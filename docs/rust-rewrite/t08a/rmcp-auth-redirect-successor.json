@@ -1,0 +1,85 @@
+{
+  "schema": "RMCP_AUTH_REDIRECT_SUCCESSOR_V1",
+  "scope": "Carry the explicit source redirect request through OAuth operations and refuse it in the built-in adapter.",
+  "prior_diagnostics_sha256": "f4116ccda0db1d057200475a266e2041f283272b99c6b59ec8cb1758c6e726cf",
+  "row": {
+    "path": "vendor/rmcp/src/transport/auth.rs",
+    "prior": {
+      "bytes": 438243,
+      "sha256": "9fa3833fc687d6194994796afb0d5ccbc5e9729e214193469e5600e9e0c83397",
+      "mode": "0644"
+    },
+    "current": {
+      "bytes": 439885,
+      "sha256": "dab36c0d921f524f260eae3d6a3432c8d74a17799abdf3f003c0f69375e2f634",
+      "mode": "0644"
+    },
+    "edits": [
+      {
+        "at": 1711,
+        "remove_utf8": "",
+        "insert_utf8": "    /// Require the injected client to preserve the request method and follow at most\n    /// five redirects within the origin, allowing its default-port HTTPS upgrade.\n    /// An adapter that cannot enforce this policy must reject the request.\n    SourceWithinOrigin,\n"
+      },
+      {
+        "at": 2659,
+        "remove_utf8": "",
+        "insert_utf8": "    #[error(\"the source OAuth redirect policy requires a compatible injected client\")]\n    UnsupportedSourceRedirectPolicy,\n"
+      },
+      {
+        "at": 7037,
+        "remove_utf8": "",
+        "insert_utf8": "                OAuthHttpRedirectPolicy::SourceWithinOrigin => {\n                    return Err(Box::new(OAuthHttpError::UnsupportedSourceRedirectPolicy)\n                        as OAuthHttpClientError);\n                }\n"
+      },
+      {
+        "at": 45064,
+        "remove_utf8": "    // Preserve legacy reqwest refresh behavior without weakening custom clients.\n",
+        "insert_utf8": "    // The legacy refresh policy also carries the explicit source profile across state transitions.\n"
+      },
+      {
+        "at": 58116,
+        "remove_utf8": "",
+        "insert_utf8": "    /// Request the source redirect profile on every OAuth operation using this manager.\n    ///\n    /// Configure an injected [`OAuthHttpClient`] that implements\n    /// [`OAuthHttpRedirectPolicy::SourceWithinOrigin`] before starting OAuth.\n    /// The built-in reqwest adapter rejects this profile before sending a request.\n    pub fn use_source_within_origin_redirects(&mut self) {\n        self.refresh_redirect_policy = OAuthHttpRedirectPolicy::SourceWithinOrigin;\n    }\n\n    fn oauth_redirect_policy(&self, default: OAuthHttpRedirectPolicy) -> OAuthHttpRedirectPolicy {\n        if self.refresh_redirect_policy == OAuthHttpRedirectPolicy::SourceWithinOrigin {\n            self.refresh_redirect_policy\n        } else {\n            default\n        }\n    }\n\n"
+      },
+      {
+        "at": 64655,
+        "remove_utf8": "        self.refresh_redirect_policy = OAuthHttpRedirectPolicy::Follow;\n",
+        "insert_utf8": "        self.refresh_redirect_policy = self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Follow);\n"
+      },
+      {
+        "at": 76073,
+        "remove_utf8": "                OAuthHttpRedirectPolicy::Follow,\n",
+        "insert_utf8": "                self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Follow),\n"
+      },
+      {
+        "at": 94549,
+        "remove_utf8": "                redirect_policy: OAuthHttpRedirectPolicy::Stop,\n",
+        "insert_utf8": "                redirect_policy: self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Stop),\n"
+      },
+      {
+        "at": 131510,
+        "remove_utf8": "",
+        "insert_utf8": "        let redirect_policy = self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Stop);\n"
+      },
+      {
+        "at": 131937,
+        "remove_utf8": "                .discovery_request(OAuthHttpRequest::new(\n                    request,\n                    OAuthHttpRedirectPolicy::Stop,\n                ))\n",
+        "insert_utf8": "                .discovery_request(OAuthHttpRequest::new(request, redirect_policy))\n"
+      },
+      {
+        "at": 132120,
+        "remove_utf8": "            if !response.status().is_redirection() {\n",
+        "insert_utf8": "            if redirect_policy == OAuthHttpRedirectPolicy::SourceWithinOrigin\n                || !response.status().is_redirection()\n            {\n"
+      },
+      {
+        "at": 144893,
+        "remove_utf8": "                redirect_policy: OAuthHttpRedirectPolicy::Stop,\n",
+        "insert_utf8": "                redirect_policy: self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Stop),\n"
+      },
+      {
+        "at": 149566,
+        "remove_utf8": "                OAuthHttpRedirectPolicy::Stop,\n",
+        "insert_utf8": "                self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Stop),\n"
+      }
+    ]
+  }
+}
