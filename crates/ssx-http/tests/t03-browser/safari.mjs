@@ -166,6 +166,44 @@ try {
   await call('/forward', 'POST', {});
   assert.equal((await resultsPage('valkey', 2)).searchParams.get('pageno'), '2');
   receipt.cases.push('pagination-history');
+
+  // WebDriver sizes the outer window. Qualify only the content size Safari reports.
+  receipt.viewports = [];
+  for (const [width, height] of [[1440, 900], [390, 844], [320, 640]]) {
+    if (width === 320) {
+      await navigate('/search?q=long&categories=general');
+      await resultsPage('long', 1);
+    }
+    const sample = { requested: { width, height }, attempts: [] };
+    receipt.viewports.push(sample);
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const window = await call('/window/rect');
+      const content = await execute(`
+        return {
+          width: innerWidth, height: innerHeight,
+          clientWidth: document.documentElement.clientWidth,
+          scrollWidth: document.documentElement.scrollWidth,
+          availableWidth: screen.availWidth, availableHeight: screen.availHeight,
+        };
+      `);
+      sample.attempts.push({ window, content });
+      if (content.width === width && content.height === height) break;
+      if (attempt === 2) break;
+      await call('/window/rect', 'POST', {
+        width: window.width + width - content.width,
+        height: window.height + height - content.height,
+      });
+      await delay(200);
+    }
+    await screenshot('viewport-' + width + 'x' + height);
+  }
+  for (const { requested, attempts } of receipt.viewports) {
+    const { content } = attempts.at(-1);
+    const size = requested.width + 'x' + requested.height;
+    assert.equal(content.width + 'x' + content.height, size, 'Safari content viewport ' + size);
+    assert(content.scrollWidth <= content.clientWidth, 'Safari horizontal overflow at ' + size);
+    receipt.cases.push('viewport-' + size);
+  }
 } catch (error) {
   receipt.error = error.message;
   throw error;
