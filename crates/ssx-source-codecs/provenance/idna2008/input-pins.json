@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "profile": "python-idna3.18/IDNA17/CPython16",
+  "historical_revision": "884d50f222792cbce82d282fef01afec33d93191",
+  "inputs": [
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/IDNA-LICENSE.md",
+      "bytes": 1541,
+      "sha256": "1a9a4f0e3d479a27240ddd59a9137a66ab4a0f9dfdc8ca6188cc0bfd85187f04"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/idna_core.py.txt",
+      "bytes": 24685,
+      "sha256": "49f3abd713b73e8134443631edb31c8809e38b28c93db3f0ffddc007921460ec"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/idna_package_data.py.txt",
+      "bytes": 21,
+      "sha256": "4de23de04a8014015a5df049c2c38f50c2e7dbdebdba2acf6be0da79a71e0325"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/idnadata.py.txt",
+      "bytes": 44862,
+      "sha256": "01ffa6a3c5819a48402ba4f25ca3901fcf0e5f49903432ad74bed45ad429a699"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna2008/inputs/unicodename_db.h.gz",
+      "bytes": 1417522,
+      "sha256": "b756b8c66e7b73d4e177fa75e88c466322b158c1cbef276d5a4b5dea865c72b5",
+      "encoding": "gzip",
+      "archive_bytes": 391044,
+      "archive_sha256": "cd67cb081ba2b5fb783295a447bb26fea5334a7048f827e925a22815df13ef7c"
+    },
+    {
+      "path": "contracts/unicode/python-text-source/Modules__unicodedata_db.h.txt",
+      "bytes": 588046,
+      "sha256": "00a5ed9e602bb55e9f080333ac8cbc360352eea9de960eec69efdb0c3d68b110"
+    },
+    {
+      "path": "contracts/unicode/python-text-source/LICENSE.txt",
+      "bytes": 13804,
+      "sha256": "b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231"
+    },
+    {
+      "path": "crates/ssx-source-codecs/provenance/idna/inputs/UnicodeData-16.0.0.txt",
+      "bytes": 2175362,
+      "sha256": "ff58e5823bd095166564a006e47d111130813dcf8bf234ef79fa51a870edb48f"
+    }
+  ],
+  "historical_text_data_sha256": "394f184e9c23bef54e77830a48f9b11d9be803d6e1c70a8743c9af58f2bcebe7",
+  "generated_tables": [
+    {
+      "path": "crates/ssx-source-codecs/src/idna2008_data.rs",
+      "sha256": "df1f0cd88639505467dc216ee4b9a0e658f73bec299cd73c704667c47aec38a6",
+      "bytes": 261606
+    },
+    {
+      "path": "crates/ssx-source-codecs/src/idna2008_normalization_data.rs",
+      "sha256": "48761064bf2e12e8fceeb5755ce681f20dc278b1238790537a15faa35079ed23",
+      "bytes": 399028
+    }
+  ],
+  "assembled_table_sha256": "fdb92c7ebab5e2f24b20a88b016f0d99f776d74080375482f6e32593323df7bd"
+}

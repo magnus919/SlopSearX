@@ -79,6 +79,11 @@ fn decode_single_byte_points(bytes: &[u8], canonical: &str) -> Option<Text> {
     Some(Text::from_codepoints(points).expect("generated mapping codepoints"))
 }
 
+/// Strict IDNA 2008 for the native gateway's source URL profile.
+#[cfg(feature = "source-idna2008")]
+pub mod idna2008;
+#[cfg(feature = "source-idna2008")]
+mod idna2008_data;
 mod punycode;
 mod raw_unicode_escape;
 mod text;
