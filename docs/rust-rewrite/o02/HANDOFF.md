@@ -21,6 +21,13 @@ revision. The gate includes mismatched-digest rejection, promotion transaction
 failure and recovery, and failed readiness. [Qualification PR](https://github.com/magnus919/SlopSearX/pull/1155)
 · [Rollback PR](https://github.com/magnus919/SlopSearX/pull/1156)
 
+The retained `merged-O02.json` receipt records a clean checkout of that revision,
+2,472 source blobs, and four successful test commands. They passed 3 healthcheck
+tests, 95 O02 tests, and 2 image-publication controls. The receipt SHA-256 is
+`5e8178727da2863add0e5341c6531a9f0f4f6166533b8032a7b47ded0b3d3c4e`.
+The [healthcheck qualification](HEALTHCHECK_QUALIFICATION.md) links the separate
+hosted amd64 and ARM64 shipping-image checks.
+
 The healthcheck now uses a fixed loopback connection, bypasses proxy settings
 and redirects, and bounds headers and elapsed time. The base verifier applies
 curl's downloaded-body limit, subject to the curl version's enforcement of
