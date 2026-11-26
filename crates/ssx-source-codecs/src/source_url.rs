@@ -1,6 +1,6 @@
-//! Immutable gateway URL construction using the historical HTTPX2 source rules.
+//! Immutable gateway URLs and typed component copies using the historical HTTPX2 rules.
 //!
-//! Constructor from 884d50f222792cbce82d282fef01afec33d93191
+//! Adapted from 884d50f222792cbce82d282fef01afec33d93191
 //! (vendor/ssx-http-source/reqwest/src/source_pool/source_url.rs, blob
 //! 16dc6e58f3832dd55a68d4a68c97eed52c88f946).
 
@@ -25,6 +25,8 @@ pub enum SourceUrlErrorKind {
     Port,
     /// Source relative or authority path validation.
     Path,
+    /// A malformed typed copy component.
+    Component,
 }
 /// Typed source URL validation failure.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -139,6 +141,15 @@ fn host(host: &str) -> Result<String, SourceUrlError> {
     Ok(encoded)
 }
 
+/// Provenance of the text retained by the URL.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum SourceUrlOrigin {
+    /// Direct caller input, retained verbatim.
+    Input,
+    /// A serialization reconstructed from the copied components.
+    Copy,
+}
+
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 struct Parts {
     scheme: String,
@@ -154,13 +165,52 @@ struct Parts {
 #[derive(Clone)]
 pub struct SourceUrl {
     input: String,
+    origin: SourceUrlOrigin,
     lexical_authority: bool,
     lexical_userinfo: bool,
     parts: Parts,
 }
 impl std::fmt::Debug for SourceUrl {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("SourceUrl").finish_non_exhaustive()
+        f.debug_struct("SourceUrl")
+            .field("origin", &self.origin)
+            .finish_non_exhaustive()
+    }
+}
+
+/// Typed copy inputs. None keeps a component; Some(None) clears query/fragment/port.
+/// Empty strings clear nonnullable components. Defaults come from current parsed
+/// fields, never the original input. raw_path and userinfo aliases follow HTTPX.
+#[derive(Clone, Copy, Default)]
+pub struct SourceUrlChanges<'a> {
+    /// Scheme spelling before source lowercase/default-port handling.
+    pub scheme: Option<&'a str>,
+    /// Full authority replacement before individual authority overrides.
+    pub authority: Option<&'a str>,
+    /// Quoted or unquoted joint user information; must not contain literal @.
+    pub userinfo: Option<&'a str>,
+    /// Host replacement; colon-containing hosts are bracketed as source kwargs.
+    pub host: Option<&'a str>,
+    /// Lossless signed decimal source input; no u16 restriction.
+    pub port: Option<Option<&'a str>>,
+    /// Path replacement, excluding ? and #.
+    pub path: Option<&'a str>,
+    /// Query replacement, excluding #; Some("") retains the delimiter.
+    pub query: Option<Option<&'a str>>,
+    /// Fragment replacement; Some("") retains the delimiter.
+    pub fragment: Option<Option<&'a str>>,
+    /// Source raw_path alias; replaces path and query together.
+    pub raw_path: Option<&'a str>,
+    /// Username alias; when either alias is given, the other defaults to empty.
+    pub username: Option<&'a str>,
+    /// Password alias, never rendered by Debug or errors.
+    pub password: Option<&'a str>,
+    /// Source netloc alias partitions at the first colon before host validation.
+    pub netloc: Option<&'a str>,
+}
+impl std::fmt::Debug for SourceUrlChanges<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("SourceUrlChanges(<redacted>)")
     }
 }
 
@@ -189,6 +239,7 @@ const PATH_EXCLUDED: &[u8] = b" \"#<>?`{}";
 const QUERY_EXCLUDED: &[u8] = b" \"#<>";
 const FRAGMENT_EXCLUDED: &[u8] = b" \"<>`";
 const USERINFO_EXCLUDED: &[u8] = b" \"#<>?`{}/;=@[\\]^|";
+const USERNAME_EXCLUDED: &[u8] = b" \"#<>?`{}/:;=@[\\]^|";
 fn unquote(text: &str) -> String {
     fn hex(c: u8) -> Option<u8> {
         match c {
@@ -350,20 +401,25 @@ impl SourceUrl {
             .map_or((before_fragment, None), |(a, b)| (a, Some(b)));
         Ok(Self {
             input: text.into(),
+            origin: SourceUrlOrigin::Input,
             lexical_authority,
             lexical_userinfo: authority.contains('@'),
             parts: normalize(scheme, userinfo, raw_host, raw_port, path, query, fragment)?,
         })
     }
-    /// Original caller text, including the spelling of every component.
+    /// Original caller text or the serialization reconstructed by a copy.
     pub fn input(&self) -> &str {
         &self.input
     }
-    /// Original parser input contained an authority delimiter, even if it normalized away.
+    /// Provenance of the retained input text.
+    pub fn origin(&self) -> SourceUrlOrigin {
+        self.origin
+    }
+    /// Retained input contained an authority delimiter, even if it normalized away.
     pub fn lexical_authority_present(&self) -> bool {
         self.lexical_authority
     }
-    /// Original parser authority contained a userinfo delimiter, even if empty.
+    /// Retained authority contained a userinfo delimiter, even if empty.
     pub fn lexical_userinfo_present(&self) -> bool {
         self.lexical_userinfo
     }
@@ -375,7 +431,7 @@ impl SourceUrl {
     pub fn raw_host(&self) -> &str {
         &self.parts.host
     }
-    /// Source raw_scheme ASCII bytes.
+    /// Display host with fallible ACE decoding.
     pub fn display_host(&self) -> Result<String, SourceUrlError> {
         if self.parts.host.contains("xn--") {
             decode_display(&self.parts.host).map_err(|_| invalid(SourceUrlErrorKind::Idna))
@@ -387,8 +443,6 @@ impl SourceUrl {
     pub fn port(&self) -> Option<&str> {
         self.parts.port.as_deref()
     }
-    /// httpcore URL.origin uses truthy port or scheme default, so explicit zero defaults.
-    /// Unsupported schemes without a truthy port have no supported default here.
     /// Quoted raw source userinfo. This explicit accessor may contain credentials.
     pub fn raw_userinfo(&self) -> &str {
         &self.parts.userinfo
@@ -443,8 +497,7 @@ impl SourceUrl {
     pub fn netloc(&self) -> String {
         self.parts.netloc()
     }
-    /// Source netloc ASCII boundary, separate from its retained textual form.
-    /// Fragment/userinfo never enter this target. This does not authorize sending it.
+    /// Source path and query projection, with a slash for an empty path.
     pub fn raw_path(&self) -> String {
         let mut out = if self.parts.path.is_empty() {
             "/".into()
@@ -464,6 +517,106 @@ impl SourceUrl {
     /// HTTPX considers a URL absolute only when BOTH scheme and host are nonempty.
     pub fn is_absolute(&self) -> bool {
         !self.parts.scheme.is_empty() && !self.parts.host.is_empty()
+    }
+
+    /// Copy current normalized components using source kwargs normalization.
+    pub fn copy_with(&self, c: SourceUrlChanges<'_>) -> Result<Self, SourceUrlError> {
+        if c.scheme.is_none()
+            && c.authority.is_none()
+            && c.userinfo.is_none()
+            && c.host.is_none()
+            && c.port.is_none()
+            && c.path.is_none()
+            && c.query.is_none()
+            && c.fragment.is_none()
+            && c.raw_path.is_none()
+            && c.username.is_none()
+            && c.password.is_none()
+            && c.netloc.is_none()
+        {
+            return Ok(self.clone());
+        }
+        let scheme = c.scheme.unwrap_or(self.scheme());
+        let authority = c
+            .authority
+            .map(str::to_owned)
+            .unwrap_or_else(|| self.parts.authority());
+        let (default_user, default_host, default_port) = split_authority(&authority);
+        let mut user = c
+            .userinfo
+            .map(str::to_owned)
+            .unwrap_or_else(|| default_user.into());
+        let mut h = c
+            .host
+            .map(str::to_owned)
+            .unwrap_or_else(|| default_host.into());
+        let mut p = c
+            .port
+            .map(|v| v.unwrap_or("").to_owned())
+            .unwrap_or_else(|| default_port.into());
+        if let Some(netloc) = c.netloc {
+            let (a, b) = netloc.split_once(':').unwrap_or((netloc, ""));
+            h = a.into();
+            p = b.into();
+        }
+        if c.username.is_some() || c.password.is_some() {
+            let username = quote(c.username.unwrap_or(""), USERNAME_EXCLUDED);
+            let password = quote(c.password.unwrap_or(""), USERNAME_EXCLUDED);
+            user = if password.is_empty() {
+                username
+            } else {
+                format!("{username}:{password}")
+            };
+        }
+        if h.contains(':') && !(h.starts_with('[') && h.ends_with(']')) {
+            h = format!("[{h}]");
+        }
+        let mut path = c.path.unwrap_or(self.path());
+        let mut query = c.query.unwrap_or(self.query_component());
+        if let Some(raw) = c.raw_path {
+            let (a, b) = raw
+                .split_once('?')
+                .map_or((raw, None), |(a, b)| (a, Some(b)));
+            path = a;
+            query = b;
+        }
+        let fragment = c.fragment.unwrap_or(self.fragment_component());
+        // Component guards run before host/port normalization, as source kwargs do.
+        for text in [
+            Some(scheme),
+            Some(authority.as_str()),
+            Some(user.as_str()),
+            Some(h.as_str()),
+            Some(p.as_str()),
+            Some(path),
+            query,
+            fragment,
+        ]
+        .into_iter()
+        .flatten()
+        {
+            validate(text)?;
+        }
+        if !scheme_valid(scheme)
+            || authority.contains(['/', '?', '#'])
+            || (c.username.is_none()
+                && c.password.is_none()
+                && c.userinfo.is_some_and(|u| u.contains('@')))
+            || (!(h.starts_with('[') && h.ends_with(']')) && h.contains(':'))
+            || path.contains(['?', '#'])
+            || query.is_some_and(|q| q.contains('#'))
+        {
+            return Err(invalid(SourceUrlErrorKind::Component));
+        }
+        let parts = normalize(scheme, &user, &h, &p, path, query, fragment)?;
+        let input = parts.serialized();
+        Ok(Self {
+            input,
+            origin: SourceUrlOrigin::Copy,
+            lexical_authority: !parts.authority().is_empty(),
+            lexical_userinfo: !parts.userinfo.is_empty(),
+            parts,
+        })
     }
 }
 
@@ -490,6 +643,20 @@ mod tests {
         assert!(u.password_present());
         assert!(!format!("{u:?}").contains("p%FF"));
         assert!(!format!("{u:?}").contains("x=%2f"));
+        // Copy reconstructs with parsed lowercase scheme; default port now drops.
+        assert_eq!(
+            u.copy_with(SourceUrlChanges {
+                path: Some("/next"),
+                ..Default::default()
+            })
+            .unwrap()
+            .serialized(),
+            "http://User:p%FF@example.test/next?x=%2f#frag"
+        );
+        assert_eq!(
+            u.copy_with(Default::default()).unwrap().serialized(),
+            u.serialized()
+        );
     }
     #[test]
     fn absent_empty_query_fragment_and_empty_authority_are_not_conflated() {
@@ -499,7 +666,13 @@ mod tests {
         assert_eq!(u.query_component(), Some(""));
         assert_eq!(u.fragment_component(), Some(""));
         assert_eq!(u.serialized(), "http://host?#");
-        let absent = url("http://host");
+        let absent = u
+            .copy_with(SourceUrlChanges {
+                query: Some(None),
+                fragment: Some(None),
+                ..Default::default()
+            })
+            .unwrap();
         assert_eq!(absent.query_component(), None);
         assert_eq!(absent.fragment_component(), None);
         assert_eq!(absent.serialized(), "http://host");
@@ -520,6 +693,46 @@ mod tests {
         // Relative paths keep literal dot segments until a later absolute join.
         assert_eq!(url("a/../b").path(), "a/../b");
         assert_eq!(url("http://host/%2e/%2E%2e").path(), "/%2e/%2E%2e");
+        let u = url("http://host")
+            .copy_with(SourceUrlChanges {
+                username: Some("a:b@c"),
+                password: Some("p/q"),
+                ..Default::default()
+            })
+            .unwrap();
+        assert_eq!(u.raw_userinfo(), "a%3Ab%40c:p%2Fq");
+        assert_eq!(u.username(), "a:b@c");
+        assert_eq!(u.password(), "p/q");
+        let authority = url("http://host")
+            .copy_with(SourceUrlChanges {
+                authority: Some("a@b@other"),
+                ..Default::default()
+            })
+            .unwrap();
+        assert_eq!(authority.serialized(), "http://a%40b@other");
+        assert!(
+            url("http://host")
+                .copy_with(SourceUrlChanges {
+                    userinfo: Some("a@b"),
+                    ..Default::default()
+                })
+                .is_err()
+        );
+        let raw = u
+            .copy_with(SourceUrlChanges {
+                raw_path: Some("/p?"),
+                ..Default::default()
+            })
+            .unwrap();
+        assert_eq!(raw.path(), "/p");
+        assert_eq!(raw.query_component(), Some(""));
+        assert!(
+            u.copy_with(SourceUrlChanges {
+                path: Some("/p?q"),
+                ..Default::default()
+            })
+            .is_err()
+        );
     }
     #[test]
     fn signed_zero_default_and_arbitrary_integer_ports_never_become_u16() {
@@ -605,5 +818,83 @@ mod tests {
             SourceUrl::parse("::").unwrap_err().kind,
             SourceUrlErrorKind::Path
         );
+        assert_eq!(
+            url("custom:")
+                .copy_with(SourceUrlChanges {
+                    host: Some("[bad]"),
+                    port: Some(Some("x")),
+                    path: Some("relative"),
+                    ..Default::default()
+                })
+                .unwrap_err()
+                .kind,
+            SourceUrlErrorKind::Ipv6
+        );
+        assert_eq!(
+            url("custom:")
+                .copy_with(SourceUrlChanges {
+                    host: Some("host"),
+                    port: Some(Some("x")),
+                    path: Some("relative"),
+                    ..Default::default()
+                })
+                .unwrap_err()
+                .kind,
+            SourceUrlErrorKind::Port
+        );
+        assert_eq!(
+            url("custom:")
+                .copy_with(SourceUrlChanges {
+                    host: Some("host"),
+                    path: Some("relative"),
+                    ..Default::default()
+                })
+                .unwrap_err()
+                .kind,
+            SourceUrlErrorKind::Path
+        );
+    }
+
+    #[test]
+    fn typed_copy_alias_precedence_and_input_provenance() {
+        let input = "HTTP://user:fixture-secret@EXAMPLE:080/p?a#part";
+        let base = url(input);
+        let unchanged = base.copy_with(SourceUrlChanges::default()).unwrap();
+        assert_eq!(
+            (unchanged.origin(), unchanged.input()),
+            (SourceUrlOrigin::Input, input)
+        );
+
+        let changes = SourceUrlChanges {
+            authority: Some("discarded.example:443"),
+            host: Some("also-discarded.example"),
+            port: Some(Some("9")),
+            netloc: Some("other.test:777"),
+            username: Some("a:b"),
+            path: Some("/discarded"),
+            query: Some(Some("discarded")),
+            raw_path: Some("/retained?"),
+            fragment: Some(None),
+            ..Default::default()
+        };
+        assert!(!format!("{changes:?}").contains("other.test"));
+        let copied = base.copy_with(changes).unwrap();
+        assert_eq!(copied.origin(), SourceUrlOrigin::Copy);
+        assert_eq!(copied.input(), "http://a%3Ab@other.test:777/retained?");
+        assert_eq!(copied.serialized(), copied.input());
+        assert_eq!(copied.username(), "a:b");
+        assert!(!copied.password_present());
+        assert!(copied.lexical_authority_present() && copied.lexical_userinfo_present());
+        assert_eq!(copied.query_component(), Some(""));
+        assert_eq!(copied.fragment_component(), None);
+        let cleared = copied
+            .copy_with(SourceUrlChanges {
+                port: Some(None),
+                ..Default::default()
+            })
+            .unwrap();
+        assert_eq!(cleared.netloc(), "other.test");
+        assert_eq!(base.input(), input);
+        assert!(!format!("{base:?}").contains("fixture-secret"));
     }
 }

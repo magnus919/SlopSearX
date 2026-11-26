@@ -732,9 +732,10 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         "source_url::tests::signed_zero_default_and_arbitrary_integer_ports_never_become_u16",
         "source_url::tests::source_length_controls_host_port_path_validation_precedence",
         "source_url::tests::strict_idna_context_bidi_and_lazy_ascii_ace_display_stay_distinct",
+        "source_url::tests::typed_copy_alias_precedence_and_input_provenance",
     ]);
     if passed_gateway_url_tests != expected_gateway_url_tests {
-        return Err("T07 source URL constructor cases did not all pass".into());
+        return Err("T07 source URL cases did not all pass".into());
     }
     let policy: Value = serde_json::from_slice(
         &std::fs::read(root.join("docs/rust-rewrite/a05/source-codec-policy.json"))
