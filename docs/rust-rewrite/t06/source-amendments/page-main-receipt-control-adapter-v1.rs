@@ -990,15 +990,162 @@ const STARTUP_PRIOR_BLOB: &str = "dfc36638d78ce22abb9b0da7ae0c90bf2784b684";
 const STARTUP_CURRENT: &str = "fcbb1970c46a1394fb158a41e7a0e2d2cc2162a933e2a491ec58d1afda6ff36a";
 const STARTUP_CURRENT_BYTES: usize = 87822;
 
+const STDIO_BASELINE: &str = "316f1822ec93e0fe1dfe5939e3e9018833aa02e9";
+const STDIO_PRIOR_BLOB: &str = "625c045e4f6a42dd4902e998088943bd82034805";
+const STDIO_CURRENT: &str = "e2e944c50cac65e71935d6d47fcb2eb3fe444bca642c646ebac834da129def1c";
+const STDIO_OLD: &str = r#"    pub async fn stdio(self) -> Result<()> {
+        let wire: std::sync::Arc<std::sync::Mutex<WireState>> = Default::default();
+        let handler = RawForwarder {
+            gateway: self.clone(),
+            wire: wire.clone(),
+        };
+        let result = stdio_handler(
+            handler,
+            std::sync::Arc::new(self.catalogs.clone()),
+            wire,
+            crate::output_limits::OutputLimits::HTTP,
+        )
+        .await;
+        self.close().await?;
+        result
+    }
+"#;
+const STDIO_NEW: &str = r#"    pub async fn stdio(self) -> Result<()> {
+        self.stdio_with_io(
+            tokio::io::stdin(),
+            tokio::io::stdout(),
+            tokio_util::sync::CancellationToken::new(),
+        )
+        .await
+    }
+
+    /// Serve MCP over caller-owned streams and close the upstream session on exit.
+    ///
+    /// Cancellation stops the stdio service without waiting for input EOF.
+    pub async fn stdio_with_io<I, O>(
+        self,
+        input: I,
+        output: O,
+        cancel: tokio_util::sync::CancellationToken,
+    ) -> Result<()>
+    where
+        I: tokio::io::AsyncRead + Unpin,
+        O: tokio::io::AsyncWrite + Unpin,
+    {
+        let wire: std::sync::Arc<std::sync::Mutex<WireState>> = Default::default();
+        let stop = cancel.child_token();
+        let _stop_on_drop = stop.clone().drop_guard();
+        let forwarding = std::sync::Arc::new(tokio::sync::RwLock::new(()));
+        let handler = RawForwarder {
+            gateway: self.clone(),
+            wire: wire.clone(),
+            stop: stop.clone(),
+            forwarding: forwarding.clone(),
+        };
+        let result = stdio_handler_io(
+            handler,
+            std::sync::Arc::new(self.catalogs.clone()),
+            wire,
+            crate::output_limits::OutputLimits::HTTP,
+            cancel,
+            input,
+            output,
+        )
+        .await;
+        // The SDK's response drain can finish before its handler tasks. Stop
+        // and join their HTTP futures before retiring the shared session.
+        stop.cancel();
+        let _drained = forwarding.write().await;
+        self.close().await?;
+        result
+    }
+"#;
+const FORWARDER_OLD: &str = r#"struct RawForwarder {
+    gateway: RawGateway,
+    wire: std::sync::Arc<std::sync::Mutex<WireState>>,
+}
+impl RawForwarder {
+    fn decode<T: serde::de::DeserializeOwned>(
+        value: Value,
+    ) -> std::result::Result<T, rmcp::ErrorData> {
+        serde_json::from_value(value)
+            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))
+    }
+    async fn forward<T: serde::de::DeserializeOwned>(
+        &self,
+        context: rmcp::service::RequestContext<rmcp::RoleServer>,
+    ) -> std::result::Result<T, rmcp::ErrorData> {
+"#;
+const FORWARDER_NEW: &str = r#"struct RawForwarder {
+    gateway: RawGateway,
+    stop: tokio_util::sync::CancellationToken,
+    forwarding: std::sync::Arc<tokio::sync::RwLock<()>>,
+    wire: std::sync::Arc<std::sync::Mutex<WireState>>,
+}
+impl RawForwarder {
+    fn decode<T: serde::de::DeserializeOwned>(
+        value: Value,
+    ) -> std::result::Result<T, rmcp::ErrorData> {
+        serde_json::from_value(value)
+            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))
+    }
+    async fn forward<T: serde::de::DeserializeOwned>(
+        &self,
+        context: rmcp::service::RequestContext<rmcp::RoleServer>,
+    ) -> std::result::Result<T, rmcp::ErrorData> {
+        let _active = self.forwarding.read().await;
+        tokio::select! {
+            biased;
+            _ = self.stop.cancelled() => Err(rmcp::ErrorData::internal_error("gateway stopping", None)),
+            result = self.exchange_rpc(context) => result,
+        }
+    }
+
+    async fn exchange_rpc<T: serde::de::DeserializeOwned>(
+        &self,
+        context: rmcp::service::RequestContext<rmcp::RoleServer>,
+    ) -> std::result::Result<T, rmcp::ErrorData> {
+"#;
+
+fn startup_source(raw: &[u8], mode: u32) -> Result<Vec<u8>> {
+    inverse(
+        &Row {
+            path: RAW_GATEWAY.into(),
+            prior: Material {
+                sha256: STARTUP_CURRENT.into(),
+                bytes: STARTUP_CURRENT_BYTES,
+                mode: 0o644,
+            },
+            prior_git_blob: STDIO_PRIOR_BLOB.into(),
+            current: Material {
+                sha256: STDIO_CURRENT.into(),
+                bytes: 89540,
+                mode: 0o644,
+            },
+            edits: vec![
+                Edit {
+                    current_offset: 54626,
+                    old: STDIO_OLD.into(),
+                    new: STDIO_NEW.into(),
+                },
+                Edit {
+                    current_offset: 57632,
+                    old: FORWARDER_OLD.into(),
+                    new: FORWARDER_NEW.into(),
+                },
+            ],
+        },
+        raw,
+        mode,
+    )
+}
+
 fn raw_gateway_prior(root: &Path, raw: &[u8], mode: u32, expected: &str) -> Result<Vec<u8>> {
     need(
         expected == RAW_GATEWAY_PRIOR,
         "T06 raw gateway historical binding differs",
     )?;
-    need(
-        mode == 0o644 && raw.len() == STARTUP_CURRENT_BYTES && digest(raw) == STARTUP_CURRENT,
-        "T06 raw gateway startup source identity differs",
-    )?;
+    startup_source(raw, mode)?;
     let accepted = Command::new("git")
         .args(["cat-file", "blob", STARTUP_PRIOR_BLOB])
         .current_dir(root)
@@ -1036,6 +1183,25 @@ fn raw_gateway_prior(root: &Path, raw: &[u8], mode: u32, expected: &str) -> Resu
 fn raw_gateway_controls(root: &Path) -> Result<()> {
     let (raw, mode) = regular(root, RAW_GATEWAY)?;
     let prior = raw_gateway_prior(root, &raw, mode, RAW_GATEWAY_PRIOR)?;
+    let stdio_predecessor = startup_source(&raw, mode)?;
+    let stdio_tree = Command::new("git")
+        .args(["ls-tree", STDIO_BASELINE, "--", RAW_GATEWAY])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    let stdio_blob = Command::new("git")
+        .args(["cat-file", "blob", STDIO_PRIOR_BLOB])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    need(
+        stdio_tree.status.success()
+            && stdio_tree.stdout
+                == format!("100644 blob {STDIO_PRIOR_BLOB}\t{RAW_GATEWAY}\n").as_bytes()
+            && stdio_blob.status.success()
+            && stdio_blob.stdout == stdio_predecessor,
+        "T06 raw gateway stdio predecessor Git identity differs",
+    )?;
     let startup_tree = Command::new("git")
         .args(["ls-tree", STARTUP_BASELINE, "--", RAW_GATEWAY])
         .current_dir(root)
@@ -1069,6 +1235,7 @@ fn raw_gateway_controls(root: &Path) -> Result<()> {
     for (bytes, mode, expected) in [
         (changed.as_slice(), 0o644, RAW_GATEWAY_PRIOR),
         (prior.as_slice(), 0o644, RAW_GATEWAY_PRIOR),
+        (stdio_predecessor.as_slice(), 0o644, RAW_GATEWAY_PRIOR),
         (raw.as_slice(), 0o755, RAW_GATEWAY_PRIOR),
         (raw.as_slice(), 0o644, RAW_GATEWAY_CURRENT),
     ] {
