@@ -1,0 +1,609 @@
+//! Immutable gateway URL construction using the historical HTTPX2 source rules.
+//!
+//! Constructor from 884d50f222792cbce82d282fef01afec33d93191
+//! (vendor/ssx-http-source/reqwest/src/source_pool/source_url.rs, blob
+//! 16dc6e58f3832dd55a68d4a68c97eed52c88f946).
+
+use crate::idna2008::{decode_display, encode, source_lower};
+use crate::url_reference::scheme_valid;
+use ssx_json::decimal_value;
+
+/// Ordered source URL validation stage, without retaining secret URL text.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum SourceUrlErrorKind {
+    /// The source URL codepoint length limit.
+    Length,
+    /// A forbidden ASCII control character.
+    Control,
+    /// Source IPv4 address validation.
+    Ipv4,
+    /// Source IPv6 address validation.
+    Ipv6,
+    /// Strict source IDNA or host display validation.
+    Idna,
+    /// Source decimal integer parsing.
+    Port,
+    /// Source relative or authority path validation.
+    Path,
+}
+/// Typed source URL validation failure.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SourceUrlError {
+    /// The source validation stage that rejected the input.
+    pub kind: SourceUrlErrorKind,
+}
+impl std::fmt::Display for SourceUrlError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "HTTPX2 source URL validation: {:?}", self.kind)
+    }
+}
+impl std::error::Error for SourceUrlError {}
+fn invalid(kind: SourceUrlErrorKind) -> SourceUrlError {
+    SourceUrlError { kind }
+}
+
+fn whitespace(ch: char) -> bool {
+    // CPython16 _PyUnicode_IsWhitespace; URL controls are rejected first.
+    matches!(ch, '\u{9}'..='\u{d}' | '\u{1c}'..='\u{20}' | '\u{85}' | '\u{a0}'
+        | '\u{1680}' | '\u{2000}'..='\u{200a}' | '\u{2028}' | '\u{2029}'
+        | '\u{202f}' | '\u{205f}' | '\u{3000}')
+}
+fn port(text: &str, original_scheme: &str) -> Result<Option<String>, SourceUrlError> {
+    if text.is_empty() {
+        return Ok(None);
+    }
+    let text = text.trim_matches(whitespace);
+    let (negative, digits) = if let Some(tail) = text.strip_prefix('-') {
+        (true, tail)
+    } else {
+        (false, text.strip_prefix('+').unwrap_or(text))
+    };
+    let mut normalized = String::new();
+    let mut previous_digit = false;
+    let mut digit_count = 0;
+    for ch in digits.chars() {
+        if ch == '_' {
+            if !previous_digit {
+                return Err(invalid(SourceUrlErrorKind::Port));
+            }
+            previous_digit = false;
+        } else {
+            let digit = decimal_value(ch).ok_or(invalid(SourceUrlErrorKind::Port))?;
+            normalized.push(char::from(b'0' + digit));
+            digit_count += 1;
+            previous_digit = true;
+        }
+    }
+    // Pinned CPython's default non-power-of-two int-string digit limit.
+    if !previous_digit || digit_count > 4300 {
+        return Err(invalid(SourceUrlErrorKind::Port));
+    }
+    let significant = normalized.trim_start_matches('0');
+    let normalized = if significant.is_empty() {
+        "0".to_owned()
+    } else if negative {
+        format!("-{significant}")
+    } else {
+        significant.to_owned()
+    };
+    let default = match original_scheme {
+        "ftp" => "21",
+        "http" | "ws" => "80",
+        "https" | "wss" => "443",
+        _ => "",
+    };
+    Ok((normalized != default).then_some(normalized))
+}
+fn quote_host(host: &str) -> String {
+    let mut result = String::with_capacity(host.len());
+    for b in host.bytes() {
+        if b.is_ascii_alphanumeric() || b"-._~!$&'()*+,;=\"`{}%|\\".contains(&b) {
+            result.push(char::from(b.to_ascii_lowercase()));
+        } else {
+            use std::fmt::Write;
+            write!(result, "%{b:02X}").expect("writing to String");
+        }
+    }
+    result
+}
+fn host(host: &str) -> Result<String, SourceUrlError> {
+    let encoded = if host.is_empty() {
+        String::new()
+    } else if host.split('.').count() == 4
+        && host
+            .split('.')
+            .all(|part| !part.is_empty() && part.bytes().all(|b| b.is_ascii_digit()))
+    {
+        host.parse::<std::net::Ipv4Addr>()
+            .map_err(|_| invalid(SourceUrlErrorKind::Ipv4))?;
+        host.to_owned()
+    } else if host.starts_with('[') && host.ends_with(']') {
+        let inside = &host[1..host.len() - 1];
+        let address = if let Some((address, scope)) = inside.split_once('%') {
+            if scope.is_empty() || scope.contains('%') {
+                return Err(invalid(SourceUrlErrorKind::Ipv6));
+            }
+            address
+        } else {
+            inside
+        };
+        address
+            .parse::<std::net::Ipv6Addr>()
+            .map_err(|_| invalid(SourceUrlErrorKind::Ipv6))?;
+        inside.to_owned() // Python validates but preserves IPv6 spelling and scope.
+    } else if host.is_ascii() {
+        quote_host(host)
+    } else {
+        encode(&source_lower(host)).map_err(|_| invalid(SourceUrlErrorKind::Idna))?
+    };
+    Ok(encoded)
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+struct Parts {
+    scheme: String,
+    userinfo: String,
+    host: String,
+    port: Option<String>,
+    path: String,
+    query: Option<String>,
+    fragment: Option<String>,
+}
+/// Full immutable source URL. Debug omits all URL data, including credentials.
+/// Transport callers validate the parsed components before routing.
+#[derive(Clone)]
+pub struct SourceUrl {
+    input: String,
+    lexical_authority: bool,
+    lexical_userinfo: bool,
+    parts: Parts,
+}
+impl std::fmt::Debug for SourceUrl {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SourceUrl").finish_non_exhaustive()
+    }
+}
+
+fn validate(text: &str) -> Result<(), SourceUrlError> {
+    if text.chars().count() > 65536 {
+        return Err(invalid(SourceUrlErrorKind::Length));
+    }
+    if text.bytes().any(|b| b.is_ascii_control()) {
+        return Err(invalid(SourceUrlErrorKind::Control));
+    }
+    Ok(())
+}
+fn quote(text: &str, excluded: &[u8]) -> String {
+    let mut out = String::new();
+    for b in text.bytes() {
+        if (b' '..=b'~').contains(&b) && !excluded.contains(&b) {
+            out.push(char::from(b));
+        } else {
+            use std::fmt::Write;
+            write!(out, "%{b:02X}").expect("String write");
+        }
+    }
+    out
+}
+const PATH_EXCLUDED: &[u8] = b" \"#<>?`{}";
+const QUERY_EXCLUDED: &[u8] = b" \"#<>";
+const FRAGMENT_EXCLUDED: &[u8] = b" \"<>`";
+const USERINFO_EXCLUDED: &[u8] = b" \"#<>?`{}/;=@[\\]^|";
+fn unquote(text: &str) -> String {
+    fn hex(c: u8) -> Option<u8> {
+        match c {
+            b'0'..=b'9' => Some(c - b'0'),
+            b'a'..=b'f' => Some(c - b'a' + 10),
+            b'A'..=b'F' => Some(c - b'A' + 10),
+            _ => None,
+        }
+    }
+    let b = text.as_bytes();
+    let mut out = Vec::new();
+    let mut at = 0;
+    while at < b.len() {
+        if b[at] == b'%'
+            && at + 2 < b.len()
+            && let (Some(a), Some(c)) = (hex(b[at + 1]), hex(b[at + 2]))
+        {
+            out.push(a * 16 + c);
+            at += 3;
+            continue;
+        }
+        out.push(b[at]);
+        at += 1;
+    }
+    String::from_utf8_lossy(&out).into_owned()
+}
+fn split_authority(authority: &str) -> (&str, &str, &str) {
+    let (userinfo, authority) = authority.rsplit_once('@').unwrap_or(("", authority));
+    let (host, port) = if authority.starts_with('[')
+        && let Some(end) = authority.rfind(']')
+    {
+        let tail = &authority[end + 1..];
+        (&authority[..=end], tail.strip_prefix(':').unwrap_or(tail))
+    } else {
+        authority.split_once(':').unwrap_or((authority, ""))
+    };
+    (userinfo, host, port)
+}
+fn normalized_path(path: &str) -> String {
+    let parts: Vec<_> = path.split('/').collect();
+    if !parts.iter().any(|p| matches!(*p, "." | "..")) {
+        return path.to_owned();
+    }
+    let mut out = Vec::new();
+    for part in parts {
+        if part == "." {
+        } else if part == ".." {
+            if !out.is_empty() && out != [""] {
+                out.pop();
+            }
+        } else {
+            out.push(part);
+        }
+    }
+    out.join("/")
+}
+impl Parts {
+    fn netloc(&self) -> String {
+        let h = if self.host.contains(':') {
+            format!("[{}]", self.host)
+        } else {
+            self.host.clone()
+        };
+        match &self.port {
+            Some(p) => format!("{h}:{p}"),
+            None => h,
+        }
+    }
+    fn authority(&self) -> String {
+        let netloc = self.netloc();
+        if self.userinfo.is_empty() {
+            netloc
+        } else {
+            format!("{}@{netloc}", self.userinfo)
+        }
+    }
+    fn serialized(&self) -> String {
+        let mut out = String::new();
+        if !self.scheme.is_empty() {
+            out.push_str(&self.scheme);
+            out.push(':');
+        }
+        let authority = self.authority();
+        if !authority.is_empty() {
+            out.push_str("//");
+            out.push_str(&authority);
+        }
+        out.push_str(&self.path);
+        if let Some(q) = &self.query {
+            out.push('?');
+            out.push_str(q);
+        }
+        if let Some(f) = &self.fragment {
+            out.push('#');
+            out.push_str(f);
+        }
+        out
+    }
+}
+fn normalize(
+    scheme: &str,
+    userinfo: &str,
+    raw_host: &str,
+    raw_port: &str,
+    path: &str,
+    query: Option<&str>,
+    fragment: Option<&str>,
+) -> Result<Parts, SourceUrlError> {
+    let scheme_lower = scheme.to_ascii_lowercase();
+    let userinfo = quote(userinfo, USERINFO_EXCLUDED);
+    let host = host(raw_host)?; // Host errors precede port, which precedes path.
+    let port = port(raw_port, scheme)?; // ORIGINAL scheme spelling is causal.
+    let authority = !userinfo.is_empty() || !host.is_empty() || port.is_some();
+    if (authority && !path.is_empty() && !path.starts_with('/'))
+        || (scheme_lower.is_empty()
+            && !authority
+            && (path.starts_with("//") || path.starts_with(':')))
+    {
+        return Err(invalid(SourceUrlErrorKind::Path));
+    }
+    let path = if !scheme_lower.is_empty() || authority {
+        normalized_path(path)
+    } else {
+        path.into()
+    };
+    Ok(Parts {
+        scheme: scheme_lower,
+        userinfo,
+        host,
+        port,
+        path: quote(&path, PATH_EXCLUDED),
+        query: query.map(|s| quote(s, QUERY_EXCLUDED)),
+        fragment: fragment.map(|s| quote(s, FRAGMENT_EXCLUDED)),
+    })
+}
+
+impl SourceUrl {
+    /// Parse exact HTTPX2 string input, preserving original text separately.
+    pub fn parse(text: &str) -> Result<Self, SourceUrlError> {
+        validate(text)?;
+        let (scheme, mut rest) = match text.split_once(':') {
+            Some((candidate, tail)) if scheme_valid(candidate) => (candidate, tail),
+            _ => ("", text),
+        };
+        let lexical_authority = rest.starts_with("//");
+        let authority = if let Some(after) = rest.strip_prefix("//") {
+            let end = after.find(['/', '?', '#']).unwrap_or(after.len());
+            rest = &after[end..];
+            &after[..end]
+        } else {
+            ""
+        };
+        let (userinfo, raw_host, raw_port) = split_authority(authority);
+        let (before_fragment, fragment) = rest
+            .split_once('#')
+            .map_or((rest, None), |(a, b)| (a, Some(b)));
+        let (path, query) = before_fragment
+            .split_once('?')
+            .map_or((before_fragment, None), |(a, b)| (a, Some(b)));
+        Ok(Self {
+            input: text.into(),
+            lexical_authority,
+            lexical_userinfo: authority.contains('@'),
+            parts: normalize(scheme, userinfo, raw_host, raw_port, path, query, fragment)?,
+        })
+    }
+    /// Original caller text, including the spelling of every component.
+    pub fn input(&self) -> &str {
+        &self.input
+    }
+    /// Original parser input contained an authority delimiter, even if it normalized away.
+    pub fn lexical_authority_present(&self) -> bool {
+        self.lexical_authority
+    }
+    /// Original parser authority contained a userinfo delimiter, even if empty.
+    pub fn lexical_userinfo_present(&self) -> bool {
+        self.lexical_userinfo
+    }
+    /// Source-normalized scheme; always ASCII.
+    pub fn scheme(&self) -> &str {
+        &self.parts.scheme
+    }
+    /// Source-normalized raw host; IPv6 has no surrounding brackets.
+    pub fn raw_host(&self) -> &str {
+        &self.parts.host
+    }
+    /// Source raw_scheme ASCII bytes.
+    pub fn display_host(&self) -> Result<String, SourceUrlError> {
+        if self.parts.host.contains("xn--") {
+            decode_display(&self.parts.host).map_err(|_| invalid(SourceUrlErrorKind::Idna))
+        } else {
+            Ok(self.parts.host.clone())
+        }
+    }
+    /// Canonical arbitrary signed source integer, never clamped/cast to u16.
+    pub fn port(&self) -> Option<&str> {
+        self.parts.port.as_deref()
+    }
+    /// httpcore URL.origin uses truthy port or scheme default, so explicit zero defaults.
+    /// Unsupported schemes without a truthy port have no supported default here.
+    /// Quoted raw source userinfo. This explicit accessor may contain credentials.
+    pub fn raw_userinfo(&self) -> &str {
+        &self.parts.userinfo
+    }
+    /// Whether the normalized username contains any bytes, independent of password.
+    pub fn username_present(&self) -> bool {
+        !self
+            .parts
+            .userinfo
+            .split_once(':')
+            .map_or(self.parts.userinfo.as_str(), |(a, _)| a)
+            .is_empty()
+    }
+    /// Whether the normalized userinfo carries the first-colon password marker.
+    pub fn password_present(&self) -> bool {
+        self.parts.userinfo.contains(':')
+    }
+    /// Username with UTF-8 replacement unquote, exactly the source display boundary.
+    pub fn username(&self) -> String {
+        unquote(
+            self.parts
+                .userinfo
+                .split_once(':')
+                .map_or(self.parts.userinfo.as_str(), |(a, _)| a),
+        )
+    }
+    /// Password with UTF-8 replacement unquote; no plus-to-space conversion.
+    pub fn password(&self) -> String {
+        unquote(self.parts.userinfo.split_once(':').map_or("", |(_, b)| b))
+    }
+    /// Source path without query; an empty path remains empty here.
+    pub fn path(&self) -> &str {
+        &self.parts.path
+    }
+    /// Preserve absent versus explicitly empty query internally and at this accessor.
+    pub fn query_component(&self) -> Option<&str> {
+        self.parts.query.as_deref()
+    }
+    /// Preserve absent versus explicitly empty fragment.
+    pub fn fragment_component(&self) -> Option<&str> {
+        self.parts.fragment.as_deref()
+    }
+    /// Public raw query bytes collapse absent and empty; component accessor retains them.
+    pub fn query(&self) -> &[u8] {
+        self.query_component().unwrap_or("").as_bytes()
+    }
+    /// Source public fragment display collapses None/empty and applies UTF-8 unquote.
+    pub fn fragment(&self) -> String {
+        unquote(self.fragment_component().unwrap_or(""))
+    }
+    /// Source netloc excludes userinfo, brackets IPv6, and retains explicit zero port.
+    pub fn netloc(&self) -> String {
+        self.parts.netloc()
+    }
+    /// Source netloc ASCII boundary, separate from its retained textual form.
+    /// Fragment/userinfo never enter this target. This does not authorize sending it.
+    pub fn raw_path(&self) -> String {
+        let mut out = if self.parts.path.is_empty() {
+            "/".into()
+        } else {
+            self.parts.path.clone()
+        };
+        if let Some(q) = &self.parts.query {
+            out.push('?');
+            out.push_str(q);
+        }
+        out
+    }
+    /// Source __str__, including explicit empty ?/#. May contain credentials.
+    pub fn serialized(&self) -> String {
+        self.parts.serialized()
+    }
+    /// HTTPX considers a URL absolute only when BOTH scheme and host are nonempty.
+    pub fn is_absolute(&self) -> bool {
+        !self.parts.scheme.is_empty() && !self.parts.host.is_empty()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    fn url(s: &str) -> SourceUrl {
+        SourceUrl::parse(s).unwrap()
+    }
+    // HTTPX _urlparse ParseResult.__str__/authority/netloc + _urls raw_path.
+    #[test]
+    fn complete_owner_separates_provenance_normalized_fields_and_wire_target() {
+        let input = "HTTP://User:p%FF@EXAMPLE.test:080/a/./b/../c%2f?x=%2f#frag";
+        let u = url(input);
+        assert_eq!(u.input(), input);
+        assert_eq!(
+            u.serialized(),
+            "http://User:p%FF@example.test:80/a/c%2f?x=%2f#frag"
+        );
+        assert_eq!(u.raw_path(), "/a/c%2f?x=%2f");
+        assert_eq!(u.netloc(), "example.test:80");
+        assert_eq!(u.username(), "User");
+        assert_eq!(u.password(), "p\u{fffd}");
+        assert!(u.password_present());
+        assert!(!format!("{u:?}").contains("p%FF"));
+        assert!(!format!("{u:?}").contains("x=%2f"));
+    }
+    #[test]
+    fn absent_empty_query_fragment_and_empty_authority_are_not_conflated() {
+        let u = url("http://host?#");
+        assert_eq!(u.path(), "");
+        assert_eq!(u.raw_path(), "/?");
+        assert_eq!(u.query_component(), Some(""));
+        assert_eq!(u.fragment_component(), Some(""));
+        assert_eq!(u.serialized(), "http://host?#");
+        let absent = url("http://host");
+        assert_eq!(absent.query_component(), None);
+        assert_eq!(absent.fragment_component(), None);
+        assert_eq!(absent.serialized(), "http://host");
+        assert_eq!(absent.raw_path(), "/");
+        let empty = url("//");
+        assert!(empty.lexical_authority_present());
+        assert_eq!(empty.serialized(), "");
+        let user = url("http://@host");
+        assert!(user.lexical_userinfo_present());
+        assert_eq!(user.serialized(), "http://host");
+    }
+    #[test]
+    fn quoting_literal_dot_segments_and_utf8_userinfo_follow_source_stages() {
+        assert_eq!(
+            url("https://bücher.example/é a/%2e/../x\\y?q=é #é").serialized(),
+            "https://xn--bcher-kva.example/%C3%A9%20a/x\\y?q=%C3%A9%20#%C3%A9"
+        );
+        // Relative paths keep literal dot segments until a later absolute join.
+        assert_eq!(url("a/../b").path(), "a/../b");
+        assert_eq!(url("http://host/%2e/%2E%2e").path(), "/%2e/%2E%2e");
+    }
+    #[test]
+    fn signed_zero_default_and_arbitrary_integer_ports_never_become_u16() {
+        for p in ["0", "-000", "+٠_٠"] {
+            let u = url(&format!("http://host:{p}"));
+            assert_eq!(u.port(), Some("0"));
+            assert_eq!(u.netloc(), "host:0");
+        }
+        for p in ["-1", "65536", "999999999999999999999999999999999999999"] {
+            let u = url(&format!("https://host:{p}"));
+            assert_eq!(u.port(), Some(p));
+        }
+        assert_eq!(url("https://host:00443").port(), None);
+        assert_eq!(url("HTTPS://host:00443").port(), Some("443"));
+        assert_eq!(url("custom://host:+١_٢٣٤٥٦").port(), Some("123456"));
+        assert_eq!(
+            SourceUrl::parse("http://host: ").unwrap_err().kind,
+            SourceUrlErrorKind::Port
+        );
+        assert_eq!(
+            SourceUrl::parse("http://host:1__2").unwrap_err().kind,
+            SourceUrlErrorKind::Port
+        );
+        assert!(SourceUrl::parse(&format!("http://host:{}", "1".repeat(4300))).is_ok());
+        assert_eq!(
+            SourceUrl::parse(&format!("http://host:{}", "1".repeat(4301)))
+                .unwrap_err()
+                .kind,
+            SourceUrlErrorKind::Port
+        );
+    }
+    #[test]
+    fn strict_idna_context_bidi_and_lazy_ascii_ace_display_stay_distinct() {
+        assert_eq!(url("http://faß.de").raw_host(), "xn--fa-hia.de");
+        assert_eq!(
+            url("http://BÜCHER.example").display_host().unwrap(),
+            "bücher.example"
+        );
+        assert_eq!(url("http://l·l").display_host().unwrap(), "l·l");
+        for bad in [
+            "http://a·a",
+            "http://a\u{200d}b",
+            "http://\u{088f}",
+            "http://e\u{301}.example",
+        ] {
+            assert_eq!(
+                SourceUrl::parse(bad).unwrap_err().kind,
+                SourceUrlErrorKind::Idna
+            );
+        }
+        // ASCII construction bypasses IDNA, including invalid ACE. Display is later.
+        let ace = url("http://xn--.bad_label");
+        assert_eq!(ace.raw_host(), "xn--.bad_label");
+        assert!(ace.display_host().is_err());
+        assert_eq!(url("http://[fe80::1%é]").raw_host(), "fe80::1%é");
+        let ipv6 = url("http://[2001:0DB8::1%eth0]:0");
+        assert_eq!(ipv6.raw_host(), "2001:0DB8::1%eth0");
+        assert_eq!(ipv6.netloc(), "[2001:0DB8::1%eth0]:0");
+    }
+    #[test]
+    fn source_length_controls_host_port_path_validation_precedence() {
+        assert_eq!(
+            SourceUrl::parse(&"é".repeat(65537)).unwrap_err().kind,
+            SourceUrlErrorKind::Length
+        );
+        assert_eq!(
+            SourceUrl::parse("http://[bad]:x/\n").unwrap_err().kind,
+            SourceUrlErrorKind::Control
+        );
+        assert_eq!(
+            SourceUrl::parse("http://[bad]:x").unwrap_err().kind,
+            SourceUrlErrorKind::Ipv6
+        );
+        assert_eq!(
+            SourceUrl::parse("http://001.2.3.4:x").unwrap_err().kind,
+            SourceUrlErrorKind::Ipv4
+        );
+        assert_eq!(
+            SourceUrl::parse("http://host:bad").unwrap_err().kind,
+            SourceUrlErrorKind::Port
+        );
+        assert_eq!(
+            SourceUrl::parse("::").unwrap_err().kind,
+            SourceUrlErrorKind::Path
+        );
+    }
+}

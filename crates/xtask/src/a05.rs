@@ -704,6 +704,38 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     if passed_idna_tests != expected_idna_tests {
         return Err("T07 pinned IDNA2008 cases did not all pass".into());
     }
+    let gateway_url_output = command(
+        root,
+        "cargo",
+        &[
+            "test",
+            "--locked",
+            "-p",
+            "ssx-source-codecs",
+            "--features",
+            "source-gateway-url",
+            "--lib",
+            "source_url::tests::",
+            "--",
+            "--nocapture",
+        ],
+        records,
+    )?;
+    let passed_gateway_url_tests: BTreeSet<_> = gateway_url_output
+        .lines()
+        .filter_map(|line| line.strip_prefix("test ")?.strip_suffix(" ... ok"))
+        .collect();
+    let expected_gateway_url_tests = BTreeSet::from([
+        "source_url::tests::absent_empty_query_fragment_and_empty_authority_are_not_conflated",
+        "source_url::tests::complete_owner_separates_provenance_normalized_fields_and_wire_target",
+        "source_url::tests::quoting_literal_dot_segments_and_utf8_userinfo_follow_source_stages",
+        "source_url::tests::signed_zero_default_and_arbitrary_integer_ports_never_become_u16",
+        "source_url::tests::source_length_controls_host_port_path_validation_precedence",
+        "source_url::tests::strict_idna_context_bidi_and_lazy_ascii_ace_display_stay_distinct",
+    ]);
+    if passed_gateway_url_tests != expected_gateway_url_tests {
+        return Err("T07 source URL constructor cases did not all pass".into());
+    }
     let policy: Value = serde_json::from_slice(
         &std::fs::read(root.join("docs/rust-rewrite/a05/source-codec-policy.json"))
             .map_err(|e| e.to_string())?,

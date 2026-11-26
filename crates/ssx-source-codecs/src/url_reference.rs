@@ -25,7 +25,7 @@ impl std::fmt::Display for RawSourceUrlError {
 
 impl std::error::Error for RawSourceUrlError {}
 
-fn scheme_valid(s: &str) -> bool {
+pub(crate) fn scheme_valid(s: &str) -> bool {
     s.is_empty()
         || (s.as_bytes()[0].is_ascii_alphabetic()
             && s.bytes()
