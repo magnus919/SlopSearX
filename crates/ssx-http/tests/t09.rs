@@ -1141,7 +1141,7 @@ async fn callback_state_and_duplicate_inputs_reject_before_token_exchange_and_ta
     assert_eq!(f.idp.token_calls.load(Ordering::SeqCst), 1);
 }
 #[tokio::test]
-async fn host_origin_form_and_rate_boundaries_fail_closed() {
+async fn host_origin_and_form_boundaries_fail_closed() {
     let f = Fixture::new(false).await;
     let wrong = f
         .client
@@ -1184,10 +1184,45 @@ async fn host_origin_form_and_rate_boundaries_fail_closed() {
         .await
         .unwrap();
     assert_eq!(referer.status(), 303);
-    for _ in 0..9 {
-        assert_eq!(f.get("/auth/login").await.status(), 303)
-    }
-    assert_eq!(f.get("/auth/login").await.status(), 429);
+}
+
+#[tokio::test]
+async fn login_rate_limit_rejects_eleventh_request_in_one_valkey_window() {
+    let f = Fixture::new(false).await;
+    let store = f.valkey.store();
+    let (_, _, window_seconds) = BrowserRate::Login.settings();
+    let window_ms = window_seconds * 1_000;
+    // The limiter uses Valkey's clock. Start a fresh window if the request burst
+    // would otherwise approach the current window's end.
+    let started = tokio::time::timeout(Duration::from_secs(15), async {
+        loop {
+            let now = store.quota_time().await.unwrap().milliseconds();
+            let remaining = window_ms - now % window_ms;
+            if remaining > 12_000 {
+                break now;
+            }
+            tokio::time::sleep(Duration::from_millis(remaining + 200)).await;
+        }
+    })
+    .await
+    .expect("Valkey did not provide a window with room for the login requests");
+    let statuses = tokio::time::timeout(Duration::from_secs(10), async {
+        let mut statuses = [reqwest::StatusCode::OK; 11];
+        for status in &mut statuses {
+            *status = f.get("/auth/login").await.status();
+        }
+        statuses
+    })
+    .await
+    .expect("login requests exceeded the quota test deadline");
+    let finished = store.quota_time().await.unwrap().milliseconds();
+    assert_eq!(
+        started / window_ms,
+        finished / window_ms,
+        "login requests crossed a Valkey quota window"
+    );
+    assert_eq!(statuses[..10], [reqwest::StatusCode::SEE_OTHER; 10]);
+    assert_eq!(statuses[10], reqwest::StatusCode::TOO_MANY_REQUESTS);
 }
 fn session_projection(value: Result<BrowserSession, BrowserError>) -> Value {
     match value {
