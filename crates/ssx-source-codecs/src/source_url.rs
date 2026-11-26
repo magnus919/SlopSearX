@@ -465,6 +465,18 @@ impl SourceUrl {
     pub fn port(&self) -> Option<&str> {
         self.parts.port.as_deref()
     }
+    /// Transport origin port. Missing and zero ports use the scheme's origin default.
+    pub fn effective_origin_port(&self) -> Option<&str> {
+        match self.port() {
+            Some(port) if port != "0" => Some(port),
+            _ => match self.scheme() {
+                "http" | "ws" => Some("80"),
+                "https" | "wss" => Some("443"),
+                "socks5" | "socks5h" => Some("1080"),
+                _ => None,
+            },
+        }
+    }
     /// Quoted raw source userinfo. This explicit accessor may contain credentials.
     pub fn raw_userinfo(&self) -> &str {
         &self.parts.userinfo
@@ -823,12 +835,45 @@ mod tests {
             let u = url(&format!("http://host:{p}"));
             assert_eq!(u.port(), Some("0"));
             assert_eq!(u.netloc(), "host:0");
+            assert_eq!(u.effective_origin_port(), Some("80"));
         }
         for p in ["-1", "65536", "999999999999999999999999999999999999999"] {
             let u = url(&format!("https://host:{p}"));
             assert_eq!(u.port(), Some(p));
+            assert_eq!(u.effective_origin_port(), Some(p));
         }
+        for (scheme, default) in [
+            ("http", "80"),
+            ("ws", "80"),
+            ("https", "443"),
+            ("wss", "443"),
+            ("socks5", "1080"),
+            ("socks5h", "1080"),
+        ] {
+            assert_eq!(
+                url(&format!("{scheme}://host")).effective_origin_port(),
+                Some(default)
+            );
+            assert_eq!(
+                url(&format!("{scheme}://host:0")).effective_origin_port(),
+                Some(default)
+            );
+        }
+        assert_eq!(url("custom://host").effective_origin_port(), None);
+        assert_eq!(url("custom://host:0").effective_origin_port(), None);
+        assert_eq!(
+            url("custom://host:65536").effective_origin_port(),
+            Some("65536")
+        );
+        let ftp = url("ftp://host:21");
+        assert_eq!(ftp.port(), None);
+        assert_eq!(ftp.effective_origin_port(), None);
+        assert_eq!(url("FTP://host:21").effective_origin_port(), Some("21"));
         assert_eq!(url("https://host:00443").port(), None);
+        assert_eq!(
+            url("https://host:00443").effective_origin_port(),
+            Some("443")
+        );
         assert_eq!(url("HTTPS://host:00443").port(), Some("443"));
         assert_eq!(url("custom://host:+١_٢٣٤٥٦").port(), Some("123456"));
         assert_eq!(
