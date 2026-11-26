@@ -1,0 +1,19 @@
+{
+  "path": "crates/ssx-http/tests/t09.rs",
+  "current_bytes": 69377,
+  "current_sha256": "0b403e6d07f323ead67133c2193e8cb27b0115249abb1d5a0d8d08483d13211f",
+  "prior_bytes": 67949,
+  "prior_sha256": "5b8bd731142d37a08f92d93cbea66e0c663a7cbfa16fb5582af8528625313499",
+  "spans": [
+    {
+      "at": 37144,
+      "current": "async fn host_origin_and_form_boundaries_fail_closed() {\n",
+      "prior": "async fn host_origin_form_and_rate_boundaries_fail_closed() {\n"
+    },
+    {
+      "at": 38623,
+      "current": "}\n\n#[tokio::test]\nasync fn login_rate_limit_rejects_eleventh_request_in_one_valkey_window() {\n    let f = Fixture::new(false).await;\n    let store = f.valkey.store();\n    let (_, _, window_seconds) = BrowserRate::Login.settings();\n    let window_ms = window_seconds * 1_000;\n    // The limiter uses Valkey's clock. Start a fresh window if the request burst\n    // would otherwise approach the current window's end.\n    let started = tokio::time::timeout(Duration::from_secs(15), async {\n        loop {\n            let now = store.quota_time().await.unwrap().milliseconds();\n            let remaining = window_ms - now % window_ms;\n            if remaining > 12_000 {\n                break now;\n            }\n            tokio::time::sleep(Duration::from_millis(remaining + 200)).await;\n        }\n    })\n    .await\n    .expect(\"Valkey did not provide a window with room for the login requests\");\n    let statuses = tokio::time::timeout(Duration::from_secs(10), async {\n        let mut statuses = [reqwest::StatusCode::OK; 11];\n        for status in &mut statuses {\n            *status = f.get(\"/auth/login\").await.status();\n        }\n        statuses\n    })\n    .await\n    .expect(\"login requests exceeded the quota test deadline\");\n    let finished = store.quota_time().await.unwrap().milliseconds();\n    assert_eq!(\n        started / window_ms,\n        finished / window_ms,\n        \"login requests crossed a Valkey quota window\"\n    );\n    assert_eq!(statuses[..10], [reqwest::StatusCode::SEE_OTHER; 10]);\n    assert_eq!(statuses[10], reqwest::StatusCode::TOO_MANY_REQUESTS);\n",
+      "prior": "    for _ in 0..9 {\n        assert_eq!(f.get(\"/auth/login\").await.status(), 303)\n    }\n    assert_eq!(f.get(\"/auth/login\").await.status(), 429);\n"
+    }
+  ]
+}

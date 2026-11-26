@@ -5,6 +5,12 @@
 )]
 #[path = "../a11/replay-scheduling-source.rs"]
 mod a11_replay_source;
+#[allow(
+    clippy::duplicate_mod,
+    reason = "Independent proof roots share the stateless exact-byte inverse"
+)]
+#[path = "rmcp-source-afterimage.rs"]
+mod source_afterimage;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::{path::Path, process::Command};
@@ -18,6 +24,9 @@ const T07_LOCK_BYTES: usize = 96228;
 const T07_LOCK_SHA: &str = "d6ae7d6cfee09ca6cfdbffa6faaa7eb955d38d6de38b7d8d7c858c2491b2019f";
 const T07_IDNA_EDGE: usize = 70349;
 const T07_TEXT_EDGE: usize = 70373;
+const T03_READER_PATH: &str = "docs/rust-rewrite/t03/source-successor-v1.rs";
+const T09_T03_READER_SOURCE: &str = include_str!("t09-t03-reader-afterimage.json");
+const T09_T03_READER_SHA: &str = "e4113304ad4054a298f51cf2fabccd1749b2c423560c4e3c7bff9928fa4a5d39";
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -168,12 +177,19 @@ fn project_row(row: &Row, current: &[u8]) -> Result<Vec<u8>> {
         .then(|| t07_codec_lock_prior(current))
         .transpose()?;
     let current = lock_prior.as_deref().unwrap_or(current);
-    let preceding = matches!(
-        row.path.as_str(),
-        a11_replay_source::NATIVE_READER | a11_replay_source::SHARED_READER
-    )
-    .then(|| a11_replay_source::prior(&row.path, current))
-    .transpose()?;
+    let preceding = match row.path.as_str() {
+        a11_replay_source::NATIVE_READER | a11_replay_source::SHARED_READER => {
+            Some(a11_replay_source::prior(&row.path, current)?)
+        }
+        T03_READER_PATH => Some(source_afterimage::prior(
+            T09_T03_READER_SOURCE,
+            T09_T03_READER_SHA,
+            &row.path,
+            current,
+            0o644,
+        )?),
+        _ => None,
+    };
     let current = preceding.as_deref().unwrap_or(current);
     need(
         current.len() == row.current.bytes,
