@@ -1319,18 +1319,51 @@ impl RawGateway {
         Ok(gateway)
     }
     pub async fn stdio(self) -> Result<()> {
+        self.stdio_with_io(
+            tokio::io::stdin(),
+            tokio::io::stdout(),
+            tokio_util::sync::CancellationToken::new(),
+        )
+        .await
+    }
+
+    /// Serve MCP over caller-owned streams and close the upstream session on exit.
+    ///
+    /// Cancellation stops the stdio service without waiting for input EOF.
+    pub async fn stdio_with_io<I, O>(
+        self,
+        input: I,
+        output: O,
+        cancel: tokio_util::sync::CancellationToken,
+    ) -> Result<()>
+    where
+        I: tokio::io::AsyncRead + Unpin,
+        O: tokio::io::AsyncWrite + Unpin,
+    {
         let wire: std::sync::Arc<std::sync::Mutex<WireState>> = Default::default();
+        let stop = cancel.child_token();
+        let _stop_on_drop = stop.clone().drop_guard();
+        let forwarding = std::sync::Arc::new(tokio::sync::RwLock::new(()));
         let handler = RawForwarder {
             gateway: self.clone(),
             wire: wire.clone(),
+            stop: stop.clone(),
+            forwarding: forwarding.clone(),
         };
-        let result = stdio_handler(
+        let result = stdio_handler_io(
             handler,
             std::sync::Arc::new(self.catalogs.clone()),
             wire,
             crate::output_limits::OutputLimits::HTTP,
+            cancel,
+            input,
+            output,
         )
         .await;
+        // The SDK's response drain can finish before its handler tasks. Stop
+        // and join their HTTP futures before retiring the shared session.
+        stop.cancel();
+        let _drained = forwarding.write().await;
         self.close().await?;
         result
     }
@@ -1371,6 +1404,8 @@ impl RawGateway {
 #[derive(Clone)]
 struct RawForwarder {
     gateway: RawGateway,
+    stop: tokio_util::sync::CancellationToken,
+    forwarding: std::sync::Arc<tokio::sync::RwLock<()>>,
     wire: std::sync::Arc<std::sync::Mutex<WireState>>,
 }
 impl RawForwarder {
@@ -1381,6 +1416,18 @@ impl RawForwarder {
             .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))
     }
     async fn forward<T: serde::de::DeserializeOwned>(
+        &self,
+        context: rmcp::service::RequestContext<rmcp::RoleServer>,
+    ) -> std::result::Result<T, rmcp::ErrorData> {
+        let _active = self.forwarding.read().await;
+        tokio::select! {
+            biased;
+            _ = self.stop.cancelled() => Err(rmcp::ErrorData::internal_error("gateway stopping", None)),
+            result = self.exchange_rpc(context) => result,
+        }
+    }
+
+    async fn exchange_rpc<T: serde::de::DeserializeOwned>(
         &self,
         context: rmcp::service::RequestContext<rmcp::RoleServer>,
     ) -> std::result::Result<T, rmcp::ErrorData> {
