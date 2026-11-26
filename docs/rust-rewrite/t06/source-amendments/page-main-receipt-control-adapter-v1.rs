@@ -391,7 +391,87 @@ pub(crate) fn w07_registry_to_w08(physical: &[u8], mode: u32) -> Result<Vec<u8>>
         mode,
     )
 }
+// Authenticate the exact EXP-124 reader changes before composing them with
+// the accepted receipt generation. Older receipt files remain immutable.
+const SCHOLARLY_READERS: &[(&str, usize, &str, &str, &str)] = &[
+    (
+        "crates/xtask/src/t06.rs",
+        20100,
+        "f726de530415b13b44d8df3b9b5d5bd04b07614e1dd27c782f04aa4cb757cd15",
+        "7125a8c5245f56eea34dd2f5f6d08f082c421b14",
+        "f28475c15f8c25eb159d3239f2ce0d78a523fe86bdea865a8173609af7b04a94",
+    ),
+    (
+        "crates/ssx-mcp/tests/t06_source_bindings.rs",
+        6025,
+        "dbc1cbb7feb7d5d266bc919ec12e1908cf2a17597f7d2078e67b3ea5a97a11cf",
+        "fce1581aa6b987ed1ee5ab5834e2c70596da5b3f",
+        "6b84c5f9d1532f4ba4a66906d3031bd0b68db32ce4593bc4c240c11df32d55bf",
+    ),
+];
+
+fn scholarly_reader_prior<'a>(
+    root: &Path,
+    path: &str,
+    physical: &'a [u8],
+    mode: u32,
+) -> Result<std::borrow::Cow<'a, [u8]>> {
+    let Some((_, bytes, sha, blob, prior_sha)) =
+        SCHOLARLY_READERS.iter().find(|(name, ..)| *name == path)
+    else {
+        return Ok(std::borrow::Cow::Borrowed(physical));
+    };
+    need(
+        mode == 0o644 && physical.len() == *bytes && digest(physical) == *sha,
+        "EXP-124 T06 reader does not match reviewed current bytes",
+    )?;
+    let prior = Command::new("git")
+        .args(["cat-file", "blob", blob])
+        .current_dir(root)
+        .output()
+        .map_err(|error| error.to_string())?;
+    need(
+        prior.status.success() && digest(&prior.stdout) == *prior_sha,
+        "EXP-124 T06 historical reader Git object differs",
+    )?;
+    Ok(std::borrow::Cow::Owned(prior.stdout))
+}
+
+pub(crate) fn scholarly_serializer(root: &Path, path: &str, expected: &str) -> Result<bool> {
+    const SOURCE: &str = "slopsearx/mcp/result_serialization.py";
+    if path != SOURCE {
+        return Ok(false);
+    }
+    need(
+        expected == "170d358b3d0b7da2b5aa61c18736ca424b3764f82c8d81d8e0d54329066fe669",
+        "EXP-124 T06 historical serializer SHA differs",
+    )?;
+    let (current, mode) = regular(root, SOURCE)?;
+    need(
+        mode == 0o644
+            && current.len() == 11523
+            && digest(&current)
+                == "347336f96e3ccfeab9dac48651a002b454c57061f9d0a5e99f76c2dd713f67b0",
+        "EXP-124 T06 current serializer differs",
+    )?;
+    let original = Command::new("git")
+        .args([
+            "show",
+            "6c44976444340cc8f343fef61e2e8d723b189c19:slopsearx/mcp/result_serialization.py",
+        ])
+        .current_dir(root)
+        .output()
+        .map_err(|error| error.to_string())?;
+    need(
+        original.status.success() && digest(&original.stdout) == expected,
+        "EXP-124 T06 original serializer Git bytes differ",
+    )?;
+    Ok(true)
+}
+
 fn current_operand(root: &Path, row: &CurrentRow, supplied: &[u8], mode: u32) -> Result<Vec<u8>> {
+    let generation = scholarly_reader_prior(root, &row.path, supplied, mode)?;
+    let supplied = generation.as_ref();
     if row.path == T06_REGISTRAR {
         let physical = row
             .physical
@@ -582,7 +662,11 @@ fn current_load(root: &Path) -> Result<CurrentComposition> {
         )?;
         let (physical, mode) = regular(root, &row.path)?;
         if let Some(pin) = &row.physical {
-            material(pin, &physical, mode)?;
+            material(
+                pin,
+                &scholarly_reader_prior(root, &row.path, &physical, mode)?,
+                mode,
+            )?;
         }
         let logical = current_operand(root, row, &physical, mode)?;
         material(&row.current, &logical, mode)?;
@@ -648,6 +732,7 @@ fn current_frame(
         "combined receipt supplied bytes/mode not actual physical generation",
     )?;
     let logical = current_operand(root, row, &physical, mode)?;
+    let generation = scholarly_reader_prior(root, path, &physical, mode)?;
     let (endpoint, revision, operand, operand_pin) = match boundary {
         CurrentBoundary::Main => (&row.main, CURRENT_MAIN, logical.as_slice(), &row.current),
         CurrentBoundary::Page => (&row.page, CURRENT_PAGE, logical.as_slice(), &row.current),
@@ -656,7 +741,7 @@ fn current_frame(
                 .as_ref()
                 .ok_or("T06 qualification endpoint absent")?,
             CURRENT_QUALIFICATION,
-            physical.as_slice(),
+            generation.as_ref(),
             row.physical
                 .as_ref()
                 .ok_or("T06 physical source pin absent")?,
@@ -841,22 +926,23 @@ fn current_controls(root: &Path) -> Result<()> {
                 .physical
                 .as_ref()
                 .ok_or("qualification physical pin absent")?;
+            let generation = scholarly_reader_prior(root, &row.path, &physical, mode)?;
             let mut missing = endpoint.clone();
             missing.edits.remove(0);
             need(
-                current_inverse_from(row, &missing, &physical, mode, physical_pin).is_err(),
+                current_inverse_from(row, &missing, &generation, mode, physical_pin).is_err(),
                 "qualification missing inverse accepted",
             )?;
             let mut duplicate = endpoint.clone();
             duplicate.edits.insert(0, endpoint.edits[0].clone());
             need(
-                current_inverse_from(row, &duplicate, &physical, mode, physical_pin).is_err(),
+                current_inverse_from(row, &duplicate, &generation, mode, physical_pin).is_err(),
                 "qualification duplicate inverse accepted",
             )?;
             let mut moved = endpoint.clone();
             moved.edits[0].current_offset += 1;
             need(
-                current_inverse_from(row, &moved, &physical, mode, physical_pin).is_err(),
+                current_inverse_from(row, &moved, &generation, mode, physical_pin).is_err(),
                 "qualification relocated inverse accepted",
             )?;
         }

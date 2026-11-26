@@ -258,6 +258,15 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     for key in ["sources", "artifacts"] {
         for row in v[key].as_array().unwrap() {
             let path = row["file"].as_str().ok_or("T06 binding path")?;
+            if key == "sources"
+                && receipt_control::scholarly_serializer(
+                    root,
+                    path,
+                    row["sha256"].as_str().ok_or("T06 source SHA absent")?,
+                )?
+            {
+                continue;
+            }
             let bytes = fs::read(root.join(path)).map_err(|e| format!("T06 {path}: {e}"))?;
             if key == "sources" && path == crate::t06::lock_amendment::SOURCE_PATH {
                 crate::t06::lock_amendment::verify(

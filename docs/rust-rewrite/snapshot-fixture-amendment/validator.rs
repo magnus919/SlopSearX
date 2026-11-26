@@ -354,7 +354,9 @@ pub(crate) fn w03(root: &Path, row: &Value) -> Result<Option<Vec<u8>>> {
         return scholarly_prior_sha(
             root,
             path,
-            row["sha256"].as_str().ok_or("EXP-124 W03 source SHA absent")?,
+            row["sha256"]
+                .as_str()
+                .ok_or("EXP-124 W03 source SHA absent")?,
         );
     }
     let Some(doc) = load_for_source(root, path)? else {
