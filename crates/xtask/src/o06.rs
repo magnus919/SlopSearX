@@ -392,7 +392,7 @@ fn checkout_with(
 // Exact reviewed source assets: binary formats are never treated as UTF8 source.
 const A05_ASSET_MANIFEST: &str = "docs/rust-rewrite/a05/source-assets.json";
 const A05_ASSET_MANIFEST_SHA256: &str =
-    "a04b55d47739d0caab79a25df573346850594849baa5e9265071f758a8053afa";
+    "a3dd73ab1ff72e800b5cd6ec242d14a9f2bb1ebd70d57569f199a4da81ec9980";
 const A05_MAX_ASSET_BYTES: u64 = 5_869_813;
 // Finite CPython Unicode16 source provenance; no directory-prefix exemption.
 const F05_PYTHON_TEXT_ASSET_PATHS: [&str; 8] = [
@@ -641,7 +641,7 @@ fn hygiene(root: &Path) -> Result<()> {
         AssetPolicy {
             path: A05_ASSET_MANIFEST,
             digest: A05_ASSET_MANIFEST_SHA256,
-            count: 208,
+            count: 209,
         },
     )
 }

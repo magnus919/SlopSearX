@@ -303,6 +303,92 @@ fn rmcp_security_prior(path: &str, physical: &[u8]) -> Result<Vec<u8>> {
     inverse(&doc["rows"][index], physical, "0644", RMCP_ROWS[index].1)
 }
 
+const RMCP_AUTH_DIAGNOSTICS: &str =
+    include_str!("../../../docs/rust-rewrite/t08a/rmcp-auth-diagnostics-successor.json");
+const RMCP_AUTH_DIAGNOSTICS_SHA: &str =
+    "f4116ccda0db1d057200475a266e2041f283272b99c6b59ec8cb1758c6e726cf";
+const RMCP_AUTH_PARENT: &str = include_str!("../../../docs/rust-rewrite/t08a/rmcp-provenance.json");
+const RMCP_AUTH_ROWS: [(&str, usize); 2] = [
+    ("vendor/rmcp/src/transport/auth.rs", 28),
+    ("vendor/rmcp/src/transport/auth/metadata_resolver.rs", 1),
+];
+
+const RMCP_AUTH_REDIRECT: &str =
+    include_str!("../../../docs/rust-rewrite/t08a/rmcp-auth-redirect-successor.json");
+const RMCP_AUTH_REDIRECT_SHA: &str =
+    "4369485b29c893e40c3f339c544976a5f27863feb339191e28410642a061b399";
+const RMCP_AUTH_REDIRECT_EDITS: usize = 13;
+
+fn rmcp_auth_redirect_prior(path: &str, current: &[u8], mode: &str) -> Result<Vec<u8>> {
+    need(
+        digest(RMCP_AUTH_REDIRECT.as_bytes()) == RMCP_AUTH_REDIRECT_SHA,
+        "compiled RMCP auth redirect patch identity",
+    )?;
+    let patch: Value = serde_json::from_str(RMCP_AUTH_REDIRECT).map_err(|e| e.to_string())?;
+    let row = &patch["row"];
+    need(
+        patch["schema"] == "RMCP_AUTH_REDIRECT_SUCCESSOR_V1"
+            && patch["prior_diagnostics_sha256"] == RMCP_AUTH_DIAGNOSTICS_SHA
+            && path == "vendor/rmcp/src/transport/auth.rs"
+            && row["path"] == path,
+        "closed RMCP auth redirect patch and predecessor",
+    )?;
+    let prior = inverse(row, current, mode, RMCP_AUTH_REDIRECT_EDITS)?;
+    let mut altered = current.to_vec();
+    altered.push(b'\n');
+    need(
+        inverse(row, &altered, mode, RMCP_AUTH_REDIRECT_EDITS).is_err(),
+        "altered RMCP auth redirect source rejected",
+    )?;
+    Ok(prior)
+}
+
+fn rmcp_auth_diagnostics_controls(root: &Path) -> Result<()> {
+    need(
+        digest(RMCP_AUTH_DIAGNOSTICS.as_bytes()) == RMCP_AUTH_DIAGNOSTICS_SHA,
+        "compiled RMCP auth diagnostic patch identity",
+    )?;
+    let patch: Value = serde_json::from_str(RMCP_AUTH_DIAGNOSTICS).map_err(|e| e.to_string())?;
+    need(
+        patch["schema"] == "RMCP_AUTH_DIAGNOSTICS_SUCCESSOR_V1"
+            && patch["prior_provenance_sha256"] == digest(RMCP_AUTH_PARENT.as_bytes())
+            && patch["rows"]
+                .as_array()
+                .is_some_and(|rows| rows.len() == RMCP_AUTH_ROWS.len()),
+        "closed RMCP auth diagnostic patch and predecessor",
+    )?;
+    let parent: Value = serde_json::from_str(RMCP_AUTH_PARENT).map_err(|e| e.to_string())?;
+    for (index, (path, edit_count)) in RMCP_AUTH_ROWS.into_iter().enumerate() {
+        let row = &patch["rows"][index];
+        need(
+            row["path"] == path,
+            "exact RMCP auth diagnostic source path",
+        )?;
+        let (bytes, physical_mode) = regular_material(root, path)?;
+        let mode = opened_source_mode(root, path, physical_mode)?;
+        let bytes = if path == "vendor/rmcp/src/transport/auth.rs" {
+            rmcp_auth_redirect_prior(path, &bytes, mode)?
+        } else {
+            bytes
+        };
+        let prior = inverse(row, &bytes, mode, edit_count)?;
+        let member = path
+            .strip_prefix("vendor/rmcp/")
+            .ok_or("RMCP member path")?;
+        need(
+            parent["files"][member] == digest(&prior),
+            "RMCP auth diagnostic predecessor matches package provenance",
+        )?;
+        let mut altered = bytes;
+        altered.push(b'\n');
+        need(
+            inverse(row, &altered, mode, edit_count).is_err(),
+            "altered RMCP auth diagnostic source rejected",
+        )?;
+    }
+    Ok(())
+}
+
 // One additive std-only health package; immutable CLI lock capsule stays unchanged.
 pub(crate) const HEALTH_LOCK_SHA: &str =
     "53fb4619c6e4fd12eae7928073c5062929498d2db29b270e456514a855a5bdd9";
@@ -710,6 +796,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
     issue903_config_controls(root)?;
     w07_test_dependency_source_successor::controls(root)?;
     rmcp_security_controls(root)?;
+    rmcp_auth_diagnostics_controls(root)?;
     let (actual, mode) = regular_material(root, "Cargo.lock")?;
     let projected_prior_lock = project_issue903_config(root, "Cargo.lock", &actual, mode)?;
     let accepted = optional_chrono_prior("Cargo.lock", &projected_prior_lock, "0644")?;

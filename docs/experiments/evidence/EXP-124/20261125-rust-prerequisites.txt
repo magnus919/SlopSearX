@@ -1,0 +1,22 @@
+Rust 1.99.0 aarch64-apple-darwin. Main 107e778f3585a8bef5e99396df5a3fac5d322e3c. Candidate 3d0bcb1cb3413964ff687abc28e4b12f8ed30043.
+
+Initial attempt: offline dependency resolution, exit 101.
+package:   /Volumes/tank01/magnus/codex-scratch/slopsearx-exp124-20261124/vendor/ssx-cli-hyper/Cargo.toml
+workspace: /Volumes/tank01/magnus/codex-scratch/slopsearx-exp124-20261124/Cargo.toml
+error: failed to select a version for the requirement `url = "=2.5.9"` (locked to 2.5.9)
+candidate versions found which didn't match: 2.5.8
+location searched: crates.io index
+required by package `ssx-application v0.1.0 (/Volumes/tank01/magnus/codex-scratch/slopsearx-exp124-20261124/crates/ssx-application)`
+note: offline mode (via `--offline`) can sometimes cause surprising resolution failures
+help: if this error is too confusing you may wish to retry without `--offline`
+
+Final command, exit 0: cargo test --locked -j 2 -p xtask --bin xtask -- snapshot_fixture_amendment_actual missing_empty_malformed_stale_and_incomplete_fail scholarly_successor --test-threads=1
+running 6 tests
+test a06::tests::scholarly_successor_a06_binds_original_test_artifact ... ok
+test a06::tests::snapshot_fixture_amendment_actual_artifact_consumer ... ok
+test snapshot_fixture_amendment::tests::scholarly_successor_rejects_wrong_pin_and_unreviewed_source ... ok
+test snapshot_fixture_amendment::tests::snapshot_fixture_amendment_actual_f01_source_consumer ... ok
+test tests::missing_empty_malformed_stale_and_incomplete_fail ... ok
+test w03::snapshot_fixture_tests::snapshot_fixture_amendment_actual_w03_original_source_consumer ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 275 filtered out; finished in 10.02s

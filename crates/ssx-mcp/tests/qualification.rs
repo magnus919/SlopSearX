@@ -145,6 +145,53 @@ async fn real_streamable_http_bearer_and_stateless_contract() -> Result<()> {
     Ok(())
 }
 #[tokio::test]
+async fn gateway_paths_and_queries_survive_outbound_http() -> Result<()> {
+    use axum::{Router, extract::Request, http::Method, middleware};
+    use ssx_mcp::opaque::RawGateway;
+    use std::sync::{Arc, Mutex};
+
+    let prefix = "/tenant%2fedge%2Fname";
+    let ct = CancellationToken::new();
+    let observed = Arc::new(Mutex::new(Vec::new()));
+    let captured = Arc::clone(&observed);
+    let router = http_router(Registry::synthetic(), None, ct.clone()).map(|router| {
+        Router::new()
+            .nest(prefix, router)
+            .layer(middleware::from_fn(
+                move |request: Request, next: middleware::Next| {
+                    let captured = Arc::clone(&captured);
+                    async move {
+                        if request.method() == Method::POST {
+                            let target =
+                                request.uri().path_and_query().unwrap().as_str().to_owned();
+                            captured.lock().unwrap().push(target);
+                        }
+                        next.run(request).await
+                    }
+                },
+            ))
+    });
+    let host = Host::start(router, ct).await?;
+    let deadline = Duration::from_secs(3);
+    for suffix in ["/mcp", "/mcp?", "/mcp?arg=%2f&arg=%2F&bare&empty="] {
+        let expected = format!("{prefix}{suffix}");
+        let url = format!("http://{}/discard/..{expected}", host.address);
+
+        let raw = RawGateway::connect(url.clone(), None, deadline).await?;
+        raw.close().await?;
+        let targets = std::mem::take(&mut *observed.lock().unwrap());
+        assert_eq!(targets, vec![expected.as_str(); 6], "raw gateway");
+
+        let typed = Gateway::connect(url, None, deadline).await?;
+        typed.shutdown().await?;
+        let targets = std::mem::take(&mut *observed.lock().unwrap());
+        assert_eq!(targets, vec![expected.as_str(); 6], "typed gateway");
+    }
+    host.shutdown().await?;
+    Ok(())
+}
+
+#[tokio::test]
 async fn real_stdio_gateway_forwards_to_remote_and_owns_session() -> Result<()> {
     let ct = CancellationToken::new();
     let registry = Registry::synthetic();

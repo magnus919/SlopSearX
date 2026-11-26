@@ -51,6 +51,10 @@ pub enum OAuthHttpRedirectPolicy {
     Follow,
     /// Return the redirect response without following its location.
     Stop,
+    /// Require the injected client to preserve the request method and follow at most
+    /// five redirects within the origin, allowing its default-port HTTPS upgrade.
+    /// An adapter that cannot enforce this policy must reject the request.
+    SourceWithinOrigin,
 }
 
 /// A complete outbound HTTP operation requested by the OAuth implementation.
@@ -80,6 +84,8 @@ pub type OAuthHttpClientError = Box<dyn std::error::Error + Send + Sync>;
 
 #[derive(Debug, Error)]
 enum OAuthHttpError {
+    #[error("the source OAuth redirect policy requires a compatible injected client")]
+    UnsupportedSourceRedirectPolicy,
     #[error("OAuth HTTP response body exceeds {0} bytes")]
     ResponseBodyTooLarge(usize),
     #[error("unexpected HTTP status {0}")]
@@ -159,7 +165,7 @@ impl ReqwestOAuthHttpClient {
         let follow = reqwest::redirect::Policy::custom(move |attempt| {
             if !policy.allows_url(attempt.url()) {
                 let error = OAuthHttpError::DisallowedAddress(attempt.url().clone());
-                warn!("{error}");
+                warn!("OAuth redirect rejected by address policy");
                 attempt.error(error)
             } else if attempt.previous().len() > MAX_OAUTH_REDIRECTS {
                 attempt.error(OAuthHttpError::TooManyRedirects(MAX_OAUTH_REDIRECTS))
@@ -186,6 +192,10 @@ impl OAuthHttpClient for ReqwestOAuthHttpClient {
             let client = match redirect_policy {
                 OAuthHttpRedirectPolicy::Follow => &self.follow_redirects,
                 OAuthHttpRedirectPolicy::Stop => &self.stop_redirects,
+                OAuthHttpRedirectPolicy::SourceWithinOrigin => {
+                    return Err(Box::new(OAuthHttpError::UnsupportedSourceRedirectPolicy)
+                        as OAuthHttpClientError);
+                }
             };
             let request = reqwest::Request::try_from(request)
                 .map_err(|error| Box::new(error) as OAuthHttpClientError)?;
@@ -193,7 +203,7 @@ impl OAuthHttpClient for ReqwestOAuthHttpClient {
                 && !policy.allows_url(request.url())
             {
                 let error = OAuthHttpError::DisallowedAddress(request.url().clone());
-                warn!("{error}");
+                warn!("OAuth request rejected by address policy");
                 return Err(Box::new(error) as OAuthHttpClientError);
             }
             let response = client
@@ -1245,7 +1255,7 @@ struct InitialScopeState {
 /// oauth2 auth manager
 pub struct AuthorizationManager {
     http_client: Arc<dyn OAuthHttpClient>,
-    // Preserve legacy reqwest refresh behavior without weakening custom clients.
+    // The legacy refresh policy also carries the explicit source profile across state transitions.
     refresh_redirect_policy: OAuthHttpRedirectPolicy,
     metadata: Option<AuthorizationMetadata>,
     oauth_client: Option<OAuthClient>,
@@ -1451,8 +1461,8 @@ impl AuthorizationManager {
 
         let url = match Url::parse(value).or_else(|_| base_url.join(value)) {
             Ok(url) => url,
-            Err(error) => {
-                debug!("failed to parse resource metadata value `{value}` as URL: {error}");
+            Err(_) => {
+                debug!("failed to parse resource metadata URL");
                 return None;
             }
         };
@@ -1461,15 +1471,13 @@ impl AuthorizationManager {
             return Some(url);
         }
         if base_url.scheme() == "https" && url.scheme() != "https" {
-            warn!("rejecting resource metadata URL `{url}`: downgrades `{base_url}` from https");
+            warn!("rejecting resource metadata URL that downgrades HTTPS");
             return None;
         }
         if Self::is_allowed_metadata_url(base_url, &url, allow_private) {
             Some(url)
         } else {
-            warn!(
-                "rejecting resource metadata URL `{url}`: not same-origin with `{base_url}` and not an allowed metadata host"
-            );
+            warn!("rejecting cross-origin resource metadata URL for a disallowed host");
             None
         }
     }
@@ -1586,6 +1594,23 @@ impl AuthorizationManager {
         Ok(manager)
     }
 
+    /// Request the source redirect profile on every OAuth operation using this manager.
+    ///
+    /// Configure an injected [`OAuthHttpClient`] that implements
+    /// [`OAuthHttpRedirectPolicy::SourceWithinOrigin`] before starting OAuth.
+    /// The built-in reqwest adapter rejects this profile before sending a request.
+    pub fn use_source_within_origin_redirects(&mut self) {
+        self.refresh_redirect_policy = OAuthHttpRedirectPolicy::SourceWithinOrigin;
+    }
+
+    fn oauth_redirect_policy(&self, default: OAuthHttpRedirectPolicy) -> OAuthHttpRedirectPolicy {
+        if self.refresh_redirect_policy == OAuthHttpRedirectPolicy::SourceWithinOrigin {
+            self.refresh_redirect_policy
+        } else {
+            default
+        }
+    }
+
     /// Set the scope upgrade configuration
     pub fn set_scope_upgrade_config(&mut self, config: ScopeUpgradeConfig) {
         self.scope_upgrade_config = config;
@@ -1676,8 +1701,6 @@ impl AuthorizationManager {
                         // portable across authorization servers — but the tokens
                         // were minted by the previous AS and must not be reused.
                         tracing::warn!(
-                            stored_issuer,
-                            current_issuer,
                             "authorization server issuer changed; discarding tokens but keeping portable CIMD client ID"
                         );
                         self.credential_store
@@ -1696,8 +1719,6 @@ impl AuthorizationManager {
                     }
 
                     tracing::warn!(
-                        stored_issuer,
-                        current_issuer,
                         "authorization server issuer changed; clearing stored credentials bound to the previous issuer"
                     );
                     self.credential_store.clear().await?;
@@ -1729,7 +1750,7 @@ impl AuthorizationManager {
             stop_redirects: http_client,
             address_policy: None,
         });
-        self.refresh_redirect_policy = OAuthHttpRedirectPolicy::Follow;
+        self.refresh_redirect_policy = self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Follow);
         Ok(())
     }
 
@@ -1838,7 +1859,7 @@ impl AuthorizationManager {
         if scopes.is_empty() {
             return;
         }
-        debug!("WWW-Authenticate challenge contains scope: {scope}");
+        debug!("WWW-Authenticate challenge contains scope");
         *self.www_auth_scopes.write().await = scopes;
     }
 
@@ -2008,7 +2029,7 @@ impl AuthorizationManager {
             .http_client
             .execute(OAuthHttpRequest::new(
                 request,
-                OAuthHttpRedirectPolicy::Follow,
+                self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Follow),
             ))
             .await
         {
@@ -2357,10 +2378,7 @@ impl AuthorizationManager {
         let mut upgraded_scopes = Self::compute_scope_union(&current_scopes, required_scope);
         self.add_offline_access_if_supported(&mut upgraded_scopes);
 
-        debug!(
-            "Requesting scope upgrade: current={:?}, required={}, union={:?}",
-            current_scopes, required_scope, upgraded_scopes
-        );
+        debug!("Requesting scope upgrade");
 
         let scope_refs: Vec<&str> = upgraded_scopes.iter().map(|s| s.as_str()).collect();
         self.get_authorization_url(&scope_refs).await
@@ -2429,7 +2447,7 @@ impl AuthorizationManager {
         csrf_token: &str,
         received_issuer: Option<&str>,
     ) -> Result<OAuthTokenResponse, AuthError> {
-        debug!("start exchange code for token: {:?}", code);
+        debug!("start exchange code for token");
         let oauth_client = self
             .oauth_client
             .as_ref()
@@ -2454,7 +2472,7 @@ impl AuthorizationManager {
         // Reconstruct the PKCE verifier
         let pkce_verifier = stored_state.into_pkce_verifier();
 
-        debug!("client_id: {:?}", oauth_client.client_id());
+        debug!("configured OAuth client for code exchange");
 
         // exchange token
         let token_result = match oauth_client
@@ -2463,7 +2481,7 @@ impl AuthorizationManager {
             .add_extra_param("resource", self.oauth_resource().await)
             .request_async(&OAuth2HttpClient {
                 client: self.http_client.as_ref(),
-                redirect_policy: OAuthHttpRedirectPolicy::Stop,
+                redirect_policy: self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Stop),
             })
             .await
         {
@@ -2486,7 +2504,7 @@ impl AuthorizationManager {
             }
         };
 
-        debug!("exchange token result: {:?}", token_result);
+        debug!("code token exchange completed");
 
         // SEP-2350: an omitted `scope` means the grant equals the request (RFC 6749 §5.1).
         let response_scopes = token_result
@@ -2591,8 +2609,8 @@ impl AuthorizationManager {
                 tracing::info!("Refreshed access token.");
                 Ok(new_creds.access_token().secret().to_string())
             }
-            Err(e @ (AuthError::AuthorizationRequired | AuthError::TokenRefreshRejected(_))) => {
-                tracing::warn!(error = %e, "Token refresh not possible, re-authorization required.");
+            Err(AuthError::AuthorizationRequired | AuthError::TokenRefreshRejected(_)) => {
+                tracing::warn!("Token refresh not possible, re-authorization required.");
                 Err(AuthError::AuthorizationRequired)
             }
             Err(e) => Err(e),
@@ -2615,8 +2633,6 @@ impl AuthorizationManager {
         // request authenticated as this client.
         if stored_credentials.client_id != oauth_client.client_id().as_str() {
             tracing::warn!(
-                stored_client_id = stored_credentials.client_id.as_str(),
-                configured_client_id = oauth_client.client_id().as_str(),
                 "stored credentials belong to a different client; reauthorization required"
             );
             return Err(AuthError::AuthorizationRequired);
@@ -2665,15 +2681,13 @@ impl AuthorizationManager {
                 RequestTokenError::ServerResponse(response)
                     if response.error() == &BasicErrorResponseType::InvalidGrant =>
                 {
-                    if let Err(store_error) = self
+                    if self
                         .credential_store
                         .on_refresh_token_rejected(&stored_credentials)
                         .await
+                        .is_err()
                     {
-                        tracing::warn!(
-                            error = %store_error,
-                            "Failed to handle rejected refresh token"
-                        );
+                        tracing::warn!("Failed to handle rejected refresh token");
                     }
                     return Err(AuthError::TokenRefreshRejected(error.to_string()));
                 }
@@ -2814,7 +2828,7 @@ impl AuthorizationManager {
         discovery_url: &Url,
         expected_issuer: Option<&str>,
     ) -> Result<Option<AuthorizationMetadata>, AuthError> {
-        debug!("discovery url: {:?}", discovery_url);
+        debug!("fetching authorization server metadata");
         let response = self
             .discovery_get(discovery_url)
             .await
@@ -2834,8 +2848,8 @@ impl AuthorizationManager {
                 )?;
                 Ok(Some(metadata))
             }
-            Err(err) => {
-                debug!("Failed to parse metadata for {}: {}", discovery_url, err);
+            Err(_) => {
+                debug!("failed to parse authorization server metadata");
                 Ok(None) // malformed JSON ⇒ try next candidate
             }
         }
@@ -3001,9 +3015,7 @@ impl AuthorizationManager {
         }
 
         if candidates.is_empty() {
-            debug!(
-                "protected resource metadata at {resource_metadata_url} names no authorization server"
-            );
+            debug!("protected resource metadata names no authorization server");
             return Ok(None);
         }
 
@@ -3012,8 +3024,8 @@ impl AuthorizationManager {
                 Ok(url) => url,
                 Err(_) => match resource_metadata_url.join(candidate) {
                     Ok(url) => url,
-                    Err(e) => {
-                        debug!("Failed to resolve authorization server URL `{candidate}`: {e}");
+                    Err(_) => {
+                        debug!("failed to resolve authorization server metadata URL");
                         continue;
                     }
                 },
@@ -3024,7 +3036,7 @@ impl AuthorizationManager {
                 || (matches!(candidate_url.host(), Some(Host::Ipv6(ip)) if ip.is_unique_local())
                     && Self::is_same_origin(&self.base_url, &candidate_url));
             if !Self::is_allowed_metadata_url(&self.base_url, &candidate_url, allow_private) {
-                warn!("rejecting authorization server metadata URL `{candidate_url}`");
+                warn!("rejecting authorization server metadata URL");
                 continue;
             }
 
@@ -3266,10 +3278,7 @@ impl AuthorizationManager {
         resource_metadata_url: &Url,
         origin: ResourceMetadataUrlOrigin,
     ) -> Result<Option<ResourceServerMetadata>, AuthError> {
-        debug!(
-            "resource metadata discovery url: {:?}",
-            resource_metadata_url
-        );
+        debug!("fetching protected resource metadata");
         let response = self
             .discovery_get(resource_metadata_url)
             .await
@@ -3298,8 +3307,8 @@ impl AuthorizationManager {
     ) -> Result<Option<ResourceServerMetadata>, AuthError> {
         let metadata = match serde_json::from_slice::<ResourceServerMetadata>(body) {
             Ok(metadata) => metadata,
-            Err(e) => {
-                debug!("failed to parse resource metadata as JSON: {}", e);
+            Err(_) => {
+                debug!("failed to parse resource metadata as JSON");
                 return Ok(None);
             }
         };
@@ -3328,9 +3337,7 @@ impl AuthorizationManager {
                 // Nothing advertised this url, so its answer only rules out this
                 // candidate.
                 ResourceMetadataUrlOrigin::WellKnownGuess => {
-                    debug!(
-                        "response at {resource_metadata_url} is not a protected resource metadata document"
-                    );
+                    debug!("response is not a protected resource metadata document");
                     Ok(None)
                 }
             };
@@ -3348,9 +3355,7 @@ impl AuthorizationManager {
                     })
                 }
                 ResourceMetadataUrlOrigin::WellKnownGuess => {
-                    debug!(
-                        "document at {resource_metadata_url} is not this resource's metadata: {reason}"
-                    );
+                    debug!("document is not this resource's metadata");
                     Ok(None)
                 }
             };
@@ -3384,6 +3389,7 @@ impl AuthorizationManager {
     }
 
     async fn discovery_get(&self, url: &Url) -> Result<HttpResponse, OAuthHttpClientError> {
+        let redirect_policy = self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Stop);
         let mut current_url = url.clone();
         for _ in 0..MAX_OAUTH_REDIRECTS {
             let request = oauth2::http::Request::builder()
@@ -3393,13 +3399,12 @@ impl AuthorizationManager {
                 .body(Vec::new())
                 .map_err(|error| Box::new(error) as OAuthHttpClientError)?;
             let response = self
-                .discovery_request(OAuthHttpRequest::new(
-                    request,
-                    OAuthHttpRedirectPolicy::Stop,
-                ))
+                .discovery_request(OAuthHttpRequest::new(request, redirect_policy))
                 .await?;
 
-            if !response.status().is_redirection() {
+            if redirect_policy == OAuthHttpRedirectPolicy::SourceWithinOrigin
+                || !response.status().is_redirection()
+            {
                 return Ok(response);
             }
 
@@ -3700,7 +3705,7 @@ impl AuthorizationManager {
         let token_result = match request
             .request_async(&OAuth2HttpClient {
                 client: self.http_client.as_ref(),
-                redirect_policy: OAuthHttpRedirectPolicy::Stop,
+                redirect_policy: self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Stop),
             })
             .await
         {
@@ -3729,7 +3734,7 @@ impl AuthorizationManager {
             }
         };
 
-        debug!("client credentials token result: {:?}", token_result);
+        debug!("client credentials token exchange completed");
 
         let granted_scopes: Vec<String> = token_result
             .scopes()
@@ -3823,7 +3828,7 @@ impl AuthorizationManager {
             .http_client
             .execute(OAuthHttpRequest::new(
                 request,
-                OAuthHttpRedirectPolicy::Stop,
+                self.oauth_redirect_policy(OAuthHttpRedirectPolicy::Stop),
             ))
             .await
             .map_err(|e| {
@@ -3851,7 +3856,7 @@ impl AuthorizationManager {
             AuthError::ClientCredentialsError(format!("Failed to parse token response: {e}"))
         })?;
 
-        debug!("client credentials JWT token result: {:?}", token_result);
+        debug!("client credentials JWT token exchange completed");
 
         let granted_scopes: Vec<String> = token_result
             .scopes()

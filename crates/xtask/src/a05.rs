@@ -12,6 +12,50 @@ const COLD_LOGICAL: &str =
     "cold_bootstrap_expires_without_spending_search_deadline_or_leaking_cookies";
 const COLD_HELPER: &str = "adapters::html_helper_tests::cold_bootstrap_expires_without_spending_search_deadline_or_leaking_cookies";
 const COLD_RELOCATION: &str = "d20165844dceae8d12c64bcec6fe0437846bcd971a17535b9daa37513f675fef";
+fn check_t07_idna_provenance(root: &Path) -> Result<()> {
+    let pins = pinned(
+        root,
+        "crates/ssx-source-codecs/provenance/idna2008/input-pins.json",
+        "075aa89b2dec1bbc5918ddb31a003c0f0e8d860df19569129d81764436b065b9",
+    )?;
+    let verify = |row: &Value| -> Result<Vec<u8>> {
+        let path = row["path"].as_str().ok_or("missing T07 IDNA input path")?;
+        let (length, expected) = if row["encoding"] == "gzip" {
+            (&row["archive_bytes"], &row["archive_sha256"])
+        } else {
+            (&row["bytes"], &row["sha256"])
+        };
+        let raw = std::fs::read(root.join(path)).map_err(|error| error.to_string())?;
+        if length.as_u64() != Some(raw.len() as u64)
+            || expected.as_str() != Some(digest(&raw).as_str())
+        {
+            return Err(format!("T07 IDNA source identity changed: {path}"));
+        }
+        Ok(raw)
+    };
+    for input in pins["inputs"].as_array().ok_or("missing T07 IDNA inputs")? {
+        verify(input)?;
+    }
+    let [head, normalization] = pins["generated_tables"]
+        .as_array()
+        .ok_or("missing T07 IDNA tables")?
+        .as_slice()
+    else {
+        return Err("expected two T07 IDNA tables".into());
+    };
+    let head = verify(head)?;
+    let head = head
+        .strip_suffix(b"include!(\"idna2008_normalization_data.rs\");\n")
+        .ok_or("T07 IDNA table split changed")?;
+    let normalization = verify(normalization)?;
+    if pins["assembled_table_sha256"].as_str()
+        != Some(digest(&[head, normalization.as_slice()].concat()).as_str())
+    {
+        return Err("T07 assembled IDNA table changed".into());
+    }
+    Ok(())
+}
+
 fn digest(bytes: &[u8]) -> String {
     Sha256::digest(bytes)
         .iter()
@@ -559,7 +603,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             return Err(format!("A05 codec evidence drift: {path}"));
         }
     }
-    let expected_codec_tests: BTreeSet<_> = coverage["codec_native_tests"]
+    let mut expected_codec_tests: BTreeSet<_> = coverage["codec_native_tests"]
         .as_array()
         .ok_or("missing codec native tests")?
         .iter()
@@ -567,6 +611,17 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         .collect();
     if expected_codec_tests.len() != 71 {
         return Err("A05 codec test inventory incomplete".into());
+    }
+    // Keep the A05 manifest frozen and require the later T07 cases explicitly.
+    for test in [
+        "url_join::tests::url_join_delimiter_guard_matches_unicode16_decomposition_closure",
+        "url_reference::tests::raw_parse_preserves_case_userinfo_and_only_strips_final_params_for_table_schemes",
+        "url_reference::tests::raw_join_preserves_early_returns_empty_delimiters_and_unknown_scheme_rules",
+        "url_reference::tests::public_unsplit_empty_delimiters_are_distinct_from_private_join",
+    ] {
+        if !expected_codec_tests.insert(test) {
+            return Err(format!("A05 codec inventory already includes {test}"));
+        }
     }
     let codec_list = command(
         root,
@@ -614,6 +669,81 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
             .any(|line| !line.contains("0 failed; 0 ignored;"))
     {
         return Err("A05 required codec tests did not execute successfully".into());
+    }
+    check_t07_idna_provenance(root)?;
+    // The T07 profile remains opt-in, so qualify it separately from the default suite.
+    let idna_output = command(
+        root,
+        "cargo",
+        &[
+            "test",
+            "--locked",
+            "-p",
+            "ssx-source-codecs",
+            "--features",
+            "source-idna2008",
+            "--lib",
+            "idna2008::tests::",
+            "--",
+            "--nocapture",
+        ],
+        records,
+    )?;
+    let passed_idna_tests: BTreeSet<_> = idna_output
+        .lines()
+        .filter_map(|line| line.strip_prefix("test ")?.strip_suffix(" ... ok"))
+        .collect();
+    let expected_idna_tests = BTreeSet::from([
+        "idna2008::tests::source_ascii_case_and_nontransitional_sharp_s",
+        "idna2008::tests::source_context_bidi_and_hybrid_version",
+        "idna2008::tests::source_display_recovers_only_ace_and_uses_pinned_lower",
+        "idna2008::tests::source_dots_nfc_and_ordered_failures",
+        "idna2008::tests::source_hangul_and_composition_blocking",
+        "idna2008::tests::source_limits_are_codepoints_then_wire_bytes",
+    ]);
+    if passed_idna_tests != expected_idna_tests {
+        return Err("T07 pinned IDNA2008 cases did not all pass".into());
+    }
+    let gateway_url_output = command(
+        root,
+        "cargo",
+        &[
+            "test",
+            "--locked",
+            "-p",
+            "ssx-source-codecs",
+            "--features",
+            "source-gateway-url",
+            "--lib",
+            "source_url::tests::",
+            "--",
+            "--nocapture",
+        ],
+        records,
+    )?;
+    let passed_gateway_url_tests: BTreeSet<_> = gateway_url_output
+        .lines()
+        .filter_map(|line| line.strip_prefix("test ")?.strip_suffix(" ... ok"))
+        .collect();
+    let expected_gateway_url_tests = BTreeSet::from([
+        "source_url::tests::absent_empty_query_fragment_and_empty_authority_are_not_conflated",
+        "source_url::tests::client_base_raw_path_merge_is_not_urljoin_or_authority_replacement",
+        "source_url::tests::complete_owner_separates_provenance_normalized_fields_and_wire_target",
+        "source_url::tests::join_bracket_prefix_value_errors_do_not_validate_the_colon_port_tail",
+        "source_url::tests::join_inherits_none_but_not_empty_delimiters_and_preserves_source_scheme_tables",
+        "source_url::tests::join_nfkc_value_errors_follow_both_nonempty_operand_splits_only",
+        "source_url::tests::join_resplits_serialized_authority_scheme_and_semicolon_paths",
+        "source_url::tests::quoting_literal_dot_segments_and_utf8_userinfo_follow_source_stages",
+        "source_url::tests::signed_zero_default_and_arbitrary_integer_ports_never_become_u16",
+        "source_url::tests::source_length_controls_host_port_path_validation_precedence",
+        "source_url::tests::source_pattern_matches_display_idna_and_original_integer_ports",
+        "source_url::tests::source_pattern_preserves_failure_order_and_wildcard_boundaries",
+        "source_url::tests::source_pattern_priority_prefers_explicit_ports_and_specific_routes",
+        "source_url::tests::strict_idna_context_bidi_and_lazy_ascii_ace_display_stay_distinct",
+        "source_url::tests::typed_copy_alias_precedence_and_input_provenance",
+    ]);
+    if passed_gateway_url_tests != expected_gateway_url_tests {
+        return Err("T07 source URL cases did not all pass".into());
     }
     let policy: Value = serde_json::from_slice(
         &std::fs::read(root.join("docs/rust-rewrite/a05/source-codec-policy.json"))

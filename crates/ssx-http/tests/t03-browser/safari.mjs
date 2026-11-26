@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { createReadStream, createWriteStream } from 'node:fs';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { createServer, Socket } from 'node:net';
 import { join } from 'node:path';
@@ -68,7 +68,8 @@ async function command(origin, path, method = 'GET', body) {
   return result.value;
 }
 
-const fixture = start(fixturePath, [join(evidence, 'adapter-calls.jsonl'), 'dark', 'contract'], 'fixture');
+const adapterCallsPath = join(evidence, 'adapter-calls.jsonl');
+const fixture = start(fixturePath, [adapterCallsPath, 'dark', 'contract'], 'fixture');
 let fixtureUrl;
 let driver;
 let driverPort;
@@ -150,6 +151,44 @@ try {
   await resultsPage('keyboard', 1);
   await screenshot('keyboard-search');
   receipt.cases.push('keyboard-search');
+
+  // Safari can display today's date in an untouched native control.
+  const unboundedQuery = 'safari-untouched-dates';
+  await navigate('/search?q=' + unboundedQuery + '&engines=openalex&pageno=2');
+  await resultsPage(unboundedQuery, 2);
+  if (!await execute("return document.querySelector('.scope-panel').open")) {
+    const disclosure = await element('.scope-panel summary');
+    await call('/element/' + disclosure + '/click', 'POST', {});
+  }
+  const dateControls = await execute(`
+    const form = document.querySelector('.scope-apply').form;
+    const data = new FormData(form);
+    return ['date_from', 'date_to'].map(name => {
+      const { type, value, defaultValue } = form.elements.namedItem(name);
+      return { name, type, value, defaultValue, submitted: data.getAll(name) };
+    });
+  `);
+  receipt.untouched_dates = { controls: dateControls };
+  assert.deepEqual(dateControls, ['date_from', 'date_to'].map(name => ({
+    name, type: 'date', value: '', defaultValue: '', submitted: [''],
+  })));
+  await screenshot('untouched-date-controls');
+
+  const applyFilters = await element('.scope-apply');
+  await call('/element/' + applyFilters + '/click', 'POST', {});
+  const unboundedResults = await resultsPage(unboundedQuery, 1);
+  assert.equal(unboundedResults.searchParams.get('engines'), 'openalex');
+  const bounds = ['date_from', 'date_to'].map(name => unboundedResults.searchParams.get(name));
+  receipt.untouched_dates.navigation_bounds = bounds;
+  assert(bounds.every(value => value === null || value === ''), 'Safari submitted an untouched date');
+  const unboundedCalls = (await readFile(adapterCallsPath, 'utf8')).trim().split('\n')
+    .map(line => JSON.parse(line))
+    .filter(request => request.query === unboundedQuery)
+    .map(({ engine, page, date_from, date_to }) => ({ engine, page, date_from, date_to }));
+  assert.deepEqual(unboundedCalls, [2, 1].map(page => ({
+    engine: 'openalex', page, date_from: null, date_to: null,
+  })));
+  receipt.cases.push('untouched-date-controls');
 
   await navigate('/search?q=valkey&categories=general');
   await resultsPage('valkey', 1);
