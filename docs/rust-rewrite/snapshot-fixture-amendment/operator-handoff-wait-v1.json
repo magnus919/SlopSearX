@@ -1,0 +1,57 @@
+{
+  "schema": "OPERATOR_HANDOFF_WAIT_SOURCE_V1",
+  "baseline_commit": "369526acf4b0ab95ab1b6f66a90bd8a9542a6a84",
+  "source": {
+    "prior": {
+      "path": "tests/test_coverage_operator_handoff.py",
+      "bytes": 102945,
+      "sha256": "d8c4b3e1d2a73a2dd021c2a7e3a1fecf03676426b0c2a7e6d43d827eb4c5aca8",
+      "mode": "0644",
+      "git_blob": "cdfab98eb0308bacedb83f0dee7e5db85002665c"
+    },
+    "current": {
+      "path": "tests/test_coverage_operator_handoff.py",
+      "bytes": 103874,
+      "sha256": "de7874beabf83fdad2857be78b5d6c6d692ec48d00c77152d3dc1ace6751fada",
+      "mode": "0644",
+      "git_blob": "255bd85e537f940810a8d8b1c3a79bf62734a068"
+    },
+    "edit": {
+      "at": 47576,
+      "remove_utf8": "\n            async def resolve_selector_permits():\n                try:\n                    selector_result.append(\n                        await source_runner._selector_permits(\n                            plan,\n                            worker_result[0].prepared,\n                            map_bytes,\n                            digest(map_bytes),\n                            operation_materials,\n                        )\n                    )\n                except Exception as exc:\n                    selector_result.append(exc)\n\n            selector_worker = threading.Thread(target=lambda: asyncio.run(resolve_selector_permits()))\n            selector_worker.start()\n            selector_request_path = (\n                handoff_root / plan.stage_uuid / \"selector-operation-permits\" / \"requests\" / \"batch.json\"\n            )\n            for _ in range(300):\n                if selector_request_path.exists():\n                    break\n                time.sleep(0.005)\n            if not selector_request_path.exists():\n                selector_worker.join(timeout=2)\n                self.fail(f\"production selector request did not persist: {selector_result!r}\")\n            selector_request_bytes = selector_request_path.read_bytes()\n            selector_error = None\n            try:\n                with mock.patch.object(\n                    collector, \"_local_clock_origin_sha256\", return_value=stage_clock.clock_origin_sha256\n                ):\n                    selector_receipt = authority.PhaseArtifactReceiptIssuer.selector_operation_permits(\n                        root=handoff_root,\n                        inventory_root=inventory_root,\n                        stage_uuid=plan.stage_uuid,\n                        request_id=\"batch\",\n                        request_bytes=selector_request_bytes,\n                        expected_source_closure_sha256=plan.source_closure_sha256,\n                        expected_initial_registration_sha256=source_runner.initial_registration_sha256,\n                        expected_active_registration_sha256=digest(source_runner._active_registration_bytes),\n                        plan=plan,\n                        static_materials=static_materials,\n                        forbidden_stage_uuids=tuple(source_runner.config[\"forbidden_stage_uuids\"]),\n                        now_monotonic=pacer.monotonic(),\n                    )\n            except Exception as exc:\n                selector_error = exc\n                selector_receipt = b\"{}\"\n            selector_response = selector_request_path.parent.parent / \"responses\" / \"batch.receipt\"\n            selector_response.write_bytes(selector_receipt)\n            selector_response.chmod(0o600)\n            selector_pin = selector_request_path.parent.parent / \"pins\" / \"batch.sha256\"\n            selector_pin.write_text(digest(selector_receipt) + \"\\n\", encoding=\"ascii\")\n            selector_pin.chmod(0o600)\n            selector_worker.join(timeout=15)\n            self.assertFalse(selector_worker.is_alive()",
+      "insert_utf8": "            publication_deadline = time.monotonic() + 15\n            handoff_deadline = publication_deadline + 30\n            request_selector_receipt = source_runner.handoff.request\n\n            def bounded_selector_request(**kwargs):\n                kwargs[\"deadline_monotonic\"] = min(kwargs[\"deadline_monotonic\"], handoff_deadline)\n                return request_selector_receipt(**kwargs)\n\n            async def resolve_selector_permits():\n                try:\n                    with mock.patch.object(source_runner.handoff, \"request\", side_effect=bounded_selector_request):\n                        selector_result.append(\n                            await source_runner._selector_permits(\n                                plan,\n                                worker_result[0].prepared,\n                                map_bytes,\n                                digest(map_bytes),\n                                operation_materials,\n                            )\n                        )\n                except Exception as exc:\n                    selector_result.append(exc)\n\n            selector_request_path = (\n                handoff_root / plan.stage_uuid / \"selector-operation-permits\" / \"requests\" / \"batch.json\"\n            )\n            selector_worker = threading.Thread(target=lambda: asyncio.run(resolve_selector_permits()))\n            selector_worker.start()\n            try:\n                while not selector_request_path.exists() and selector_worker.is_alive():\n                    remaining = publication_deadline - time.monotonic()\n                    if remaining <= 0:\n                        break\n                    time.sleep(min(0.01, remaining))\n                self.assertTrue(\n                    selector_request_path.exists(),\n                    f\"production selector request did not persist: {selector_result!r}\",\n                )\n                selector_request_bytes = selector_request_path.read_bytes()\n                selector_error = None\n                try:\n                    with mock.patch.object(\n                        collector, \"_local_clock_origin_sha256\", return_value=stage_clock.clock_origin_sha256\n                    ):\n                        selector_receipt = authority.PhaseArtifactReceiptIssuer.selector_operation_permits(\n                            root=handoff_root,\n                            inventory_root=inventory_root,\n                            stage_uuid=plan.stage_uuid,\n                            request_id=\"batch\",\n                            request_bytes=selector_request_bytes,\n                            expected_source_closure_sha256=plan.source_closure_sha256,\n                            expected_initial_registration_sha256=source_runner.initial_registration_sha256,\n                            expected_active_registration_sha256=digest(source_runner._active_registration_bytes),\n                            plan=plan,\n                            static_materials=static_materials,\n                            forbidden_stage_uuids=tuple(source_runner.config[\"forbidden_stage_uuids\"]),\n                            now_monotonic=pacer.monotonic(),\n                        )\n                except Exception as exc:\n                    selector_error = exc\n                    selector_receipt = b\"{}\"\n                selector_response = selector_request_path.parent.parent / \"responses\" / \"batch.receipt\"\n                selector_response.write_bytes(selector_receipt)\n                selector_response.chmod(0o600)\n                selector_pin = selector_request_path.parent.parent / \"pins\" / \"batch.sha256\"\n                selector_pin.write_text(digest(selector_receipt) + \"\\n\", encoding=\"ascii\")\n                selector_pin.chmod(0o600)\n            finally:\n                selector_worker.join(timeout=max(0, handoff_deadline - time.monotonic()) + 2)\n                self.assertFalse(selector_worker.is_alive(), \"selector handoff worker did not stop\""
+    }
+  },
+  "bindings": [
+    {
+      "kind": "F01",
+      "container": {
+        "path": "crates/xtask/fixtures/F01.json",
+        "bytes": 64639,
+        "sha256": "eeb28862df43b91b1eb6d5e83255e9b1a1c1935b144b5cafcb0ed59fec3239a3",
+        "mode": "0644",
+        "git_blob": "e0af06245b7dab8d5716005b0ddb6fcab44b8017"
+      },
+      "pointer": "/sources/365",
+      "row": {
+        "path": "tests/test_coverage_operator_handoff.py",
+        "git_blob": "cdfab98eb0308bacedb83f0dee7e5db85002665c"
+      }
+    },
+    {
+      "kind": "W03",
+      "container": {
+        "path": "docs/rust-rewrite/w03/oracle-pins.json",
+        "bytes": 44747,
+        "sha256": "20ccdc5ce88182c601030a3c884e9248a8869b85c480f98a7f90ceb53573d0f4",
+        "mode": "0644",
+        "git_blob": "15ea1a4d88342c5194104135879a23d5f4391f70"
+      },
+      "pointer": "/sources/167",
+      "row": {
+        "path": "tests/test_coverage_operator_handoff.py",
+        "sha256": "d8c4b3e1d2a73a2dd021c2a7e3a1fecf03676426b0c2a7e6d43d827eb4c5aca8"
+      }
+    }
+  ]
+}

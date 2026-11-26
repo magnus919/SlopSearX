@@ -1,4 +1,4 @@
-//! Three exact historical caller bindings for one portable test-fixture selection.
+//! Exact historical caller bindings for narrow test fixture changes.
 //! Historical captures/fixtures stay byte-exact; this proves current file custody
 //! before reconstructing the old observation operand. It never executes Python.
 use serde_json::{Value, json};
@@ -11,6 +11,11 @@ use std::{
 };
 type Result<T> = std::result::Result<T, String>;
 const SOURCE: &str = "tests/test_coverage_pipeline_inputs.py";
+const OPERATOR_HANDOFF_SOURCE: &str = "tests/test_coverage_operator_handoff.py";
+const OPERATOR_HANDOFF_CAPSULE: &str =
+    "docs/rust-rewrite/snapshot-fixture-amendment/operator-handoff-wait-v1.json";
+const OPERATOR_HANDOFF_SHA: &str =
+    "2236d8b8bf98313c7e3e0d085c74bc03468d1c278332c1b0e813584ba744d752";
 const CAPSULE: &str = "docs/rust-rewrite/snapshot-fixture-amendment/capsule.json";
 include!("capsule-sha.rs");
 fn need(condition: bool, message: &str) -> Result<()> {
@@ -86,6 +91,31 @@ fn regular(root: &Path, relative: &str) -> Result<Vec<u8>> {
 fn load(root: &Path) -> Result<Value> {
     document(&regular(root, CAPSULE)?)
 }
+fn load_for_source(root: &Path, path: &str) -> Result<Option<Value>> {
+    match path {
+        SOURCE => load(root).map(Some),
+        OPERATOR_HANDOFF_SOURCE => {
+            let raw = regular(root, OPERATOR_HANDOFF_CAPSULE)?;
+            need(
+                digest(&raw) == OPERATOR_HANDOFF_SHA,
+                "operator handoff sealed capsule differs",
+            )?;
+            let doc: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
+            need(
+                doc["schema"] == "OPERATOR_HANDOFF_WAIT_SOURCE_V1"
+                    && doc["baseline_commit"] == "369526acf4b0ab95ab1b6f66a90bd8a9542a6a84"
+                    && doc["bindings"]
+                        .as_array()
+                        .is_some_and(|rows| rows.len() == 2)
+                    && doc["source"]["prior"]["path"] == OPERATOR_HANDOFF_SOURCE
+                    && doc["source"]["current"]["path"] == OPERATOR_HANDOFF_SOURCE,
+                "operator handoff capsule closed scope differs",
+            )?;
+            Ok(Some(doc))
+        }
+        _ => Ok(None),
+    }
+}
 fn material(row: &Value, raw: &[u8], mode: &str) -> Result<()> {
     need(
         row["mode"] == mode
@@ -131,7 +161,10 @@ fn git_blob(root: &Path, raw: &[u8]) -> Result<String> {
 }
 fn source_payload(root: &Path, source: &Value, current: &[u8], mode: &str) -> Result<Vec<u8>> {
     need(
-        source["prior"]["path"] == SOURCE && source["current"]["path"] == SOURCE,
+        matches!(
+            source["current"]["path"].as_str(),
+            Some(SOURCE | OPERATOR_HANDOFF_SOURCE)
+        ) && source["prior"]["path"] == source["current"]["path"],
         "snapshot fixture source path differs",
     )?;
     material(&source["current"], current, mode)?;
@@ -210,13 +243,16 @@ fn prove(root: &Path, doc: &Value, kind: &str, claimed: &Value) -> Result<Vec<u8
         ) == Some(&row["row"]),
         "snapshot fixture original caller row moved or changed",
     )?;
-    source_payload(root, &doc["source"], &regular(root, SOURCE)?, "0644")
+    let source = &doc["source"];
+    let path = source["current"]["path"]
+        .as_str()
+        .ok_or("snapshot fixture source path absent")?;
+    source_payload(root, source, &regular(root, path)?, "0644")
 }
 pub(crate) fn f01(root: &Path, path: &str, blob: &str) -> Result<Option<()>> {
-    if path != SOURCE {
+    let Some(doc) = load_for_source(root, path)? else {
         return Ok(None);
-    }
-    let doc = load(root)?;
+    };
     prove(root, &doc, "F01", &json!({"path":path,"git_blob":blob}))?;
     Ok(Some(()))
 }
@@ -229,10 +265,12 @@ pub(crate) fn a06(root: &Path, row: &Value) -> Result<Option<()>> {
     Ok(Some(()))
 }
 pub(crate) fn w03(root: &Path, row: &Value) -> Result<Option<Vec<u8>>> {
-    if row["path"] != SOURCE {
+    let Some(path) = row["path"].as_str() else {
         return Ok(None);
-    }
-    let doc = load(root)?;
+    };
+    let Some(doc) = load_for_source(root, path)? else {
+        return Ok(None);
+    };
     prove(root, &doc, "W03", row).map(Some)
 }
 #[cfg(test)]
@@ -362,6 +400,18 @@ mod tests {
             candidate["current"]["git_blob"] = json!(git_blob(&root, &changed).unwrap());
             assert!(source_payload(&root, &candidate, &changed, "0644").is_err());
         }
+        let handoff = load_for_source(&root, OPERATOR_HANDOFF_SOURCE)
+            .unwrap()
+            .unwrap();
+        let f01_row = &binding(&handoff, "F01").unwrap()["row"];
+        let w03_row = &binding(&handoff, "W03").unwrap()["row"];
+        let f01_source = prove(&root, &handoff, "F01", f01_row).unwrap();
+        assert_eq!(w03(&root, w03_row).unwrap().unwrap(), f01_source);
+        assert!(f01(&root, OPERATOR_HANDOFF_SOURCE, "wrong").is_err());
+        let mut unbound = w03_row.clone();
+        unbound["sha256"] = json!("wrong");
+        assert!(w03(&root, &unbound).is_err());
+        assert!(a06(&root, w03_row).unwrap().is_none());
         assert!(f01(&root, "unlisted.py", "wrong").unwrap().is_none());
         assert!(
             a06(&root, &json!({"path":"unlisted.py"}))
