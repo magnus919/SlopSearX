@@ -27,6 +27,8 @@ pub enum SourceUrlErrorKind {
     Path,
     /// A malformed typed copy component.
     Component,
+    /// An ASCII accessor cannot encode an otherwise valid URL.
+    Ascii,
     /// The raw join authority contains invalid bracket syntax or a malformed literal.
     JoinBracket,
     /// Unicode 16 NFKC would introduce a delimiter during raw join authority validation.
@@ -439,6 +441,18 @@ impl SourceUrl {
     pub fn raw_host(&self) -> &str {
         &self.parts.host
     }
+    /// Source-normalized scheme bytes.
+    pub fn raw_scheme(&self) -> &[u8] {
+        self.scheme().as_bytes()
+    }
+    /// ASCII raw host bytes. Scoped IPv6 text may retain Unicode.
+    pub fn raw_host_bytes(&self) -> Result<&[u8], SourceUrlError> {
+        if self.raw_host().is_ascii() {
+            Ok(self.raw_host().as_bytes())
+        } else {
+            Err(invalid(SourceUrlErrorKind::Ascii))
+        }
+    }
     /// Display host with fallible ACE decoding.
     pub fn display_host(&self) -> Result<String, SourceUrlError> {
         if self.parts.host.contains("xn--") {
@@ -504,6 +518,15 @@ impl SourceUrl {
     /// Source netloc excludes userinfo, brackets IPv6, and retains explicit zero port.
     pub fn netloc(&self) -> String {
         self.parts.netloc()
+    }
+    /// ASCII netloc bytes, with bracketed IPv6 and any explicit port.
+    pub fn netloc_bytes(&self) -> Result<Vec<u8>, SourceUrlError> {
+        let value = self.netloc();
+        if value.is_ascii() {
+            Ok(value.into_bytes())
+        } else {
+            Err(invalid(SourceUrlErrorKind::Ascii))
+        }
     }
     /// Source path and query projection, with a slash for an empty path.
     pub fn raw_path(&self) -> String {
@@ -692,6 +715,9 @@ mod tests {
         );
         assert_eq!(u.raw_path(), "/a/c%2f?x=%2f");
         assert_eq!(u.netloc(), "example.test:80");
+        assert_eq!(u.raw_scheme(), b"http");
+        assert_eq!(u.raw_host_bytes().unwrap(), b"example.test");
+        assert_eq!(u.netloc_bytes().unwrap(), b"example.test:80");
         assert_eq!(u.username(), "User");
         assert_eq!(u.password(), "p\u{fffd}");
         assert!(u.password_present());
@@ -734,6 +760,9 @@ mod tests {
         let empty = url("//");
         assert!(empty.lexical_authority_present());
         assert_eq!(empty.serialized(), "");
+        assert_eq!(empty.raw_scheme(), b"");
+        assert_eq!(empty.raw_host_bytes().unwrap(), b"");
+        assert_eq!(empty.netloc_bytes().unwrap(), b"");
         let user = url("http://@host");
         assert!(user.lexical_userinfo_present());
         assert_eq!(user.serialized(), "http://host");
@@ -840,11 +869,31 @@ mod tests {
         // ASCII construction bypasses IDNA, including invalid ACE. Display is later.
         let ace = url("http://xn--.bad_label");
         assert_eq!(ace.raw_host(), "xn--.bad_label");
-        assert!(ace.display_host().is_err());
-        assert_eq!(url("http://[fe80::1%é]").raw_host(), "fe80::1%é");
+        assert_eq!(ace.raw_host_bytes().unwrap(), b"xn--.bad_label");
+        assert_eq!(ace.netloc_bytes().unwrap(), b"xn--.bad_label");
+        assert_eq!(
+            ace.display_host().unwrap_err().kind,
+            SourceUrlErrorKind::Idna
+        );
+
+        let scoped = url("http://[fe80::1%é]:0");
+        assert_eq!(scoped.raw_host(), "fe80::1%é");
+        assert_eq!(scoped.display_host().unwrap(), "fe80::1%é");
+        assert_eq!(scoped.netloc(), "[fe80::1%é]:0");
+        assert_eq!(
+            scoped.raw_host_bytes().unwrap_err().kind,
+            SourceUrlErrorKind::Ascii
+        );
+        assert_eq!(
+            scoped.netloc_bytes().unwrap_err().kind,
+            SourceUrlErrorKind::Ascii
+        );
+
         let ipv6 = url("http://[2001:0DB8::1%eth0]:0");
         assert_eq!(ipv6.raw_host(), "2001:0DB8::1%eth0");
         assert_eq!(ipv6.netloc(), "[2001:0DB8::1%eth0]:0");
+        assert_eq!(ipv6.raw_host_bytes().unwrap(), b"2001:0DB8::1%eth0");
+        assert_eq!(ipv6.netloc_bytes().unwrap(), b"[2001:0DB8::1%eth0]:0");
     }
     #[test]
     fn source_length_controls_host_port_path_validation_precedence() {
