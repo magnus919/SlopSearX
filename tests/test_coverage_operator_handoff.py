@@ -965,64 +965,76 @@ class OperatorReceiptHandoffTests(unittest.TestCase):
                 operation_materials=operation_materials,
             )
             selector_result: list[object] = []
+            publication_deadline = time.monotonic() + 15
+            handoff_deadline = publication_deadline + 30
+            request_selector_receipt = source_runner.handoff.request
+
+            def bounded_selector_request(**kwargs):
+                kwargs["deadline_monotonic"] = min(kwargs["deadline_monotonic"], handoff_deadline)
+                return request_selector_receipt(**kwargs)
 
             async def resolve_selector_permits():
                 try:
-                    selector_result.append(
-                        await source_runner._selector_permits(
-                            plan,
-                            worker_result[0].prepared,
-                            map_bytes,
-                            digest(map_bytes),
-                            operation_materials,
+                    with mock.patch.object(source_runner.handoff, "request", side_effect=bounded_selector_request):
+                        selector_result.append(
+                            await source_runner._selector_permits(
+                                plan,
+                                worker_result[0].prepared,
+                                map_bytes,
+                                digest(map_bytes),
+                                operation_materials,
+                            )
                         )
-                    )
                 except Exception as exc:
                     selector_result.append(exc)
 
-            selector_worker = threading.Thread(target=lambda: asyncio.run(resolve_selector_permits()))
-            selector_worker.start()
             selector_request_path = (
                 handoff_root / plan.stage_uuid / "selector-operation-permits" / "requests" / "batch.json"
             )
-            for _ in range(300):
-                if selector_request_path.exists():
-                    break
-                time.sleep(0.005)
-            if not selector_request_path.exists():
-                selector_worker.join(timeout=2)
-                self.fail(f"production selector request did not persist: {selector_result!r}")
-            selector_request_bytes = selector_request_path.read_bytes()
-            selector_error = None
+            selector_worker = threading.Thread(target=lambda: asyncio.run(resolve_selector_permits()))
+            selector_worker.start()
             try:
-                with mock.patch.object(
-                    collector, "_local_clock_origin_sha256", return_value=stage_clock.clock_origin_sha256
-                ):
-                    selector_receipt = authority.PhaseArtifactReceiptIssuer.selector_operation_permits(
-                        root=handoff_root,
-                        inventory_root=inventory_root,
-                        stage_uuid=plan.stage_uuid,
-                        request_id="batch",
-                        request_bytes=selector_request_bytes,
-                        expected_source_closure_sha256=plan.source_closure_sha256,
-                        expected_initial_registration_sha256=source_runner.initial_registration_sha256,
-                        expected_active_registration_sha256=digest(source_runner._active_registration_bytes),
-                        plan=plan,
-                        static_materials=static_materials,
-                        forbidden_stage_uuids=tuple(source_runner.config["forbidden_stage_uuids"]),
-                        now_monotonic=pacer.monotonic(),
-                    )
-            except Exception as exc:
-                selector_error = exc
-                selector_receipt = b"{}"
-            selector_response = selector_request_path.parent.parent / "responses" / "batch.receipt"
-            selector_response.write_bytes(selector_receipt)
-            selector_response.chmod(0o600)
-            selector_pin = selector_request_path.parent.parent / "pins" / "batch.sha256"
-            selector_pin.write_text(digest(selector_receipt) + "\n", encoding="ascii")
-            selector_pin.chmod(0o600)
-            selector_worker.join(timeout=15)
-            self.assertFalse(selector_worker.is_alive())
+                while not selector_request_path.exists() and selector_worker.is_alive():
+                    remaining = publication_deadline - time.monotonic()
+                    if remaining <= 0:
+                        break
+                    time.sleep(min(0.01, remaining))
+                self.assertTrue(
+                    selector_request_path.exists(),
+                    f"production selector request did not persist: {selector_result!r}",
+                )
+                selector_request_bytes = selector_request_path.read_bytes()
+                selector_error = None
+                try:
+                    with mock.patch.object(
+                        collector, "_local_clock_origin_sha256", return_value=stage_clock.clock_origin_sha256
+                    ):
+                        selector_receipt = authority.PhaseArtifactReceiptIssuer.selector_operation_permits(
+                            root=handoff_root,
+                            inventory_root=inventory_root,
+                            stage_uuid=plan.stage_uuid,
+                            request_id="batch",
+                            request_bytes=selector_request_bytes,
+                            expected_source_closure_sha256=plan.source_closure_sha256,
+                            expected_initial_registration_sha256=source_runner.initial_registration_sha256,
+                            expected_active_registration_sha256=digest(source_runner._active_registration_bytes),
+                            plan=plan,
+                            static_materials=static_materials,
+                            forbidden_stage_uuids=tuple(source_runner.config["forbidden_stage_uuids"]),
+                            now_monotonic=pacer.monotonic(),
+                        )
+                except Exception as exc:
+                    selector_error = exc
+                    selector_receipt = b"{}"
+                selector_response = selector_request_path.parent.parent / "responses" / "batch.receipt"
+                selector_response.write_bytes(selector_receipt)
+                selector_response.chmod(0o600)
+                selector_pin = selector_request_path.parent.parent / "pins" / "batch.sha256"
+                selector_pin.write_text(digest(selector_receipt) + "\n", encoding="ascii")
+                selector_pin.chmod(0o600)
+            finally:
+                selector_worker.join(timeout=max(0, handoff_deadline - time.monotonic()) + 2)
+                self.assertFalse(selector_worker.is_alive(), "selector handoff worker did not stop")
             if selector_error is not None:
                 raise selector_error
             self.assertEqual(len(selector_result), 1)
