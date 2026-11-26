@@ -135,6 +135,36 @@
       },
       "license": "MIT",
       "note": "Project-owned FFI wrapper around Expat 2.9.0; not an upstream Rust crate fork."
+    },
+    {
+      "kind": "third_party_fork",
+      "local_name": "reqwest",
+      "local_version": "0.13.5",
+      "manifest": {
+        "path": "vendor/ssx-gateway-reqwest/Cargo.toml",
+        "bytes": 13151,
+        "sha256": "ab36603e15fa21c4fe1f4e9810245dcb06499cdcf6e6b07296e5d2a3c25c69a1"
+      },
+      "license": "MIT OR Apache-2.0",
+      "upstream_name": "reqwest",
+      "upstream_version": "0.13.5",
+      "upstream_source": "registry+https://github.com/rust-lang/crates.io-index",
+      "archive": {
+        "path": "docs/rust-rewrite/t07/reqwest-0.13.5.crate",
+        "bytes": 160871,
+        "sha256": "16a1cfa75cc186dd73d5818e510e042e40927bccc9c236b061cea97e1eb08029"
+      },
+      "provenance": {
+        "path": "docs/rust-rewrite/t07/reqwest-provenance.json",
+        "bytes": 9270,
+        "sha256": "0c1f9680659acec884d4d52908cca2df3838a26c366ee6798a8c8d2241e80216"
+      },
+      "patch": {
+        "path": "docs/rust-rewrite/t07/exact-gateway-reqwest.patch",
+        "bytes": 3796,
+        "sha256": "834dcbc8c101f1cac91c8c7605e0e424e875b9ae68b409f4c7ca13ad4a2d251b"
+      },
+      "note": "Workspace Reqwest patch for exact gateway request targets and effective port zero."
     }
   ]
 }

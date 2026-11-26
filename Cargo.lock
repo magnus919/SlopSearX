@@ -2184,8 +2184,6 @@ checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 [[package]]
 name = "reqwest"
 version = "0.13.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "16a1cfa75cc186dd73d5818e510e042e40927bccc9c236b061cea97e1eb08029"
 dependencies = [
  "base64",
  "bytes",
@@ -2960,6 +2958,7 @@ dependencies = [
  "ssx-infra",
  "ssx-json",
  "ssx-registry",
+ "ssx-source-codecs",
  "ssx-wire",
  "subtle",
  "tokio",

@@ -1,6 +1,6 @@
 [workspace]
 members = ["crates/*", "vendor/ssx-cli-hyper"]
-exclude = ["vendor/expat", "vendor/libxml", "vendor/rmcp", "vendor/ssx-cli-process-wrap"]
+exclude = ["vendor/expat", "vendor/libxml", "vendor/rmcp", "vendor/ssx-cli-process-wrap", "vendor/ssx-gateway-reqwest"]
 resolver = "3"
 
 [workspace.package]
@@ -54,3 +54,6 @@ unsafe_code = "forbid"
 
 [workspace.lints.clippy]
 all = "warn"
+
+[patch.crates-io]
+reqwest = { path = "vendor/ssx-gateway-reqwest" }

@@ -256,7 +256,10 @@ pub(crate) fn optional_chrono_prior(path: &str, current: &[u8], mode: &str) -> R
         row["path"] == path,
         "exact RMCP optional Chrono source path",
     )?;
-    inverse(row, current, mode, *count)
+    let workspace = (path == "Cargo.toml")
+        .then(|| issue903_config_successor::gateway_workspace_prior(current))
+        .transpose()?;
+    inverse(row, workspace.as_deref().unwrap_or(current), mode, *count)
 }
 
 #[allow(dead_code, reason = "A08 caller is compiled only in xtask")]
