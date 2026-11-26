@@ -146,46 +146,124 @@ async fn real_streamable_http_bearer_and_stateless_contract() -> Result<()> {
 }
 #[tokio::test]
 async fn gateway_paths_and_queries_survive_outbound_http() -> Result<()> {
-    use axum::{Router, extract::Request, http::Method, middleware};
-    use ssx_mcp::opaque::RawGateway;
+    use axum::{
+        Router,
+        extract::Request,
+        http::{HeaderValue, Method, header::AUTHORIZATION},
+        middleware,
+    };
+    use ssx_mcp::{harness::http_router_mode, opaque::RawGateway};
     use std::sync::{Arc, Mutex};
+    use tokio::sync::Notify;
+
+    struct ObservedRequest {
+        method: Method,
+        target: String,
+        has_token: bool,
+        session: Option<HeaderValue>,
+    }
 
     let prefix = "/tenant%2fedge%2Fname";
     let ct = CancellationToken::new();
     let observed = Arc::new(Mutex::new(Vec::new()));
-    let captured = Arc::clone(&observed);
-    let router = http_router(Registry::synthetic(), None, ct.clone()).map(|router| {
+    let issued_session = Arc::new(Mutex::new(None));
+    let saw_get = Arc::new(Notify::new());
+    let router = http_router_mode(
+        Registry::synthetic(),
+        Some("fixture-token".into()),
+        ct.clone(),
+        true,
+    )
+    .map(|router| {
+        let observed = Arc::clone(&observed);
+        let issued_session = Arc::clone(&issued_session);
+        let saw_get = Arc::clone(&saw_get);
         Router::new()
             .nest(prefix, router)
             .layer(middleware::from_fn(
                 move |request: Request, next: middleware::Next| {
-                    let captured = Arc::clone(&captured);
+                    let observed = Arc::clone(&observed);
+                    let issued_session = Arc::clone(&issued_session);
+                    let saw_get = Arc::clone(&saw_get);
                     async move {
-                        if request.method() == Method::POST {
-                            let target =
-                                request.uri().path_and_query().unwrap().as_str().to_owned();
-                            captured.lock().unwrap().push(target);
+                        let first_post = request.method() == Method::POST
+                            && !request.headers().contains_key("mcp-session-id");
+                        observed.lock().unwrap().push(ObservedRequest {
+                            method: request.method().clone(),
+                            target: request.uri().path_and_query().unwrap().as_str().to_owned(),
+                            has_token: request.headers().get(AUTHORIZATION)
+                                == Some(&HeaderValue::from_static("Bearer fixture-token")),
+                            session: request.headers().get("mcp-session-id").cloned(),
+                        });
+                        if request.method() == Method::GET {
+                            saw_get.notify_one();
                         }
-                        next.run(request).await
+
+                        let response = next.run(request).await;
+                        if first_post {
+                            *issued_session.lock().unwrap() =
+                                response.headers().get("mcp-session-id").cloned();
+                        }
+                        response
                     }
                 },
             ))
     });
+
     let host = Host::start(router, ct).await?;
+    let verify_wire = |expected: &str, typed: bool| {
+        let observed = std::mem::take(&mut *observed.lock().unwrap());
+        let issued = issued_session
+            .lock()
+            .unwrap()
+            .take()
+            .expect("issued session");
+        assert_eq!(observed.first().unwrap().method, Method::POST);
+        assert_eq!(observed.first().unwrap().session, None);
+        assert_eq!(
+            observed
+                .iter()
+                .filter(|request| request.method == Method::POST)
+                .count(),
+            6
+        );
+        assert_eq!(
+            observed
+                .iter()
+                .filter(|request| request.method == Method::DELETE)
+                .count(),
+            1
+        );
+        assert_eq!(
+            observed.iter().any(|request| request.method == Method::GET),
+            typed
+        );
+        for request in &observed[1..] {
+            assert_eq!(
+                request.session.as_ref(),
+                Some(&issued),
+                "{}",
+                request.method
+            );
+        }
+        for request in observed {
+            assert_eq!(request.target, expected, "{}", request.method);
+            assert!(request.has_token, "{}", request.method);
+        }
+    };
     let deadline = Duration::from_secs(3);
     for suffix in ["/mcp", "/mcp?", "/mcp?arg=%2f&arg=%2F&bare&empty="] {
         let expected = format!("{prefix}{suffix}");
         let url = format!("http://{}/discard/..{expected}", host.address);
 
-        let raw = RawGateway::connect(url.clone(), None, deadline).await?;
+        let raw = RawGateway::connect(url.clone(), Some("fixture-token".into()), deadline).await?;
         raw.close().await?;
-        let targets = std::mem::take(&mut *observed.lock().unwrap());
-        assert_eq!(targets, vec![expected.as_str(); 6], "raw gateway");
+        verify_wire(&expected, false);
 
-        let typed = Gateway::connect(url, None, deadline).await?;
+        let typed = Gateway::connect(url, Some("fixture-token".into()), deadline).await?;
+        tokio::time::timeout(deadline, saw_get.notified()).await?;
         typed.shutdown().await?;
-        let targets = std::mem::take(&mut *observed.lock().unwrap());
-        assert_eq!(targets, vec![expected.as_str(); 6], "typed gateway");
+        verify_wire(&expected, true);
     }
     host.shutdown().await?;
     Ok(())
