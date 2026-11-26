@@ -142,6 +142,14 @@ pub(crate) fn parent(
     expected: &str,
     supplied: &[u8],
 ) -> Result<Option<Vec<u8>>> {
+    if path == RAW_GATEWAY {
+        let (physical, mode) = regular(root, path)?;
+        need(
+            supplied == physical,
+            "T06 raw gateway requires actual current source",
+        )?;
+        return raw_gateway_prior(&physical, mode, expected).map(Some);
+    }
     if path == RMCP_TRANSPORT {
         let (physical, mode) = regular(root, path)?;
         need(
@@ -212,6 +220,7 @@ pub(crate) fn reader_parent(
 }
 pub(crate) fn controls(root: &Path) -> Result<()> {
     rmcp_transport_controls(root)?;
+    raw_gateway_controls(root)?;
     current_controls(root)?;
     let capsule = load(root)?;
     for frozen in &capsule.frozen_predecessors {
@@ -951,5 +960,91 @@ fn rmcp_transport_controls(root: &Path) -> Result<()> {
         rmcp_transport_prior(&changed, 0o644, RMCP_TRANSPORT_PRIOR).is_err(),
         "rmcp oversized input rejected",
     )?;
+    Ok(())
+}
+
+// RawGateway now delegates URL validation and client construction to the
+// shared exact-target client. Fix the source projection to that single edit.
+const RAW_GATEWAY: &str = "crates/ssx-mcp/src/opaque.rs";
+const RAW_GATEWAY_BASELINE: &str = "93da466abdb56e015474493337f537c2a6ec7b31";
+const RAW_GATEWAY_BLOB: &str = "54314e969672a3c1ebac774da35ce3f634652da6";
+const RAW_GATEWAY_PRIOR: &str = "c89e508d9d4d2c86f6d0f0f8cbf8f35690e83e63da94a4ca342c28da60526d41";
+const RAW_GATEWAY_CURRENT: &str =
+    "5800bb552fbca40f0a0bf6e11fcd8b5b5cf71aab402e2478067a22e2f45a1b17";
+const RAW_GATEWAY_OLD: &str = r#"        let parsed = reqwest::Url::parse(&url)?;
+        if !parsed.username().is_empty()
+            || parsed.password().is_some()
+            || parsed.fragment().is_some()
+        {
+            return Err("invalid MCP remote URL".into());
+        }
+        let http = reqwest::Client::builder()
+            .redirect(reqwest::redirect::Policy::none())
+            .build()?;"#;
+const RAW_GATEWAY_NEW: &str = "        let http = crate::http_client::gateway_http(&url)?;";
+
+fn raw_gateway_prior(raw: &[u8], mode: u32, expected: &str) -> Result<Vec<u8>> {
+    need(
+        expected == RAW_GATEWAY_PRIOR,
+        "T06 raw gateway historical binding differs",
+    )?;
+    inverse(
+        &Row {
+            path: RAW_GATEWAY.into(),
+            prior: Material {
+                sha256: RAW_GATEWAY_PRIOR.into(),
+                bytes: 85717,
+                mode: 0o644,
+            },
+            prior_git_blob: RAW_GATEWAY_BLOB.into(),
+            current: Material {
+                sha256: RAW_GATEWAY_CURRENT.into(),
+                bytes: 85398,
+                mode: 0o644,
+            },
+            edits: vec![Edit {
+                current_offset: 48167,
+                old: RAW_GATEWAY_OLD.into(),
+                new: RAW_GATEWAY_NEW.into(),
+            }],
+        },
+        raw,
+        mode,
+    )
+}
+
+fn raw_gateway_controls(root: &Path) -> Result<()> {
+    let (raw, mode) = regular(root, RAW_GATEWAY)?;
+    let prior = raw_gateway_prior(&raw, mode, RAW_GATEWAY_PRIOR)?;
+    let tree = Command::new("git")
+        .args(["ls-tree", RAW_GATEWAY_BASELINE, "--", RAW_GATEWAY])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    let blob = Command::new("git")
+        .args(["cat-file", "blob", RAW_GATEWAY_BLOB])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    need(
+        tree.status.success()
+            && tree.stdout == format!("100644 blob {RAW_GATEWAY_BLOB}\t{RAW_GATEWAY}\n").as_bytes()
+            && blob.status.success()
+            && blob.stdout == prior,
+        "T06 raw gateway exact Git predecessor differs",
+    )?;
+    let mut changed = raw.clone();
+    changed[0] ^= 1;
+    for (bytes, mode, expected) in [
+        (changed.as_slice(), 0o644, RAW_GATEWAY_PRIOR),
+        (prior.as_slice(), 0o644, RAW_GATEWAY_PRIOR),
+        (raw.as_slice(), 0o755, RAW_GATEWAY_PRIOR),
+        (raw.as_slice(), 0o644, RAW_GATEWAY_CURRENT),
+    ] {
+        need(
+            raw_gateway_prior(bytes, mode, expected).is_err(),
+            "T06 raw gateway accepted altered bytes, mode, or historical binding",
+        )?;
+    }
     Ok(())
 }
