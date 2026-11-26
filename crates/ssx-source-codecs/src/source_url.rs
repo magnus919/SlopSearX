@@ -7,6 +7,7 @@
 use crate::idna2008::{decode_display, encode, source_lower};
 use crate::url_reference::{RawSourceUrlError, scheme_valid, source_raw_urljoin};
 use ssx_json::decimal_value;
+use std::cmp::Reverse;
 
 /// Ordered source URL validation stage, without retaining secret URL text.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -25,6 +26,8 @@ pub enum SourceUrlErrorKind {
     Port,
     /// Source relative or authority path validation.
     Path,
+    /// A nonempty mount pattern is missing the URL form.
+    PatternForm,
     /// A malformed typed copy component.
     Component,
     /// An ASCII accessor cannot encode an otherwise valid URL.
@@ -709,6 +712,70 @@ impl SourceUrl {
     }
 }
 
+/// Immutable proxy mount pattern with the historical HTTPX matching rules.
+///
+/// Adapted from the `SourcePattern` in historical `source_pool.rs` at 884d50f2.
+/// A pattern classifies a parsed URL by its scheme, host, and parsed port.
+#[derive(Clone, Debug)]
+pub struct SourcePattern {
+    scheme: String,
+    host: String,
+    port: Option<String>,
+}
+impl SourcePattern {
+    /// Parse the pattern's URL form and decode its display host.
+    pub fn parse(text: &str) -> Result<Self, SourceUrlError> {
+        if !text.is_empty() && !text.contains(':') {
+            return Err(invalid(SourceUrlErrorKind::PatternForm));
+        }
+        let owner = SourceUrl::parse(text)?;
+        let host = owner.display_host()?;
+        Ok(Self {
+            scheme: if owner.scheme() == "all" {
+                String::new()
+            } else {
+                owner.scheme().to_owned()
+            },
+            host: if host == "*" { String::new() } else { host },
+            port: owner.port().map(str::to_owned),
+        })
+    }
+
+    /// Match a parsed source URL. Decode the host only if the pattern needs it.
+    pub fn matches_source(&self, owner: &SourceUrl) -> Result<bool, SourceUrlError> {
+        if !self.scheme.is_empty() && self.scheme != owner.scheme() {
+            return Ok(false);
+        }
+        if !self.host.is_empty() {
+            let host = owner.display_host()?;
+            let matched = if let Some(suffix) = self.host.strip_prefix("*.") {
+                host.len() > suffix.len() + 1 && host.ends_with(&format!(".{suffix}"))
+            } else if let Some(suffix) = self.host.strip_prefix('*') {
+                host == suffix
+                    || (host.len() > suffix.len() + 1 && host.ends_with(&format!(".{suffix}")))
+            } else {
+                host == self.host
+            };
+            if !matched {
+                return Ok(false);
+            }
+        }
+        Ok(self
+            .port
+            .as_deref()
+            .is_none_or(|port| owner.port() == Some(port)))
+    }
+
+    /// Sort in ascending order to prefer an explicit port and longer host and scheme.
+    pub fn priority(&self) -> (bool, Reverse<usize>, Reverse<usize>) {
+        (
+            self.port.is_none(),
+            Reverse(self.host.chars().count()),
+            Reverse(self.scheme.len()),
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1235,6 +1302,115 @@ mod tests {
         assert_eq!(
             url("file:///a/b").join("/c").unwrap().serialized(),
             "file:/c"
+        );
+    }
+
+    #[test]
+    fn source_pattern_matches_display_idna_and_original_integer_ports() {
+        let pattern = SourcePattern::parse("http://bücher.example:-1/ignored?ignored").unwrap();
+        assert!(
+            pattern
+                .matches_source(&url("http://xn--bcher-kva.example:-1/a"))
+                .unwrap()
+        );
+        assert!(
+            !pattern
+                .matches_source(&url("http://bücher.example:0/a"))
+                .unwrap()
+        );
+
+        let zero = SourcePattern::parse("http://bücher.example:0").unwrap();
+        assert!(
+            zero.matches_source(&url("http://bücher.example:0/a"))
+                .unwrap()
+        );
+        assert!(
+            !zero
+                .matches_source(&url("http://bücher.example/a"))
+                .unwrap()
+        );
+
+        let large = SourcePattern::parse("http://example.test:65536").unwrap();
+        assert!(
+            large
+                .matches_source(&url("http://example.test:65536/"))
+                .unwrap()
+        );
+        let default = SourcePattern::parse("http://example.test:80").unwrap();
+        assert!(
+            default
+                .matches_source(&url("http://example.test:65536/"))
+                .unwrap()
+        );
+    }
+
+    #[test]
+    fn source_pattern_preserves_failure_order_and_wildcard_boundaries() {
+        assert_eq!(
+            SourcePattern::parse("example.test").unwrap_err().kind,
+            SourceUrlErrorKind::PatternForm
+        );
+        assert_eq!(
+            SourcePattern::parse("http://xn--.bad_label")
+                .unwrap_err()
+                .kind,
+            SourceUrlErrorKind::Idna
+        );
+        let invalid_ace = url("http://xn--.bad_label/a");
+        for pattern in ["", "all://", "all://*"] {
+            assert!(
+                SourcePattern::parse(pattern)
+                    .unwrap()
+                    .matches_source(&invalid_ace)
+                    .unwrap()
+            );
+        }
+        assert!(
+            !SourcePattern::parse("https://example.test")
+                .unwrap()
+                .matches_source(&invalid_ace)
+                .unwrap()
+        );
+        assert_eq!(
+            SourcePattern::parse("http://example.test")
+                .unwrap()
+                .matches_source(&invalid_ace)
+                .unwrap_err()
+                .kind,
+            SourceUrlErrorKind::Idna
+        );
+
+        let exact = SourcePattern::parse("http://example.test").unwrap();
+        let subdomains = SourcePattern::parse("http://*.example.test").unwrap();
+        let apex_and_subdomains = SourcePattern::parse("http://*example.test").unwrap();
+        for (input, expected) in [
+            ("http://example.test/", [true, false, true]),
+            ("http://a.b.example.test/", [false, true, true]),
+            ("http://notexample.test/", [false, false, false]),
+            ("https://example.test/", [false, false, false]),
+        ] {
+            let owner = url(input);
+            assert_eq!(
+                [&exact, &subdomains, &apex_and_subdomains]
+                    .map(|p| p.matches_source(&owner).unwrap()),
+                expected,
+                "{input}"
+            );
+        }
+    }
+
+    #[test]
+    fn source_pattern_priority_prefers_explicit_ports_and_specific_routes() {
+        let port = SourcePattern::parse("all://example.test:0").unwrap();
+        let host_and_scheme = SourcePattern::parse("https://bücher.example").unwrap();
+        let host_only = SourcePattern::parse("all://bücher.example").unwrap();
+        let shorter = SourcePattern::parse("https://other.test").unwrap();
+        assert!(port.priority() < host_and_scheme.priority());
+        assert!(host_and_scheme.priority() < host_only.priority());
+        assert!(host_only.priority() < shorter.priority());
+        assert_eq!(
+            host_and_scheme.priority().1,
+            Reverse("bücher.example".chars().count())
         );
     }
 }

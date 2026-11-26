@@ -736,6 +736,9 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         "source_url::tests::quoting_literal_dot_segments_and_utf8_userinfo_follow_source_stages",
         "source_url::tests::signed_zero_default_and_arbitrary_integer_ports_never_become_u16",
         "source_url::tests::source_length_controls_host_port_path_validation_precedence",
+        "source_url::tests::source_pattern_matches_display_idna_and_original_integer_ports",
+        "source_url::tests::source_pattern_preserves_failure_order_and_wildcard_boundaries",
+        "source_url::tests::source_pattern_priority_prefers_explicit_ports_and_specific_routes",
         "source_url::tests::strict_idna_context_bidi_and_lazy_ascii_ace_display_stay_distinct",
         "source_url::tests::typed_copy_alias_precedence_and_input_provenance",
     ]);
