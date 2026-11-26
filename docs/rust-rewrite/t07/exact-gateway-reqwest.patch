@@ -1,0 +1,106 @@
+--- a/.cargo_vcs_info.json
++++ b/.cargo_vcs_info.json
+@@ -6 +6 @@
+-}
+\ No newline at end of file
++}
+--- a/LICENSE-MIT
++++ b/LICENSE-MIT
+@@ -20 +19,0 @@
+-
+--- a/src/async_impl/client.rs
++++ b/src/async_impl/client.rs
+@@ -50 +50 @@
+-use http::uri::Scheme;
++use http::uri::{PathAndQuery, Scheme};
+@@ -185,0 +186 @@
++    exact_endpoint: Option<(Url, PathAndQuery)>,
+@@ -311,0 +313 @@
++                exact_endpoint: None,
+@@ -410 +412,4 @@
+-        let config = self.config;
++        let mut config = self.config;
++        if config.exact_endpoint.is_some() {
++            config.redirect_policy = redirect::Policy::none();
++        }
+@@ -1016,0 +1022,3 @@
++        if config.exact_endpoint.is_some() {
++            connector_builder.set_exact_gateway_endpoint();
++        }
+@@ -1107,0 +1116 @@
++                exact_endpoint: config.exact_endpoint,
+@@ -1109,0 +1119,17 @@
++    }
++
++    /// Bind this client to an endpoint with an explicit origin-form target.
++    ///
++    /// Requests for any other URL are rejected and redirects are disabled.
++    pub fn exact_endpoint(mut self, url: Url, target: PathAndQuery) -> Self {
++        if !target.as_str().starts_with('/')
++            || !matches!(url.scheme(), "http" | "https")
++            || !url.username().is_empty()
++            || url.password().is_some()
++            || url.fragment().is_some()
++        {
++            self.config.error = Some(error::builder("invalid exact endpoint"));
++        } else {
++            self.config.exact_endpoint = Some((url, target));
++        }
++        self
+@@ -2643,0 +2670,13 @@
++        let uri = if let Some((endpoint, target)) = &self.inner.exact_endpoint {
++            if &url != endpoint {
++                return Pending::new_err(error::builder("request outside exact endpoint"));
++            }
++            let mut parts = uri.into_parts();
++            parts.path_and_query = Some(target.clone());
++            match Uri::from_parts(parts) {
++                Ok(uri) => uri,
++                Err(source) => return Pending::new_err(error::builder(source)),
++            }
++        } else {
++            uri
++        };
+@@ -2978,0 +3018 @@
++    exact_endpoint: Option<(Url, PathAndQuery)>,
+--- a/src/connect.rs
++++ b/src/connect.rs
+@@ -73,0 +74 @@
++    exact_gateway_endpoint: bool,
+@@ -89,0 +91,4 @@
++    pub(crate) fn set_exact_gateway_endpoint(&mut self) {
++        self.exact_gateway_endpoint = true;
++    }
++
+@@ -96,0 +102 @@
++            exact_gateway_endpoint: self.exact_gateway_endpoint,
+@@ -214,0 +221 @@
++            exact_gateway_endpoint: false,
+@@ -324,0 +332 @@
++            exact_gateway_endpoint: false,
+@@ -399,0 +408 @@
++            exact_gateway_endpoint: false,
+@@ -487,0 +497 @@
++    exact_gateway_endpoint: bool,
+@@ -918,0 +929,15 @@
++impl ConnectorService {
++    // The configured target retains an explicit :0 in Host and proxy absolute-form.
++    // Connection selection uses the scheme default, including a proxy tunnel to HTTPS.
++    fn destination_uri(&self, dst: Uri) -> Uri {
++        if !self.exact_gateway_endpoint || dst.port_u16() != Some(0) {
++            return dst;
++        }
++        let authority = dst.authority().expect("port requires authority");
++        let host = authority.host().parse().expect("URI already contains valid host");
++        let mut parts = dst.into_parts();
++        parts.authority = Some(host);
++        Uri::from_parts(parts).expect("valid URI with the original host")
++    }
++}
++
+@@ -944 +969 @@
+-                    self.clone().connect_via_proxy(dst, intercepted),
++                    self.clone().connect_via_proxy(self.destination_uri(dst), intercepted),
+@@ -951 +976 @@
+-            self.clone().connect_with_maybe_proxy(dst, false),
++            self.clone().connect_with_maybe_proxy(self.destination_uri(dst), false),

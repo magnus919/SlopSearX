@@ -1,0 +1,258 @@
+{
+  "schema": 1,
+  "upstream": {
+    "name": "reqwest",
+    "version": "0.13.5",
+    "archive_sha256": "16a1cfa75cc186dd73d5818e510e042e40927bccc9c236b061cea97e1eb08029",
+    "license": "MIT OR Apache-2.0"
+  },
+  "private_package": "reqwest",
+  "role": "Workspace patch. Exact endpoint mode is opt-in for the gateway. Two upstream metadata files use repository final-newline formatting.",
+  "archive": {
+    "path": "docs/rust-rewrite/t07/reqwest-0.13.5.crate",
+    "bytes": 160871,
+    "sha256": "16a1cfa75cc186dd73d5818e510e042e40927bccc9c236b061cea97e1eb08029"
+  },
+  "patch": {
+    "path": "docs/rust-rewrite/t07/exact-gateway-reqwest.patch",
+    "bytes": 3796,
+    "sha256": "834dcbc8c101f1cac91c8c7605e0e424e875b9ae68b409f4c7ca13ad4a2d251b"
+  },
+  "files": [
+    {
+      "path": "vendor/ssx-gateway-reqwest/.cargo_vcs_info.json",
+      "bytes": 95,
+      "sha256": "1ca56de818ace4474d66db5347c37c731c6a935df8eb9a08eb27e2ef55f44fd3"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/Cargo.lock",
+      "bytes": 68511,
+      "sha256": "ad5f07a0e11fec6daa3f13ff3573b09d6336ac2ca744073353bcaf51b04ad04a"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/Cargo.toml",
+      "bytes": 13151,
+      "sha256": "ab36603e15fa21c4fe1f4e9810245dcb06499cdcf6e6b07296e5d2a3c25c69a1"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/Cargo.toml.orig",
+      "bytes": 9061,
+      "sha256": "ad220e8ebafd8edf963a8815fbf4f6a78f18277e0e8aadc45269b41c61360dca"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/LICENSE-APACHE",
+      "bytes": 10833,
+      "sha256": "751963a8b88c0e3a9f27e98933079fbcf09b9998b2c13ac49c2e4d58444520d6"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/LICENSE-MIT",
+      "bytes": 1062,
+      "sha256": "917c0fe02296eec634820b2758519e39278716bb0104f055cfee771bd7a4c534"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/README.md",
+      "bytes": 2456,
+      "sha256": "d353552b3feae9e57c7a8ce10be9b6d22bd6df5268602cd2e01f21c345a8cd5c"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/async_impl/body.rs",
+      "bytes": 12787,
+      "sha256": "5f817e5c8713fc08aa410057540c6ffa37a1595340bddd2c2f39479b5c0103e9"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/async_impl/client.rs",
+      "bytes": 117870,
+      "sha256": "a40773f4c094af09d7ab082fea900767fde8be0a35877440450bff224d3c3b86"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/async_impl/h3_client/connect.rs",
+      "bytes": 8907,
+      "sha256": "709f7c95884ac1ac4d6759d2cacaa7140c3f289a80fa4387de375f040166ee02"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/async_impl/h3_client/dns.rs",
+      "bytes": 1279,
+      "sha256": "0b0876288eeba6c39331b3bd6b8b01cd4ab01e0362a1e859d961fcc5d520b43a"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/async_impl/h3_client/mod.rs",
+      "bytes": 3554,
+      "sha256": "3d7a499aec889845749098bf620dbd8c7e5338b5104a28dd12d3c8162532cab5"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/async_impl/h3_client/pool.rs",
+      "bytes": 12817,
+      "sha256": "fbba471dd143a347971df9f5862467317ae690ecc1ec5787340bd9117bed46c2"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/async_impl/mod.rs",
+      "bytes": 340,
+      "sha256": "d207798170e6263f62e652a5cca27bf868e7e17c910ba3ee8907a303cb34608d"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/async_impl/multipart.rs",
+      "bytes": 23519,
+      "sha256": "fa28f3689c3975cad971f902c368b89485317be28aaca0ea4de67ca71413f093"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/async_impl/request.rs",
+      "bytes": 34859,
+      "sha256": "997fdd44c27a25df909f0ea93dcae94a6bf07bf57d63b5901b68ddebba2e3a90"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/async_impl/response.rs",
+      "bytes": 15698,
+      "sha256": "ab12ec2046e4037e0ba370279362c9a8bbc7bcd5f8b08cfff43c86c28e40eaee"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/async_impl/upgrade.rs",
+      "bytes": 2018,
+      "sha256": "b3944107063f2b5886b754ff80c4d3af34c9a97c4e9206d3bac3f4f3d6ae5d8a"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/blocking/body.rs",
+      "bytes": 11009,
+      "sha256": "578d58f3c661a4c43b771e982bac1dd08a6fedaf98f8baacd096fbe0cad63f7a"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/blocking/client.rs",
+      "bytes": 57663,
+      "sha256": "c451ef06fe74bd4dce581ea0d2514c6944e6d72ff97703b1e5d133bf7a3d8c25"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/blocking/mod.rs",
+      "bytes": 3545,
+      "sha256": "0f6e73f94fc6088261fc93b3b95fa99b6293fdd482103dcc08f2bf8c5ca44f4f"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/blocking/multipart.rs",
+      "bytes": 15146,
+      "sha256": "9b023b57b7f075d9d2ccd48c530cb29344f45f0ce4868f7dcc8ce9d093f6b312"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/blocking/request.rs",
+      "bytes": 34706,
+      "sha256": "1d0646f1a7f8578de096ea57be8920286ec1390849cad04cfe1f0ff33f676726"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/blocking/response.rs",
+      "bytes": 14237,
+      "sha256": "0ef0d5bfed59109238316f0f6dddf44dcfe68843f4491c59d24fab166cd766f4"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/blocking/wait.rs",
+      "bytes": 2402,
+      "sha256": "2146c76d4c930aee3f18a03d7a030921cf5dd86e4b29582908b4a44be6e2166f"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/config.rs",
+      "bytes": 3819,
+      "sha256": "21d3c917c317e2c56ddc227897f88ee0506b11fdc83d1efdad22d4a9c4796eed"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/connect.rs",
+      "bytes": 72335,
+      "sha256": "f7c317a22bafbe67d45ba6de57951392d43375860062e8190eac1e1a3c7c9131"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/cookie.rs",
+      "bytes": 8979,
+      "sha256": "9878bfaa8dfd02677e5724e24fada55d1f45d98a52efbc738057412606994adf"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/dns/gai.rs",
+      "bytes": 769,
+      "sha256": "d078d9982d7e5e9e977e90ded62080fc3ac0b124753de508147f15ff8818aff8"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/dns/hickory.rs",
+      "bytes": 2318,
+      "sha256": "8807276a535b1029ebf95432f885ae8434cca46d8f20c6f9a532bed78e786e41"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/dns/mod.rs",
+      "bytes": 284,
+      "sha256": "cf9875316437ff762962a867bb3650dfe93f5cb6ec0a8e3397bfa20e36fb9c44"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/dns/resolve.rs",
+      "bytes": 5620,
+      "sha256": "87cd433e1e75984007d39a50003fcc5a53b41067cd9e5585710318767a80d425"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/error.rs",
+      "bytes": 15744,
+      "sha256": "b7aa133184a6519cd71d6f28fe2424f2db55ea4b9bef3a17b5df2d8be176a0d5"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/into_url.rs",
+      "bytes": 2880,
+      "sha256": "761e9d0e04f652b201317d746cbe2a538de0604240914913fbe968114d88893d"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/lib.rs",
+      "bytes": 12665,
+      "sha256": "ed6cd55caeafcd6d188893972af62d4d1fbd64d7247af1a331595f6f316b752c"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/proxy.rs",
+      "bytes": 30962,
+      "sha256": "ed7091c92713370d1e880157947e0ea73ea94327a91b5fbd8197cfaa58b5003d"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/redirect.rs",
+      "bytes": 14028,
+      "sha256": "7d1e8c0b99e92c8bdd815e71b0e2ec1e0b40b9e346012651e5288d04b4e0d576"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/response.rs",
+      "bytes": 1058,
+      "sha256": "12cf82de2499a426686ed4f3719cce73e269b7b9ddc9c88458e7378beb2c58a8"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/retry.rs",
+      "bytes": 15720,
+      "sha256": "ce2c5307a449047a9f7187b52d91ddd369c0468900f4f6b0b390a849515ff525"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/tls.rs",
+      "bytes": 30806,
+      "sha256": "a32a7a2cb98994af681c1258315512c379988ff3fe500eb6e51a1a33fc4d6a6d"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/util.rs",
+      "bytes": 3949,
+      "sha256": "427379213bb803187023327eba8d15aed7ac9d42a0a9e874966fd0278eb948a8"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/wasm/body.rs",
+      "bytes": 9152,
+      "sha256": "81eea1079d4bee8e23e9be0b7488a07373a23c8eddf5c05aa9ec2b83810f9061"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/wasm/client.rs",
+      "bytes": 15055,
+      "sha256": "3f88f32bb51051d54d5dd9fb9256063da8cc762aeaa1d8b03d3fda88fae6969e"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/wasm/mod.rs",
+      "bytes": 2219,
+      "sha256": "79c7aeac9b9d271e4cfe931b39314aef3a7ad78184a84424306e772652535e0b"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/wasm/multipart.rs",
+      "bytes": 11410,
+      "sha256": "4a347e2beedc2686d5d3818e205715cc6abe7ca678e26bf89de89a2ecb548f40"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/wasm/request.rs",
+      "bytes": 20055,
+      "sha256": "51f71c622a95f78c0d2251353bca0ac428caf8ee7ea34c1285e4d50fee515aa6"
+    },
+    {
+      "path": "vendor/ssx-gateway-reqwest/src/wasm/response.rs",
+      "bytes": 5827,
+      "sha256": "c7931612eb1c370345e938c8ce8a1f600f42b479ae81441f20d8832948cdd7c6"
+    }
+  ]
+}

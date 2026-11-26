@@ -29,6 +29,7 @@ subtle = "=2.6.1"
 sse-stream = "=0.2.6"
 ssx-domain.workspace = true
 ssx-json.workspace = true
+ssx-source-codecs = { workspace = true, features = ["source-gateway-url"] }
 
 # T05 protocol codecs and accepted AWS-LC credential randomness.
 base64 = "=0.23.1"

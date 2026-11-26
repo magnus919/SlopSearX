@@ -164,6 +164,7 @@ async fn gateway_paths_and_queries_survive_outbound_http() -> Result<()> {
     }
 
     let prefix = "/tenant%2fedge%2Fname";
+    let encoded_prefix = format!("/discard/%2e%2E{prefix}");
     let ct = CancellationToken::new();
     let observed = Arc::new(Mutex::new(Vec::new()));
     let issued_session = Arc::new(Mutex::new(None));
@@ -179,7 +180,8 @@ async fn gateway_paths_and_queries_survive_outbound_http() -> Result<()> {
         let issued_session = Arc::clone(&issued_session);
         let saw_get = Arc::clone(&saw_get);
         Router::new()
-            .nest(prefix, router)
+            .nest(prefix, router.clone())
+            .nest(&encoded_prefix, router)
             .layer(middleware::from_fn(
                 move |request: Request, next: middleware::Next| {
                     let observed = Arc::clone(&observed);
@@ -252,20 +254,135 @@ async fn gateway_paths_and_queries_survive_outbound_http() -> Result<()> {
         }
     };
     let deadline = Duration::from_secs(3);
-    for suffix in ["/mcp", "/mcp?", "/mcp?arg=%2f&arg=%2F&bare&empty="] {
-        let expected = format!("{prefix}{suffix}");
-        let url = format!("http://{}/discard/..{expected}", host.address);
+    for (input_prefix, expected_prefix) in [
+        (format!("/discard/..{prefix}"), prefix),
+        (encoded_prefix.clone(), encoded_prefix.as_str()),
+    ] {
+        for suffix in ["/mcp", "/mcp?", "/mcp?arg=%2f&arg=%2F&bare&empty="] {
+            let expected = format!("{expected_prefix}{suffix}");
+            let url = format!("http://{}{input_prefix}{suffix}", host.address);
 
-        let raw = RawGateway::connect(url.clone(), Some("fixture-token".into()), deadline).await?;
-        raw.close().await?;
-        verify_wire(&expected, false);
+            let raw =
+                RawGateway::connect(url.clone(), Some("fixture-token".into()), deadline).await?;
+            raw.close().await?;
+            verify_wire(&expected, false);
 
-        let typed = Gateway::connect(url, Some("fixture-token".into()), deadline).await?;
-        tokio::time::timeout(deadline, saw_get.notified()).await?;
-        typed.shutdown().await?;
-        verify_wire(&expected, true);
+            let typed = Gateway::connect(url, Some("fixture-token".into()), deadline).await?;
+            tokio::time::timeout(deadline, saw_get.notified()).await?;
+            typed.shutdown().await?;
+            verify_wire(&expected, true);
+        }
     }
     host.shutdown().await?;
+    Ok(())
+}
+
+#[tokio::test]
+async fn gateway_exact_endpoint_routes_explicit_zero_port() -> Result<()> {
+    use reqwest::{Client, Proxy, StatusCode, Url};
+    use tokio::{
+        io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
+        net::TcpListener,
+    };
+
+    async fn observe(listener: TcpListener, expected: &str, host: Option<&str>) -> Result<()> {
+        let (socket, _) = listener.accept().await?;
+        let mut socket = BufReader::new(socket);
+        let mut request = String::new();
+        while !request.ends_with("\r\n\r\n") {
+            assert!(request.len() < 4096);
+            assert_ne!(socket.read_line(&mut request).await?, 0);
+        }
+        assert_eq!(request.lines().next(), Some(expected));
+        if let Some(host) = host {
+            let expected = format!("host: {host}");
+            assert!(
+                request
+                    .lines()
+                    .any(|line| line.eq_ignore_ascii_case(&expected))
+            );
+        }
+        socket
+            .get_mut()
+            .write_all(
+                b"HTTP/1.1 418 Fixture Stop\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
+            )
+            .await?;
+        Ok(())
+    }
+
+    let target = "/discard/%2e%2E/mcp?";
+    let bind = || TcpListener::bind(("127.0.0.1", 0));
+    let deadline = Duration::from_secs(3);
+    let origin = bind().await?;
+    let address = origin.local_addr()?;
+    let endpoint = Url::parse(&format!("http://fixture.test:0{target}"))?;
+
+    // A nonzero resolver override is honored only when the TCP URI has no
+    // explicit port. This observes default-port selection without binding :80.
+    let builder = || {
+        Client::builder()
+            .no_proxy()
+            .resolve("fixture.test", address)
+            .connect_timeout(deadline)
+            .timeout(deadline)
+    };
+    let stock = builder().build()?;
+    let error = stock
+        .get(endpoint.clone())
+        .send()
+        .await
+        .expect_err("stock port zero");
+    assert!(error.is_connect());
+
+    let client = builder()
+        .exact_endpoint(endpoint.clone(), target.parse()?)
+        .build()?;
+    let request_line = format!("GET {target} HTTP/1.1");
+    let (response, observation) = tokio::time::timeout(deadline, async {
+        tokio::join!(
+            client.get(endpoint).send(),
+            observe(origin, &request_line, Some("fixture.test:0"))
+        )
+    })
+    .await?;
+    assert_eq!(response?.status(), StatusCode::IM_A_TEAPOT);
+    observation?;
+
+    for (scheme, host) in [
+        ("http", "fixture.test"),
+        ("https", "fixture.test"),
+        ("http", "[::1]"),
+        ("https", "[::1]"),
+    ] {
+        let listener = bind().await?;
+        let proxy = Proxy::all(format!("http://{}", listener.local_addr()?))?;
+        let endpoint = Url::parse(&format!("{scheme}://{host}:0{target}"))?;
+        let client = Client::builder()
+            .proxy(proxy)
+            .exact_endpoint(endpoint.clone(), target.parse()?)
+            .timeout(deadline)
+            .build()?;
+        let secure = scheme == "https";
+        let request_line = if secure {
+            format!("CONNECT {host}:443 HTTP/1.1")
+        } else {
+            format!("GET {scheme}://{host}:0{target} HTTP/1.1")
+        };
+        let (response, observation) = tokio::time::timeout(deadline, async {
+            tokio::join!(
+                client.get(endpoint).send(),
+                observe(listener, &request_line, None)
+            )
+        })
+        .await?;
+        if secure {
+            assert!(response.expect_err("fixture refused CONNECT").is_connect());
+        } else {
+            assert_eq!(response?.status(), StatusCode::IM_A_TEAPOT);
+        }
+        observation?;
+    }
     Ok(())
 }
 

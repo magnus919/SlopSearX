@@ -1,0 +1,19 @@
+{
+  "path": "Cargo.toml",
+  "current_bytes": 2245,
+  "current_sha256": "14acba4db8d71b4c6d66d731b0e2045f8256a02dab9813130fb477ab59da9e35",
+  "prior_bytes": 2146,
+  "prior_sha256": "fb454e6cd46ce2abaa68c058541390a44e286a0cdd6e678bc5a3a9f052480f4b",
+  "spans": [
+    {
+      "at": 59,
+      "current": "exclude = [\"vendor/expat\", \"vendor/libxml\", \"vendor/rmcp\", \"vendor/ssx-cli-process-wrap\", \"vendor/ssx-gateway-reqwest\"]\n",
+      "prior": "exclude = [\"vendor/expat\", \"vendor/libxml\", \"vendor/rmcp\", \"vendor/ssx-cli-process-wrap\"]\n"
+    },
+    {
+      "at": 2176,
+      "current": "\n[patch.crates-io]\nreqwest = { path = \"vendor/ssx-gateway-reqwest\" }\n",
+      "prior": ""
+    }
+  ]
+}

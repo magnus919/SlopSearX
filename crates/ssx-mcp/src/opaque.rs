@@ -1177,16 +1177,7 @@ impl RawGateway {
         tokio::time::timeout_at(deadline, read).await?
     }
     pub async fn connect(url: String, token: Option<String>, deadline: Duration) -> Result<Self> {
-        let parsed = reqwest::Url::parse(&url)?;
-        if !parsed.username().is_empty()
-            || parsed.password().is_some()
-            || parsed.fragment().is_some()
-        {
-            return Err("invalid MCP remote URL".into());
-        }
-        let http = reqwest::Client::builder()
-            .redirect(reqwest::redirect::Policy::none())
-            .build()?;
+        let http = crate::http_client::gateway_http(&url)?;
         let mut gateway = Self {
             http,
             url,
