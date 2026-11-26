@@ -159,7 +159,7 @@ struct Fixture {
     address: std::net::SocketAddr,
     done: Arc<AtomicBool>,
     requests: Arc<Mutex<Vec<Request>>>,
-    worker: Option<thread::JoinHandle<TcpListener>>,
+    worker: Option<thread::JoinHandle<std::net::SocketAddr>>,
     producer: Arc<Mutex<Vec<serde_json::Value>>>,
 }
 impl Fixture {
@@ -492,7 +492,10 @@ impl Fixture {
                     Err(e) => panic!("fixture accept: {e}"),
                 }
             }
-            listener
+            // Close the owned socket here, including when the worker reaches its deadline.
+            let retired_address = listener.local_addr().expect("fixture listener address");
+            drop(listener);
+            retired_address
         });
         Self {
             address,
@@ -505,13 +508,11 @@ impl Fixture {
     fn finish(&mut self) {
         self.done.store(true, Ordering::SeqCst);
         if let Some(worker) = self.worker.take() {
-            // Retire the owned listener, even if another process later binds its address.
-            let listener = worker.join().expect("fixture joined");
+            let retired_address = worker.join().expect("fixture joined");
             assert_eq!(
-                listener.local_addr().expect("fixture listener address"),
-                self.address
+                retired_address, self.address,
+                "fixture retired its own listener"
             );
-            drop(listener);
         }
     }
 }
