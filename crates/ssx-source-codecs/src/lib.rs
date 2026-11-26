@@ -86,6 +86,8 @@ pub mod idna2008;
 mod idna2008_data;
 mod punycode;
 mod raw_unicode_escape;
+#[cfg(feature = "source-gateway-url")]
+pub mod source_url;
 mod text;
 mod unicode;
 mod unicode_escape;

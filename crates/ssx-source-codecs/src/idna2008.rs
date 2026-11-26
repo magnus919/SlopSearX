@@ -350,7 +350,7 @@ fn alabel(label: &str) -> Result<String, Error> {
     }
     Ok(encoded)
 }
-fn source_lower(text: &str) -> String {
+pub(crate) fn source_lower(text: &str) -> String {
     ssx_json::python_text::lowercase_steps(text)
         .filter_map(|step| match step {
             ssx_json::python_text::LowerStep::Scalar(ch) => Some(ch),

@@ -9,6 +9,7 @@ publish = false
 workspace = true
 [features]
 source-idna2008 = ["dep:idna", "dep:ssx-json"]
+source-gateway-url = ["source-idna2008"]
 
 [dependencies]
 idna = { version = "=1.1.0", default-features = false, features = ["alloc", "compiled_data"], optional = true }
