@@ -1,0 +1,39 @@
+{
+  "path": "docs/rust-rewrite/t03/source-successor-v1.rs",
+  "current_bytes": 44342,
+  "current_sha256": "31c36b1e569575bacd640d567c516357b553ec4af720a06571db4afe55e771f5",
+  "prior_bytes": 43951,
+  "prior_sha256": "84f6d4218d7355e874a7ee63c90a41485ad27abadd81fc0761cd223b9d4f090d",
+  "spans": [
+    {
+      "at": 1542,
+      "current": "const T09_RATE_PATH: &str = \"crates/ssx-http/tests/t09.rs\";\nconst T09_RATE_BYTES: usize = 69377;\nconst T09_RATE_SOURCE: &str = include_str!(\"t09-login-rate-afterimage.json\");\nconst T09_RATE_SHA: &str = \"b1250c9936a741410106352d1b83f6b0896c2a42568b992c1581dfac471399f4\";\n",
+      "prior": ""
+    },
+    {
+      "at": 13667,
+      "current": "    let (record, sha) = match path {\n        RMCP_SEARCH_PATH => (RMCP_SEARCH_SOURCE, RMCP_SEARCH_SHA),\n        T09_RATE_PATH => (T09_RATE_SOURCE, T09_RATE_SHA),\n        _ => return Ok(std::borrow::Cow::Borrowed(physical)),\n    };\n    let prior = rmcp_source_afterimage::prior(record, sha, path, physical, mode)?;\n    Ok(std::borrow::Cow::Owned(prior))\n",
+      "prior": "    if path == RMCP_SEARCH_PATH {\n        let old = rmcp_source_afterimage::prior(\n            RMCP_SEARCH_SOURCE,\n            RMCP_SEARCH_SHA,\n            path,\n            physical,\n            mode,\n        )?;\n        return Ok(std::borrow::Cow::Owned(old));\n    }\n    Ok(std::borrow::Cow::Borrowed(physical))\n"
+    },
+    {
+      "at": 14071,
+      "current": "    match pin.path {\n        RMCP_SEARCH_PATH => RMCP_SEARCH_BYTES,\n        T09_RATE_PATH => T09_RATE_BYTES,\n        _ => pin.current_bytes,\n",
+      "prior": "    if pin.path == RMCP_SEARCH_PATH {\n        RMCP_SEARCH_BYTES\n    } else {\n        pin.current_bytes\n"
+    },
+    {
+      "at": 41231,
+      "current": "                if matches!(pin.path, RMCP_SEARCH_PATH | T09_RATE_PATH) {\n",
+      "prior": "                if pin.path == RMCP_SEARCH_PATH {\n"
+    },
+    {
+      "at": 41713,
+      "current": "        if matches!(pin.path, RMCP_SEARCH_PATH | T09_RATE_PATH) {\n",
+      "prior": "        if pin.path == RMCP_SEARCH_PATH {\n"
+    },
+    {
+      "at": 41920,
+      "current": "                \"predecessor bytes rejected as physical current\",\n",
+      "prior": "                \"pre-RMCP search bytes rejected as physical current\",\n"
+    }
+  ]
+}

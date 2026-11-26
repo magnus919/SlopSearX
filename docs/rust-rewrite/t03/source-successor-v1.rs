@@ -34,6 +34,10 @@ const RMCP_SEARCH_PATH: &str = "crates/ssx-infra/src/search.rs";
 const RMCP_SEARCH_BYTES: usize = 91653;
 const RMCP_SEARCH_SOURCE: &str = include_str!("../t08a/rmcp-search-clock-afterimage.json");
 const RMCP_SEARCH_SHA: &str = "41ac09394815a14b008e9590299317e6a73ba552a1b927bea27190e0886c894a";
+const T09_RATE_PATH: &str = "crates/ssx-http/tests/t09.rs";
+const T09_RATE_BYTES: usize = 69377;
+const T09_RATE_SOURCE: &str = include_str!("t09-login-rate-afterimage.json");
+const T09_RATE_SHA: &str = "b1250c9936a741410106352d1b83f6b0896c2a42568b992c1581dfac471399f4";
 
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -346,23 +350,19 @@ fn logical_material<'a>(
     physical: &'a [u8],
     mode: u32,
 ) -> Result<std::borrow::Cow<'a, [u8]>> {
-    if path == RMCP_SEARCH_PATH {
-        let old = rmcp_source_afterimage::prior(
-            RMCP_SEARCH_SOURCE,
-            RMCP_SEARCH_SHA,
-            path,
-            physical,
-            mode,
-        )?;
-        return Ok(std::borrow::Cow::Owned(old));
-    }
-    Ok(std::borrow::Cow::Borrowed(physical))
+    let (record, sha) = match path {
+        RMCP_SEARCH_PATH => (RMCP_SEARCH_SOURCE, RMCP_SEARCH_SHA),
+        T09_RATE_PATH => (T09_RATE_SOURCE, T09_RATE_SHA),
+        _ => return Ok(std::borrow::Cow::Borrowed(physical)),
+    };
+    let prior = rmcp_source_afterimage::prior(record, sha, path, physical, mode)?;
+    Ok(std::borrow::Cow::Owned(prior))
 }
 fn current_source_size(pin: &Pin<'_>) -> usize {
-    if pin.path == RMCP_SEARCH_PATH {
-        RMCP_SEARCH_BYTES
-    } else {
-        pin.current_bytes
+    match pin.path {
+        RMCP_SEARCH_PATH => RMCP_SEARCH_BYTES,
+        T09_RATE_PATH => T09_RATE_BYTES,
+        _ => pin.current_bytes,
     }
 }
 fn confined(root: &Path, path: &str) -> Result<std::path::PathBuf> {
@@ -1052,7 +1052,7 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
         need(
             frame(
                 pin.path,
-                if pin.path == RMCP_SEARCH_PATH {
+                if matches!(pin.path, RMCP_SEARCH_PATH | T09_RATE_PATH) {
                     &physical
                 } else {
                     &logical
@@ -1066,11 +1066,11 @@ pub(crate) fn controls(root: &Path) -> Result<()> {
                 && frame(pin.path, &prior_bytes, 0o644).is_err(),
             "stale parent is not current",
         )?;
-        if pin.path == RMCP_SEARCH_PATH {
+        if matches!(pin.path, RMCP_SEARCH_PATH | T09_RATE_PATH) {
             need(
                 frame(pin.path, &logical, 0o644).is_err()
                     && prior(root, pin.path, &logical).is_err(),
-                "pre-RMCP search bytes rejected as physical current",
+                "predecessor bytes rejected as physical current",
             )?;
         }
         if pin.path == W07_SOURCE {
