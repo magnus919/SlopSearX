@@ -148,7 +148,7 @@ pub(crate) fn parent(
             supplied == physical,
             "T06 raw gateway requires actual current source",
         )?;
-        return raw_gateway_prior(&physical, mode, expected).map(Some);
+        return raw_gateway_prior(root, &physical, mode, expected).map(Some);
     }
     if path == RMCP_TRANSPORT {
         let (physical, mode) = regular(root, path)?;
@@ -983,10 +983,30 @@ const RAW_GATEWAY_OLD: &str = r#"        let parsed = reqwest::Url::parse(&url)?
             .build()?;"#;
 const RAW_GATEWAY_NEW: &str = "        let http = crate::http_client::gateway_http(&url)?;";
 
-fn raw_gateway_prior(raw: &[u8], mode: u32, expected: &str) -> Result<Vec<u8>> {
+// Startup cancellation keeps the accepted request-target change as its
+// predecessor. The complete accepted and physical byte identities are pinned.
+const STARTUP_BASELINE: &str = "1e18b746b45a7c2ec31be623911687767d87ed9f";
+const STARTUP_PRIOR_BLOB: &str = "dfc36638d78ce22abb9b0da7ae0c90bf2784b684";
+const STARTUP_CURRENT: &str = "fcbb1970c46a1394fb158a41e7a0e2d2cc2162a933e2a491ec58d1afda6ff36a";
+const STARTUP_CURRENT_BYTES: usize = 87822;
+
+fn raw_gateway_prior(root: &Path, raw: &[u8], mode: u32, expected: &str) -> Result<Vec<u8>> {
     need(
         expected == RAW_GATEWAY_PRIOR,
         "T06 raw gateway historical binding differs",
+    )?;
+    need(
+        mode == 0o644 && raw.len() == STARTUP_CURRENT_BYTES && digest(raw) == STARTUP_CURRENT,
+        "T06 raw gateway startup source identity differs",
+    )?;
+    let accepted = Command::new("git")
+        .args(["cat-file", "blob", STARTUP_PRIOR_BLOB])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    need(
+        accepted.status.success(),
+        "T06 raw gateway startup predecessor missing",
     )?;
     inverse(
         &Row {
@@ -1008,14 +1028,25 @@ fn raw_gateway_prior(raw: &[u8], mode: u32, expected: &str) -> Result<Vec<u8>> {
                 new: RAW_GATEWAY_NEW.into(),
             }],
         },
-        raw,
+        &accepted.stdout,
         mode,
     )
 }
 
 fn raw_gateway_controls(root: &Path) -> Result<()> {
     let (raw, mode) = regular(root, RAW_GATEWAY)?;
-    let prior = raw_gateway_prior(&raw, mode, RAW_GATEWAY_PRIOR)?;
+    let prior = raw_gateway_prior(root, &raw, mode, RAW_GATEWAY_PRIOR)?;
+    let startup_tree = Command::new("git")
+        .args(["ls-tree", STARTUP_BASELINE, "--", RAW_GATEWAY])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    need(
+        startup_tree.status.success()
+            && startup_tree.stdout
+                == format!("100644 blob {STARTUP_PRIOR_BLOB}\t{RAW_GATEWAY}\n").as_bytes(),
+        "T06 raw gateway startup predecessor Git identity differs",
+    )?;
     let tree = Command::new("git")
         .args(["ls-tree", RAW_GATEWAY_BASELINE, "--", RAW_GATEWAY])
         .current_dir(root)
@@ -1042,7 +1073,7 @@ fn raw_gateway_controls(root: &Path) -> Result<()> {
         (raw.as_slice(), 0o644, RAW_GATEWAY_CURRENT),
     ] {
         need(
-            raw_gateway_prior(bytes, mode, expected).is_err(),
+            raw_gateway_prior(root, bytes, mode, expected).is_err(),
             "T06 raw gateway accepted altered bytes, mode, or historical binding",
         )?;
     }
