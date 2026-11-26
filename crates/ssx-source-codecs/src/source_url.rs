@@ -5,7 +5,7 @@
 //! 16dc6e58f3832dd55a68d4a68c97eed52c88f946).
 
 use crate::idna2008::{decode_display, encode, source_lower};
-use crate::url_reference::scheme_valid;
+use crate::url_reference::{RawSourceUrlError, scheme_valid, source_raw_urljoin};
 use ssx_json::decimal_value;
 
 /// Ordered source URL validation stage, without retaining secret URL text.
@@ -27,6 +27,10 @@ pub enum SourceUrlErrorKind {
     Path,
     /// A malformed typed copy component.
     Component,
+    /// The raw join authority contains invalid bracket syntax or a malformed literal.
+    JoinBracket,
+    /// Unicode 16 NFKC would introduce a delimiter during raw join authority validation.
+    JoinNetloc,
 }
 /// Typed source URL validation failure.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -148,6 +152,10 @@ pub enum SourceUrlOrigin {
     Input,
     /// A serialization reconstructed from the copied components.
     Copy,
+    /// A new input derived by joining the serialized source URLs.
+    Join,
+    /// A new input derived by appending the reference to the client's base path.
+    ClientMerge,
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
@@ -618,6 +626,52 @@ impl SourceUrl {
             parts,
         })
     }
+
+    /// Construct the reference, join the two serialized URLs, and construct the result.
+    pub fn join(&self, reference: &str) -> Result<Self, SourceUrlError> {
+        let reference = Self::parse(reference)?;
+        let joined =
+            source_raw_urljoin(&self.serialized(), &reference.serialized()).map_err(|error| {
+                invalid(match error {
+                    RawSourceUrlError::Bracket => SourceUrlErrorKind::JoinBracket,
+                    RawSourceUrlError::Netloc => SourceUrlErrorKind::JoinNetloc,
+                })
+            })?;
+        let mut result = Self::parse(&joined)?;
+        result.origin = SourceUrlOrigin::Join;
+        Ok(result)
+    }
+    /// Apply the client base trailing slash to the raw path and query.
+    pub fn client_base(&self) -> Result<Self, SourceUrlError> {
+        let mut raw = self.raw_path();
+        if raw.ends_with('/') {
+            return Ok(self.clone());
+        }
+        raw.push('/');
+        self.copy_with(SourceUrlChanges {
+            raw_path: Some(&raw),
+            ..Default::default()
+        })
+    }
+    /// Keep an absolute reference or append its raw path and query to the client base.
+    pub fn merge_client_reference(&self, reference: &str) -> Result<Self, SourceUrlError> {
+        let r = Self::parse(reference)?;
+        if r.is_absolute() {
+            return Ok(r);
+        }
+        let base = self.client_base()?;
+        let raw = format!(
+            "{}{}",
+            base.raw_path(),
+            r.raw_path().trim_start_matches('/')
+        );
+        let mut out = base.copy_with(SourceUrlChanges {
+            raw_path: Some(&raw),
+            ..Default::default()
+        })?;
+        out.origin = SourceUrlOrigin::ClientMerge;
+        Ok(out)
+    }
 }
 
 #[cfg(test)]
@@ -896,5 +950,197 @@ mod tests {
         assert_eq!(cleared.netloc(), "other.test");
         assert_eq!(base.input(), input);
         assert!(!format!("{base:?}").contains("fixture-secret"));
+    }
+
+    // CPython3.14.7 urllib.parse.urljoin582–650, called on str(URL(ref)).
+    #[test]
+    fn join_inherits_none_but_not_empty_delimiters_and_preserves_source_scheme_tables() {
+        let base = url("https://host/a/b?old#prior");
+        assert_eq!(base.join("").unwrap().origin(), SourceUrlOrigin::Join);
+        for (reference, expected) in [
+            ("", "https://host/a/b?old#prior"),
+            ("?", "https://host/a/b?"),
+            ("#", "https://host/a/b?old#"),
+            ("?new", "https://host/a/b?new"),
+            ("../c", "https://host/c"),
+            ("./", "https://host/a/"),
+            ("/a//b", "https://host/a//b"),
+            ("c//d", "https://host/a/c/d"),
+            ("//other/x?", "https://other/x?"),
+            ("http://other/x", "http://other/x"),
+        ] {
+            assert_eq!(
+                base.join(reference).unwrap().serialized(),
+                expected,
+                "{reference}"
+            );
+        }
+        // HTTPX's outer URL construction also runs on urllib early returns.
+        assert_eq!(
+            url("HTTP://host:80/a").join("").unwrap().serialized(),
+            "http://host/a"
+        );
+        assert_eq!(
+            url("").join("HTTP://host:80/a").unwrap().serialized(),
+            "http://host/a"
+        );
+        assert_eq!(
+            base.join("HTTP://other:80/a").unwrap().serialized(),
+            "http://other/a"
+        );
+        assert_eq!(url("custom://host/a").join("b").unwrap().serialized(), "b");
+        assert_eq!(
+            url("http:base").join("next").unwrap().serialized(),
+            "http:next"
+        );
+    }
+    #[test]
+    fn client_base_raw_path_merge_is_not_urljoin_or_authority_replacement() {
+        let base = url("https://host/api");
+        assert_eq!(base.client_base().unwrap().origin(), SourceUrlOrigin::Copy);
+        assert_eq!(
+            url("https://host/api/").client_base().unwrap().origin(),
+            SourceUrlOrigin::Input
+        );
+        assert_eq!(
+            base.merge_client_reference("/next").unwrap().origin(),
+            SourceUrlOrigin::ClientMerge
+        );
+        assert_eq!(
+            base.merge_client_reference("https://other/next")
+                .unwrap()
+                .origin(),
+            SourceUrlOrigin::Input
+        );
+        assert_eq!(
+            base.client_base().unwrap().serialized(),
+            "https://host/api/"
+        );
+        assert_eq!(
+            base.join("/next").unwrap().serialized(),
+            "https://host/next"
+        );
+        assert_eq!(
+            base.merge_client_reference("/next").unwrap().serialized(),
+            "https://host/api/next"
+        );
+        assert_eq!(
+            base.merge_client_reference("//other/next#drop")
+                .unwrap()
+                .serialized(),
+            "https://host/api/next"
+        );
+        assert_eq!(
+            base.merge_client_reference("http:next")
+                .unwrap()
+                .serialized(),
+            "https://host/api/next"
+        );
+        assert_eq!(
+            base.merge_client_reference("https://other/next#keep")
+                .unwrap()
+                .serialized(),
+            "https://other/next#keep"
+        );
+        assert_eq!(
+            url("https://host/api?q")
+                .client_base()
+                .unwrap()
+                .serialized(),
+            "https://host/api?q/"
+        );
+        assert_eq!(
+            url("https://host/api?q")
+                .merge_client_reference("/next")
+                .unwrap()
+                .serialized(),
+            "https://host/api?q/next"
+        );
+    }
+    #[test]
+    fn join_nfkc_value_errors_follow_both_nonempty_operand_splits_only() {
+        let base = url("http://host/a");
+        for input in ["http://[::1%／]/a", "http://[::1%℀]/a"] {
+            let bad = url(input); // Source construction remains valid.
+            assert_eq!(
+                bad.join("b").unwrap_err().kind,
+                SourceUrlErrorKind::JoinNetloc
+            );
+            assert_eq!(
+                base.join(input).unwrap_err().kind,
+                SourceUrlErrorKind::JoinNetloc
+            );
+            assert_eq!(
+                bad.join("mailto:x").unwrap_err().kind,
+                SourceUrlErrorKind::JoinNetloc
+            );
+            assert_eq!(bad.join("").unwrap().serialized(), bad.serialized());
+            assert_eq!(url("").join(input).unwrap().serialized(), bad.serialized());
+        }
+    }
+    #[test]
+    fn join_bracket_prefix_value_errors_do_not_validate_the_colon_port_tail() {
+        let base = url("http://host/a");
+        for input in ["http://[::1%x]y]/a", "http://[::1%]:y]/a"] {
+            let bad = url(input);
+            assert_eq!(
+                bad.join("b").unwrap_err().kind,
+                SourceUrlErrorKind::JoinBracket
+            );
+            assert_eq!(
+                base.join(input).unwrap_err().kind,
+                SourceUrlErrorKind::JoinBracket
+            );
+            assert_eq!(bad.join("").unwrap().serialized(), bad.serialized());
+            assert_eq!(url("").join(input).unwrap().serialized(), bad.serialized());
+        }
+        // First closing-bracket tail only needs ':', even if not a port integer.
+        let allowed = "http://[::1%x]:y]/a";
+        assert_eq!(
+            url(allowed).join("b").unwrap().serialized(),
+            "http://[::1%x]:y]/b"
+        );
+        assert_eq!(base.join(allowed).unwrap().serialized(), allowed);
+        // Bracket checks precede the NFKC netloc check.
+        assert_eq!(
+            url("http://[::1%／]y]/a").join("b").unwrap_err().kind,
+            SourceUrlErrorKind::JoinBracket
+        );
+    }
+    #[test]
+    fn join_resplits_serialized_authority_scheme_and_semicolon_paths() {
+        let u = url("http:////x");
+        assert_eq!(u.raw_host(), "");
+        assert_eq!(u.path(), "//x");
+        assert_eq!(u.serialized(), "http://x");
+        assert_eq!(u.join("b").unwrap().serialized(), "http://x/b");
+        assert_eq!(url("http:////").join("b").unwrap().serialized(), "http:/b");
+        assert_eq!(url(":foo").serialized(), "foo");
+        assert_eq!(
+            url("http://host/a/b").join(":foo").unwrap().serialized(),
+            "http://host/a/foo"
+        );
+        let copied = url("a")
+            .copy_with(SourceUrlChanges {
+                path: Some("http:a/b"),
+                ..Default::default()
+            })
+            .unwrap();
+        assert_eq!(copied.scheme(), "");
+        assert_eq!(copied.serialized(), "http:a/b");
+        assert_eq!(copied.join("/c").unwrap().serialized(), "http:/c");
+        let params = url("http://host/a;b/c;d?old");
+        assert_eq!(
+            params.join(";p").unwrap().serialized(),
+            "http://host/a;b/;p"
+        );
+        assert_eq!(
+            params.join("?new").unwrap().serialized(),
+            "http://host/a;b/c;d?new"
+        );
+        assert_eq!(
+            url("file:///a/b").join("/c").unwrap().serialized(),
+            "file:/c"
+        );
     }
 }

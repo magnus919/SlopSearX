@@ -727,7 +727,12 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         .collect();
     let expected_gateway_url_tests = BTreeSet::from([
         "source_url::tests::absent_empty_query_fragment_and_empty_authority_are_not_conflated",
+        "source_url::tests::client_base_raw_path_merge_is_not_urljoin_or_authority_replacement",
         "source_url::tests::complete_owner_separates_provenance_normalized_fields_and_wire_target",
+        "source_url::tests::join_bracket_prefix_value_errors_do_not_validate_the_colon_port_tail",
+        "source_url::tests::join_inherits_none_but_not_empty_delimiters_and_preserves_source_scheme_tables",
+        "source_url::tests::join_nfkc_value_errors_follow_both_nonempty_operand_splits_only",
+        "source_url::tests::join_resplits_serialized_authority_scheme_and_semicolon_paths",
         "source_url::tests::quoting_literal_dot_segments_and_utf8_userinfo_follow_source_stages",
         "source_url::tests::signed_zero_default_and_arbitrary_integer_ports_never_become_u16",
         "source_url::tests::source_length_controls_host_port_path_validation_precedence",
