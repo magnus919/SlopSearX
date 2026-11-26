@@ -2850,9 +2850,13 @@ dependencies = [
 name = "ssx-gateway"
 version = "0.1.0"
 dependencies = [
+ "axum",
  "clap",
- "rmcp",
- "ssx-wire",
+ "nix",
+ "serde_json",
+ "ssx-mcp",
+ "tokio",
+ "tokio-util",
 ]
 
 [[package]]

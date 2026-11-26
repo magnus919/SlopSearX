@@ -24,6 +24,13 @@ const T07_LOCK_BYTES: usize = 96228;
 const T07_LOCK_SHA: &str = "d6ae7d6cfee09ca6cfdbffa6faaa7eb955d38d6de38b7d8d7c858c2491b2019f";
 const GATEWAY_LOCK_BYTES: usize = 96107;
 const GATEWAY_LOCK_SHA: &str = "e779fa77be4df46c9ec3005ce81fdf0c0c54319c252e8f055ca72f45506e7409";
+const INSTALLED_GATEWAY_LOCK_BYTES: usize = 96154;
+const INSTALLED_GATEWAY_LOCK_SHA: &str =
+    "7685919743252d3b8642944fb494f81df2636af3e17a5b58b1767abf1b5e4b0d";
+const INSTALLED_GATEWAY_LOCK_SOURCE: &str =
+    include_str!("t07-installed-gateway-lock-afterimage.json");
+const INSTALLED_GATEWAY_LOCK_SOURCE_SHA: &str =
+    "6bc7592a2536777555b2976e51a133bf0cbf7a8f0da15788761110e888013d87";
 const GATEWAY_LOCK_SOURCE: &str = include_str!("t07-gateway-reqwest-lock-afterimage.json");
 const GATEWAY_LOCK_SOURCE_SHA: &str =
     "bbacc3197f28c25a837ea7a9e75af95eea1d7fdc40f5fdab69cf56bc76b62d90";
@@ -134,7 +141,10 @@ pub(crate) fn current_lock_identity() -> Result<(usize, String)> {
                 == "5f4d339df70efcfa71a6ad6d878d4078c6250cd1a54279c8716123f2276e0c99",
         "T07 lock predecessor identity",
     )?;
-    Ok((GATEWAY_LOCK_BYTES, GATEWAY_LOCK_SHA.to_owned()))
+    Ok((
+        INSTALLED_GATEWAY_LOCK_BYTES,
+        INSTALLED_GATEWAY_LOCK_SHA.to_owned(),
+    ))
 }
 
 fn git(root: &Path, args: &[&str]) -> Result<Vec<u8>> {
@@ -161,11 +171,23 @@ pub(crate) fn owns(path: &str) -> bool {
     )
 }
 fn t07_codec_lock_prior(current: &[u8]) -> Result<Vec<u8>> {
+    let exact_target_lock = source_afterimage::prior(
+        INSTALLED_GATEWAY_LOCK_SOURCE,
+        INSTALLED_GATEWAY_LOCK_SOURCE_SHA,
+        "Cargo.lock",
+        current,
+        0o644,
+    )?;
+    need(
+        exact_target_lock.len() == GATEWAY_LOCK_BYTES
+            && sha(&exact_target_lock) == GATEWAY_LOCK_SHA,
+        "T07 installed gateway lock predecessor identity",
+    )?;
     let previous = source_afterimage::prior(
         GATEWAY_LOCK_SOURCE,
         GATEWAY_LOCK_SOURCE_SHA,
         "Cargo.lock",
-        current,
+        &exact_target_lock,
         0o644,
     )?;
     let current = previous.as_slice();
