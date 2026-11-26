@@ -1177,6 +1177,16 @@ impl RawGateway {
         tokio::time::timeout_at(deadline, read).await?
     }
     pub async fn connect(url: String, token: Option<String>, deadline: Duration) -> Result<Self> {
+        Self::connect_cancellable(url, token, deadline, &Default::default()).await
+    }
+
+    /// Signal cancellation through this token so startup can retire any remote session it acquired.
+    pub async fn connect_cancellable(
+        url: String,
+        token: Option<String>,
+        deadline: Duration,
+        cancel: &tokio_util::sync::CancellationToken,
+    ) -> Result<Self> {
         let http = crate::http_client::gateway_http(&url)?;
         let mut gateway = Self {
             http,
@@ -1188,35 +1198,120 @@ impl RawGateway {
             initialize_result: None,
             protocol: "2025-11-25".into(),
         };
-        let startup=tokio::time::timeout(deadline,async {
+        let initialize = tokio::time::timeout(deadline, async {
             let initialize=gateway.exchange(&json!({"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"ssx-native-proxy","version":"0.1.0"}}}).to_string()).await?.ok_or("remote initialize had no result")?;
-            let mut fields:BTreeMap<String,Box<RawValue>>=serde_json::from_str(&initialize)?;if !fields.contains_key("result") || fields.contains_key("error"){return Err("remote initialize failed".into());}
-            gateway.initialize_result=fields.remove("result");
-            let initialize_fields:BTreeMap<String,Box<RawValue>>=serde_json::from_str(gateway.initialize_result.as_ref().ok_or("initialize result")?.get())?;
-            let version:String=serde_json::from_str(initialize_fields.get("protocolVersion").ok_or("remote protocol version missing")?.get())?;
-            if !["2024-11-05","2025-03-26","2025-06-18","2025-11-25"].contains(&version.as_str()){return Err("unsupported remote initialize protocol version".into());}
-            gateway.protocol=version;
-            gateway.exchange(r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#).await?;
-            let mut budget=crate::gateway::DiscoveryBudget::default();
-            for (method,field) in [("tools/list","tools"),("resources/list","resources"),("prompts/list","prompts"),("resources/templates/list","resourceTemplates")] {
-                let mut items:Vec<Box<RawValue>>=Vec::new();let mut names=HashSet::new();let mut cursors=HashSet::new();let mut cursor=None;let mut complete=false;
-                for page in 0..128 {
-                    let params=cursor.as_ref().map(|c|json!({"cursor":c})).unwrap_or(json!({}));
-                    let body=gateway.exchange(&json!({"jsonrpc":"2.0","id":page+1,"method":method,"params":params}).to_string()).await?.ok_or("empty catalog response")?;
-                    budget.charge(body.len())?;
-                    let envelope:BTreeMap<String,Box<RawValue>>=serde_json::from_str(&body)?;
-                    if envelope.contains_key("error"){return Err("remote catalog error".into());}
-                    let result:BTreeMap<String,Box<RawValue>>=serde_json::from_str(envelope.get("result").ok_or("catalog result missing")?.get())?;
-                    let rows:Vec<Box<RawValue>>=serde_json::from_str(result.get(field).ok_or("catalog entries missing")?.get())?;
-                    for row in rows {let data:BTreeMap<String,Box<RawValue>>=serde_json::from_str(row.get())?;let identity=crate::gateway::catalog_identity(method)?;let name:String=serde_json::from_str(data.get(identity).ok_or("catalog identity missing")?.get())?;if !names.insert(name){return Err("duplicate catalog name".into());}items.push(row);if items.len()>4096{return Err("catalog exceeds 4096 items".into());}}
-                    let next:Option<String>=result.get("nextCursor").map(|c|serde_json::from_str(c.get())).transpose()?.flatten();
-                    let Some(next)=next else{complete=true;break;};if !cursors.insert(next.clone()){return Err("repeated catalog cursor".into());}cursor=Some(next);
-                }
-                if !complete{return Err("catalog exceeds 128 pages".into());}
-                let raw=RawValue::from_string(format!("{{{}:{}}}",serde_json::to_string(field)?,serde_json::to_string(&items)?))?;gateway.catalogs.insert(method.into(),raw);
+            let mut fields: BTreeMap<String, Box<RawValue>> = serde_json::from_str(&initialize)?;
+            if !fields.contains_key("result") || fields.contains_key("error") {
+                return Err("remote initialize failed".into());
             }
-            Ok::<(),crate::Error>(())
-        }).await.map_err(|e|->crate::Error{e.into()}).and_then(|v|v);
+            gateway.initialize_result = fields.remove("result");
+            let initialize_fields: BTreeMap<String, Box<RawValue>> = serde_json::from_str(
+                gateway
+                    .initialize_result
+                    .as_ref()
+                    .ok_or("initialize result")?
+                    .get(),
+            )?;
+            let version: String = serde_json::from_str(
+                initialize_fields
+                    .get("protocolVersion")
+                    .ok_or("remote protocol version missing")?
+                    .get(),
+            )?;
+            if !["2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"].contains(&version.as_str())
+            {
+                return Err("unsupported remote initialize protocol version".into());
+            }
+            gateway.protocol = version;
+            gateway
+                .exchange(r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#)
+                .await?;
+            let mut budget = crate::gateway::DiscoveryBudget::default();
+            for (method, field) in [
+                ("tools/list", "tools"),
+                ("resources/list", "resources"),
+                ("prompts/list", "prompts"),
+                ("resources/templates/list", "resourceTemplates"),
+            ] {
+                let mut items: Vec<Box<RawValue>> = Vec::new();
+                let mut names = HashSet::new();
+                let mut cursors = HashSet::new();
+                let mut cursor = None;
+                let mut complete = false;
+                for page in 0..128 {
+                    let params = cursor
+                        .as_ref()
+                        .map(|c| json!({"cursor":c}))
+                        .unwrap_or(json!({}));
+                    let body = gateway
+                        .exchange(
+                            &json!({"jsonrpc":"2.0","id":page+1,"method":method,"params":params})
+                                .to_string(),
+                        )
+                        .await?
+                        .ok_or("empty catalog response")?;
+                    budget.charge(body.len())?;
+                    let envelope: BTreeMap<String, Box<RawValue>> = serde_json::from_str(&body)?;
+                    if envelope.contains_key("error") {
+                        return Err("remote catalog error".into());
+                    }
+                    let result: BTreeMap<String, Box<RawValue>> = serde_json::from_str(
+                        envelope
+                            .get("result")
+                            .ok_or("catalog result missing")?
+                            .get(),
+                    )?;
+                    let rows: Vec<Box<RawValue>> = serde_json::from_str(
+                        result.get(field).ok_or("catalog entries missing")?.get(),
+                    )?;
+                    for row in rows {
+                        let data: BTreeMap<String, Box<RawValue>> =
+                            serde_json::from_str(row.get())?;
+                        let identity = crate::gateway::catalog_identity(method)?;
+                        let name: String = serde_json::from_str(
+                            data.get(identity).ok_or("catalog identity missing")?.get(),
+                        )?;
+                        if !names.insert(name) {
+                            return Err("duplicate catalog name".into());
+                        }
+                        items.push(row);
+                        if items.len() > 4096 {
+                            return Err("catalog exceeds 4096 items".into());
+                        }
+                    }
+                    let next: Option<String> = result
+                        .get("nextCursor")
+                        .map(|c| serde_json::from_str(c.get()))
+                        .transpose()?
+                        .flatten();
+                    let Some(next) = next else {
+                        complete = true;
+                        break;
+                    };
+                    if !cursors.insert(next.clone()) {
+                        return Err("repeated catalog cursor".into());
+                    }
+                    cursor = Some(next);
+                }
+                if !complete {
+                    return Err("catalog exceeds 128 pages".into());
+                }
+                let raw = RawValue::from_string(format!(
+                    "{{{}:{}}}",
+                    serde_json::to_string(field)?,
+                    serde_json::to_string(&items)?
+                ))?;
+                gateway.catalogs.insert(method.into(), raw);
+            }
+            Ok::<(), crate::Error>(())
+        });
+        let startup = tokio::select! {
+            biased;
+            _ = cancel.cancelled() => Err("remote MCP startup cancelled".into()),
+            result = initialize => result
+                .map_err(|error| -> crate::Error { error.into() })
+                .and_then(|result| result),
+        };
         if let Err(error) = startup {
             let _ = gateway.close().await;
             return Err(error);
