@@ -317,6 +317,19 @@ startup with a clear message.
   available via `MCP_REMOTE_OAUTH`, `MCP_REMOTE_OAUTH_CALLBACK_PORT`,
   `MCP_REMOTE_OAUTH_NO_BROWSER`, and `MCP_REMOTE_TOKEN_FILE` (§3.2).
 
+  The native `ssx-gateway` executable on Unix accepts the same OAuth
+  flags and environment variables. For example:
+
+  ```bash
+  ssx-gateway --remote https://slopsearx.example/mcp --oauth --oauth-no-browser
+  ```
+
+  It reuses valid Python gateway token files at the same per-remote path.
+  The native gateway requires a regular file with owner-only permissions.
+  For an existing file, verify its ownership and set permissions to
+  `0600`. If its JSON is damaged or belongs to a different authorization
+  server, select a fresh path with `--oauth-token-file` and sign in again.
+
 ### 4.5 OAuth 2.1 mode (Claude Web / ChatGPT connectors)
 
 Remote MCP servers that OAuth-only clients connect to (Claude Web
