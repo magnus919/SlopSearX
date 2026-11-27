@@ -25,7 +25,6 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      CARGO_TARGET_DIR: ${{ runner.temp }}/ssx-gateway-tests/target
       CARGO_TERM_COLOR: always
     steps:
       - uses: actions/checkout@v7
@@ -34,6 +33,8 @@ jobs:
       - name: Confirm pinned toolchain
         run: rustc --version --verbose
       - name: Run multi-instance isolation regression
+        env:
+          CARGO_TARGET_DIR: ${{ runner.temp }}/ssx-gateway-tests/target
         run: cargo test --locked --manifest-path crates/ssx-gateway/Cargo.toml --test unix_instances
       - name: Retire gateway test build artifacts
         if: always()

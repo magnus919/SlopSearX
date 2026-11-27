@@ -3280,7 +3280,6 @@
           "runs-on": "ubuntu-24.04",
           "timeout-minutes": 30,
           "env": {
-            "CARGO_TARGET_DIR": "${{ runner.temp }}/ssx-gateway-tests/target",
             "CARGO_TERM_COLOR": "always"
           },
           "steps": [
@@ -3296,6 +3295,9 @@
             },
             {
               "name": "Run multi-instance isolation regression",
+              "env": {
+                "CARGO_TARGET_DIR": "${{ runner.temp }}/ssx-gateway-tests/target"
+              },
               "run": "cargo test --locked --manifest-path crates/ssx-gateway/Cargo.toml --test unix_instances"
             },
             {
