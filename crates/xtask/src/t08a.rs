@@ -15,6 +15,12 @@ use std::{
     time::Duration,
 };
 const BINDINGS: &str = include_str!("../../../docs/rust-rewrite/t08a/bindings.json");
+pub(crate) const SUPPORTED_NATIVE_TARGETS: &[&str] = &[
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+    "aarch64-apple-darwin",
+    "x86_64-pc-windows-msvc",
+];
 const PRIVATE_LIB_LINT_ARGS: &[&str] = &[
     "clippy",
     "--locked",
@@ -200,6 +206,25 @@ fn portal_lock_source_bindings_and_historical_custody_remain_strict() {
     sources(&root).expect("every current T08A source size/hash/mode matches");
     source_custody::controls(&root).expect("portal, health and original CLI custody controls");
 }
+#[cfg(test)]
+#[test]
+fn native_cli_workflow_matches_supported_targets() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let workflow = fs::read_to_string(root.join(".github/workflows/rust-cli.yml")).unwrap();
+    let workflow: Value = serde_saphyr::from_str(&workflow).unwrap();
+    let jobs = &workflow["jobs"];
+    let required = jobs["native-cli"]["strategy"]["matrix"]["include"]
+        .as_array()
+        .unwrap();
+    let windows = &jobs["native-cli-windows"]["with"];
+    assert_eq!(windows["advisory"], true);
+    let targets: Vec<_> = required
+        .iter()
+        .map(|row| row["target"].as_str().unwrap())
+        .chain(std::iter::once(windows["target"].as_str().unwrap()))
+        .collect();
+    assert_eq!(targets, SUPPORTED_NATIVE_TARGETS);
+}
 // Windows completed250 consecutive cases in298s before the old300s suite cap.
 // Full261+4 suites get a fixed900s ceiling; metadata/help retain300s. Each
 // child still has its25s contract, and the whole hosted job remains60minutes.
@@ -316,14 +341,7 @@ pub(crate) fn native_host(root: &Path, records: &mut Vec<Value>) -> Result<Strin
         .filter_map(|line| line.strip_prefix("host: "))
         .collect::<Vec<_>>();
     ensure(
-        hosts.len() == 1
-            && matches!(
-                hosts[0],
-                "x86_64-unknown-linux-gnu"
-                    | "aarch64-unknown-linux-gnu"
-                    | "aarch64-apple-darwin"
-                    | "x86_64-pc-windows-msvc"
-            ),
+        hosts.len() == 1 && SUPPORTED_NATIVE_TARGETS.contains(&hosts[0]),
         "T08A supported actual native host required",
     )?;
     Ok(hosts[0].to_owned())
