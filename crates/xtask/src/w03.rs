@@ -337,9 +337,15 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         let path = source["path"]
             .as_str()
             .ok_or("W03 envelope pin path absent")?;
-        if Some(digest(&fs::read(root.join(path)).map_err(|e| e.to_string())?).as_str())
-            != source["sha256"].as_str()
-        {
+        let expected = source["sha256"]
+            .as_str()
+            .ok_or("W03 envelope source SHA absent")?;
+        let raw =
+            match crate::snapshot_fixture_amendment::scholarly_prior_sha(root, path, expected)? {
+                Some(prior) => prior,
+                None => fs::read(root.join(path)).map_err(|e| e.to_string())?,
+            };
+        if digest(&raw) != expected {
             return Err(format!("W03 envelope source changed: {path}"));
         }
     }

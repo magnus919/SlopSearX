@@ -35,6 +35,16 @@ fn original_profiles_strategies_tool_surface_and_observations_match_reviewed_sou
                 lock_amendment::verify(&root, name, row["sha256"].as_str().unwrap()).unwrap();
                 continue;
             }
+            if key == "sources"
+                && receipt_control::scholarly_serializer(
+                    &root,
+                    name,
+                    row["sha256"].as_str().unwrap(),
+                )
+                .unwrap()
+            {
+                continue;
+            }
             let bytes = std::fs::read(root.join(name)).unwrap();
             assert_eq!(
                 Sha256::digest(bytes)

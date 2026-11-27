@@ -1141,3 +1141,5 @@ proxy tools or ready session are published. This is a per-phase timeout; it is
 not an end-to-end deadline for interactive OAuth authorization. OAuth mode keeps
 its existing authorization timeout during initialization; it is excluded from
 this shorter initialization deadline, while discovery remains bounded.
+
+Expanded `slopsearx_read_result` records may include a bounded `work_group` for scholarly results. Its `members` retain per-engine payloads and explicit conflicting source values; this is source attribution, not independent verification. Compact search cards and flat HTTP/portal results retain their existing representation.

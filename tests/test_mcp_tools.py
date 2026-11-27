@@ -995,3 +995,79 @@ async def test_research_snapshot_captures_actual_ranking(state):
     assert query.cursor
     snapshot = await state.snapshots.get(query.cursor)
     assert snapshot and snapshot.ranking_explanation == "tier_then_reciprocal_rank_fusion_k60"
+
+
+async def test_search_snapshot_read_keeps_contributors(monkeypatch):
+
+    from slopsearx.adapter import AdapterResponse, EngineStatus, SearchResult
+    from slopsearx.mcp import tools
+    from slopsearx.mcp.state import set_state
+    from slopsearx.payload import build_payload
+
+    async def search(engine, query, params=None):
+        engine.calls += 1
+        return AdapterResponse(
+            results=[
+                SearchResult(
+                    url=f"https://{engine.name}.test/paper",
+                    title="Public paper",
+                    content="Public snippet",
+                    engine=engine.name,
+                    payload=build_payload(
+                        "science",
+                        "publication",
+                        {
+                            "doi": "10.1234/probe",
+                            "conflict": engine.name,
+                        },
+                        engine=engine.name,
+                    ),
+                )
+            ],
+            status=EngineStatus.OK,
+            latency_ms=1.0,
+        )
+
+    state = _build_state(["arxiv", "openalex"])
+    monkeypatch.setattr(_MockEngine, "search", search)
+    set_state(state)
+    try:
+        for _ in range(2):
+            response = await tools.slopsearx_search("public paper", engines=["arxiv", "openalex"])
+            assert len(response["results"]) == 1
+            assert "work_group" not in response["results"][0]
+            result_id = response["meta"]["cursor"] + ":0"
+            expanded = await tools.slopsearx_read_result(result_id)
+            members = expanded["work_group"]["members"]
+            assert {m["engine"]: m["payload"]["data"]["conflict"] for m in members} == {
+                "arxiv": "arxiv",
+                "openalex": "openalex",
+            }
+            members.clear()
+            assert len((await tools.slopsearx_read_result(result_id))["work_group"]["members"]) == 2
+        assert all(engine.calls == 1 for engine in state.ctx.active_engines.values())
+    finally:
+        set_state(None)
+
+
+def test_scholarly_work_group_is_bounded_and_copied():
+    from copy import deepcopy
+
+    from slopsearx.mcp.result_serialization import _work_group_for_record
+    from slopsearx.scholarly import MAX_MEMBERS, MAX_RECORD_BYTES
+
+    group = {"schema_version": 1, "members": [{"engine": "arxiv", "payload": {"value": "one"}}]}
+    original = deepcopy(group)
+    output = _work_group_for_record(group)
+    assert output == group
+    output["members"][0]["payload"]["value"] = "changed"
+    assert group == original
+    for invalid in [
+        None,
+        {},
+        {"schema_version": 1, "members": []},
+        {"schema_version": 1, "members": [{"engine": 1}]},
+        {"schema_version": 1, "members": [{"engine": "a"}] * (MAX_MEMBERS + 1)},
+        {"schema_version": 1, "members": [{"engine": "a", "data": "x" * MAX_RECORD_BYTES}]},
+    ]:
+        assert _work_group_for_record(invalid) is None

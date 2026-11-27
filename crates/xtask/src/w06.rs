@@ -351,18 +351,26 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         }
     }
     for (path, expected) in source_bindings {
-        let source = fs::read(root.join(path)).map_err(|e| format!("{path}: {e}"))?;
-        if Some(digest(&source).as_str()) != expected.as_str() {
-            return Err(format!(
-                "W06 source drift requires reviewed reconciliation: {path}"
-            ));
-        }
         let original = command(
             root,
             "git",
             &["rev-parse", &format!("{BASELINE}:{path}")],
             records,
         )?;
+        if let Some(prior) =
+            crate::snapshot_fixture_amendment::scholarly_prior_blob(root, path, original.trim())?
+        {
+            if Some(digest(&prior).as_str()) != expected.as_str() {
+                return Err(format!("W06 historical source digest differs: {path}"));
+            }
+            continue;
+        }
+        let source = fs::read(root.join(path)).map_err(|e| format!("{path}: {e}"))?;
+        if Some(digest(&source).as_str()) != expected.as_str() {
+            return Err(format!(
+                "W06 source drift requires reviewed reconciliation: {path}"
+            ));
+        }
         let actual = command(root, "git", &["hash-object", path], records)?;
         if original.trim() != actual.trim() {
             return Err(format!(

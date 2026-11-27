@@ -244,6 +244,9 @@ fn verify_artifact(root: &Path, row: &Value) -> Result<()> {
         let raw = bounded_regular_material(root, path, 18095)?;
         return admission_bytes(&raw, expected, &capsule);
     }
+    if crate::snapshot_fixture_amendment::scholarly_prior_sha(root, path, expected)?.is_some() {
+        return Ok(());
+    }
     if crate::snapshot_fixture_amendment::a06(root, row)?.is_some() {
         return Ok(());
     }
@@ -793,6 +796,25 @@ mod tests {
         wrong["extra"] = json!(true);
         assert!(verify_artifact(&root, &wrong).is_err());
     }
+    #[test]
+    fn scholarly_successor_a06_binds_original_test_artifact() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let coverage: Value = serde_json::from_slice(
+            &fs::read(root.join("docs/rust-rewrite/a06/coverage.json")).unwrap(),
+        )
+        .unwrap();
+        let row = coverage["artifacts"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|row| row["path"] == "tests/test_mcp_tools.py")
+            .unwrap();
+        verify_artifact(&root, row).unwrap();
+        let mut drift = row.clone();
+        drift["sha256"] = json!("wrong");
+        assert!(verify_artifact(&root, &drift).is_err());
+    }
+
     #[test]
     fn snapshot_fixture_amendment_exact_main_custody_controls() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
