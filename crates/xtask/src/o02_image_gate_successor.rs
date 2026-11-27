@@ -80,6 +80,19 @@ const FOUNDATION_SUCCESSOR_OFFSET: usize = 113137;
 const FOUNDATION_SUCCESSOR: &str = r###""Mandatory prerequisites partition on both existing architectures; xtask tests complement the F03 workspace suite, which excludes xtask. Native deadlines, mutation control, tool/isolation/Valkey/compiler/source provenance and the workflow aggregation remain required.""###;
 const PRIOR_FOUNDATION_SUCCESSOR: &str = r###""Mandatory prerequisites partition on both existing architectures; exact original commands and native deadlines retained; fresh tool/isolation/Valkey/compiler/source provenance; no inherited targets or dropped gates. Separate 130-minute outer workflow job cap; native command deadlines and all gates remain unchanged.""###;
 
+const APPLE_SILICON_CATALOG_BYTES: usize = 188864;
+const APPLE_SILICON_CATALOG_SHA: &str =
+    "469e6ac4cea610677c62113d10da9f13b52e0eff17e168bb2e73bf1e54213569";
+const INTEL_CLI_ROW_OFFSET: usize = 149550;
+const INTEL_CLI_ROW: &str = r#"                {
+                  "runner": "macos-15-intel",
+                  "target": "x86_64-apple-darwin"
+                },
+"#;
+const APPLE_SILICON_CLI_SUCCESSOR_OFFSET: usize = 150323;
+const APPLE_SILICON_CLI_SUCCESSOR: &str = "Mandatory native external-child CLI/TLS/proxy corpus and source installation on Linux x64, Linux ARM64 and Apple Silicon macOS through the shared CLI target workflow.";
+const PRIOR_CLI_SUCCESSOR: &str = "Mandatory native external-child CLI/TLS/proxy corpus and source installation on both Linux and both macOS targets through the shared CLI target workflow.";
+
 const SAFARI_CATALOG_BYTES: usize = 188984;
 const SAFARI_CATALOG_SHA: &str = "b3664f64c669d2e0b5417e0667152d381ca59d23c68f25a85ad237ade289fb62";
 const SAFARI_ROW_OFFSET: usize = 82295;
@@ -93,7 +106,7 @@ fn hash(raw: &[u8]) -> String {
 }
 pub(super) fn physical_bytes(path: &str, expected: usize) -> usize {
     if path == PATH && expected == PRIOR_BYTES {
-        SAFARI_CATALOG_BYTES
+        APPLE_SILICON_CATALOG_BYTES
     } else {
         expected
     }
@@ -102,10 +115,23 @@ pub(super) fn project(path: &str, expected: usize, raw: Vec<u8>) -> Result<Vec<u
     if path != PATH || expected != PRIOR_BYTES {
         return Ok(raw);
     }
+    if raw.len() != APPLE_SILICON_CATALOG_BYTES || hash(&raw) != APPLE_SILICON_CATALOG_SHA {
+        return Err("O02 catalog successor: exact Apple Silicon catalog required".into());
+    }
+    let mut raw = raw;
+    let start = APPLE_SILICON_CLI_SUCCESSOR_OFFSET;
+    let end = start + APPLE_SILICON_CLI_SUCCESSOR.len();
+    if raw.get(start..end) != Some(APPLE_SILICON_CLI_SUCCESSOR.as_bytes()) {
+        return Err("O02 catalog successor: exact Apple Silicon CLI successor required".into());
+    }
+    raw.splice(start..end, PRIOR_CLI_SUCCESSOR.bytes());
+    raw.splice(
+        INTEL_CLI_ROW_OFFSET..INTEL_CLI_ROW_OFFSET,
+        INTEL_CLI_ROW.bytes(),
+    );
     if raw.len() != SAFARI_CATALOG_BYTES || hash(&raw) != SAFARI_CATALOG_SHA {
         return Err("O02 catalog successor: exact Safari catalog required".into());
     }
-    let mut raw = raw;
     raw.drain(SAFARI_ROW_OFFSET..SAFARI_ROW_OFFSET + SAFARI_ROW_BYTES);
     if raw.len() != WINDOWS_CLI_CATALOG_BYTES || hash(&raw) != WINDOWS_CLI_CATALOG_SHA {
         return Err("O02 catalog successor: exact Windows CLI catalog required".into());
@@ -206,6 +232,9 @@ pub(super) fn controls(root: &std::path::Path) {
     ] {
         assert!(project(PATH, PRIOR_BYTES, mutant).is_err());
     }
-    assert_eq!(physical_bytes(PATH, PRIOR_BYTES), SAFARI_CATALOG_BYTES);
+    assert_eq!(
+        physical_bytes(PATH, PRIOR_BYTES),
+        APPLE_SILICON_CATALOG_BYTES
+    );
     assert_eq!(physical_bytes("unlisted", 7), 7);
 }

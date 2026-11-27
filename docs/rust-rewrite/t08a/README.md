@@ -4,6 +4,8 @@ This component authors `ssx` against the frozen external HTTP contract. It does 
 qualify the native backend, close T08/T02, switch deployment defaults or certify a
 finished rewrite. Historical Python captures remain immutable reference evidence.
 
+Native macOS client qualification targets Apple Silicon. See [ADR 010](../../adr/010-support-apple-silicon-macos.md).
+
 All four commands use external HTTP only. The binary imports no domain, service,
 server, infrastructure, adapter, cache or page crate. `ssx-json` supplies only native
 finite float formatting; its default value parser cannot represent the

@@ -2744,10 +2744,6 @@
                   "target": "aarch64-unknown-linux-gnu"
                 },
                 {
-                  "runner": "macos-15-intel",
-                  "target": "x86_64-apple-darwin"
-                },
-                {
                   "runner": "macos-15",
                   "target": "aarch64-apple-darwin"
                 }
@@ -2780,7 +2776,7 @@
       },
       "owner": "T08A",
       "state": "additive",
-      "successor": "Mandatory native external-child CLI/TLS/proxy corpus and source installation on both Linux and both macOS targets through the shared CLI target workflow."
+      "successor": "Mandatory native external-child CLI/TLS/proxy corpus and source installation on Linux x64, Linux ARM64 and Apple Silicon macOS through the shared CLI target workflow."
     },
     "rust-cli.yml:native-cli-windows": {
       "source": {

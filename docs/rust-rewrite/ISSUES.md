@@ -82,32 +82,23 @@ Dependencies are hard finish-to-start: accepted/merged predecessor work and its 
 | [#946 — G08](https://github.com/magnus919/SlopSearX/issues/946) | Remove all backend Python source and runtime dependencies | retirement | [#945 — G07](https://github.com/magnus919/SlopSearX/issues/945), [#934 — O05](https://github.com/magnus919/SlopSearX/issues/934), [#935 — O06](https://github.com/magnus919/SlopSearX/issues/935), [#941 — O08](https://github.com/magnus919/SlopSearX/issues/941), [#942 — O09](https://github.com/magnus919/SlopSearX/issues/942) |
 | [#947 — G09](https://github.com/magnus919/SlopSearX/issues/947) | Verify final Rust-only release and close rewrite acceptance | release | [#946 — G08](https://github.com/magnus919/SlopSearX/issues/946), [#1080 — S01](https://github.com/magnus919/SlopSearX/issues/1080) |
 
-## Live follow-up blockers that are not plan work packages
+## Platform trust-store follow-ups
 
-Two platform follow-ups track native gateway qualification in
+Two non-blocking platform follow-ups track trust-store mutation experiments for
 [#902 — T07](https://github.com/magnus919/SlopSearX/issues/902).
 
 | Issue | Effect |
 | --- | --- |
-| [#1073 — macOS platform trust](https://github.com/magnus919/SlopSearX/issues/1073) | Hard predecessor of T07. Require a complete user-domain trust and cleanup witness on disposable Intel and ARM macOS. |
+| [#1073 — macOS platform trust](https://github.com/magnus919/SlopSearX/issues/1073) | Optional follow-up outside the T07 release gate. The installed Apple Silicon gateway must pass public HTTPS, certificate and hostname rejection, and additive CA-bundle checks on a disposable runner. [Platform decision](../adr/010-support-apple-silicon-macos.md). |
 | [#1075 — Windows platform trust](https://github.com/magnus919/SlopSearX/issues/1075) | Open best-effort follow-up. The full Windows CurrentUser Root witness is outside the T07 release gate. |
 
 The maintainer set Windows support to best effort on 2026-11-22. Keep the
 GitHub-hosted Windows x64 build, install, ordinary loopback TLS, and runtime
 coverage. Report the full CurrentUser Root install and removal sequence as
 unverified until it passes on an authorized disposable Windows environment.
-Retain previous failure and cleanup receipts. The ordinary TLS tests cover
-explicit CA configuration. Only the independent store witness can qualify
-the default platform trust path.
-
-The macOS gate still requires a supported establishment and removal route.
-Preserve per-run CA identity, default trust and wrong-hostname controls, exact
-removal, rejection after removal, and restoration and cleanup evidence. The
-gateway fixture paths (`crates/ssx-gateway/tests/platform_support/` and
-`.github/workflows/rust-client-platforms.yml`) remain on the unmerged
-`codex/preview-1056-t07-source-integration-20261027` branch. The matching
-GitHub dependency update removes the #1075 edge after this decision lands
-and keeps #1075 open.
+Retain previous failure and cleanup receipts for both optional store-mutation
+investigations. T07 owns the installed Apple Silicon gateway HTTPS checks
+described in [ADR 010](../adr/010-support-apple-silicon-macos.md).
 
 Where a native GitHub `blocked_by` edge differs from the plan table, the native
 edge is authoritative for start decisions; this table records plan intent, not

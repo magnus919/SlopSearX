@@ -1,9 +1,13 @@
 # T07 macOS platform-trust route assessment
 
-This assessment records the remaining decision for
-[#1073](https://github.com/magnus919/SlopSearX/issues/1073). Route qualification and
-authorization are pending. The Windows investigation in
-[#1075](https://github.com/magnus919/SlopSearX/issues/1075) is independent.
+This assessment preserves the historical investigation for
+[#1073](https://github.com/magnus919/SlopSearX/issues/1073). The maintainer removed
+trust-store mutation from the T07 release gate on 2026-11-27.
+[ADR 010](../../adr/010-support-apple-silicon-macos.md) defines the required
+installed-gateway HTTPS checks. The routes and cleanup criteria below apply
+only if the optional investigation resumes with an authorized disposable host.
+The Windows investigation in [#1075](https://github.com/magnus919/SlopSearX/issues/1075)
+is independent.
 
 ## Observed boundary
 
@@ -34,7 +38,7 @@ notes](https://developer.apple.com/documentation/macos-release-notes/macos-big-s
 | Hosted macOS with admin-domain trust | Establish a supported administrator authorization path for both adding and removing the unique test CA. Record what authorization the runner can supply. Keep this route on hold while those prerequisites are unproven. |
 | Disposable runner with a pre-provisioned image | Show initial rejection and per-run establishment using a unique CA. A fixed anchor baked into the image supplies boot-time trust only. |
 | Managed disposable macOS hosts with a per-run certificate profile | Apple documents deployment of root-certificate payloads to managed Macs. A candidate still needs a reviewed qualification environment, a unique test CA and profile per run, authenticated install and removal of that profile, verification that the same installed client returns to rejection, and proof of exact cleanup. The owner must review compatibility with the selected trust contract and authorize device-management changes. [Apple deployment guide](https://support.apple.com/en-mide/guide/deployment/dep91d2eb26/web) · [Apple Developer Technical Support](https://developer.apple.com/forums/thread/820374) |
-| Dedicated disposable test hosts with an operator session | Identify exact supported Intel and ARM environments, an operator who can authorize establishment and removal, and a procedure to isolate and restore both hosts. Review the environment and harness before requesting a test window. |
+| Dedicated disposable test hosts with an operator session | Identify a disposable Apple Silicon environment, an operator who can authorize establishment and removal, and a procedure to isolate and restore the host. Review the environment and harness before requesting a test window. |
 | Acceptance-scope amendment | Record the exact platform claim being removed or narrowed and obtain maintainer approval in a separate reviewed decision. Explicit CA-bundle success has a different scope from platform-default trust. A failed attempt on any one route leaves the remaining routes open for evaluation. |
 
 ## Evidence required for an authorized route
@@ -53,13 +57,10 @@ notes](https://developer.apple.com/documentation/macos-release-notes/macos-big-s
 4. Reap the owned process tree and retire the fixture and marker only after verified
    cleanup. Retain diagnostic evidence for a deadline, an incomplete authorization trace
    or incomplete cleanup.
-5. Run the exact sequence on supported Intel and ARM environments. Before either run,
+5. Run the exact sequence on the supported Apple Silicon environment. Before the run,
    independently review source and fake-command evidence for install, removal,
    restoration, timeout, and cleanup paths. Obtain explicit authorization for the
    selected environment and trust operation.
 
-The owner decision is to identify an environment that can support authorized
-establishment and verified removal for both architectures. Pending that decision and
-review, #1073 remains open. On Windows, the last authenticated marker precedes
-completion of the certificate-load expression. Continue localizing that boundary under
-the independently scoped CurrentUser Root contract.
+The retained Windows marker precedes completion of the certificate-load
+expression. The Windows CurrentUser Root investigation has its own scope.
