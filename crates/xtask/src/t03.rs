@@ -1514,6 +1514,7 @@ fn journey_ids(scenario: &str) -> Result<&'static [&'static str]> {
             "progressive-explanations",
             "keyboard-only",
             "viewport-desktop",
+            "compact-landing",
             "viewport-narrow",
             "viewport-320css",
             "reduced-motion",

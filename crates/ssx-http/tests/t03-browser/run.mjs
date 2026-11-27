@@ -98,6 +98,7 @@ const requiredByScenario = {
     'progressive-explanations',
     'keyboard-only',
     'viewport-desktop',
+    'compact-landing',
     'viewport-narrow',
     'viewport-320css',
     'reduced-motion',
@@ -1078,6 +1079,28 @@ async function runContract() {
     // Keyboard activation must not synthesize a pointer sequence. Gecko reports
     // click count 1 for Enter on a link; Chromium reports 0.
     assert([0, 1].includes(activation.detail), `unexpected activation detail ${activation.detail}`);
+  });
+
+  await check('compact-landing', async () => {
+    const compact = await newContext({ viewport: { width: 390, height: 844 } });
+    try {
+      const landing = await compact.newPage();
+      attachPageEvidence(landing);
+      await navigate(landing, '/');
+      assert(await landing.getByRole('heading', { name: 'Search SlopSearX.', exact: true }).isVisible());
+      const input = landing.getByRole('searchbox', { name: 'Search SlopSearX', exact: true });
+      assert(await input.isVisible());
+      await landing.getByRole('button', { name: 'Use darker mode', exact: true }).click();
+      assert.equal(await landing.locator('html').getAttribute('data-theme'), 'darker');
+      assert(await landing.getByRole('button', { name: 'Use dark mode', exact: true }).isVisible());
+      await input.blur();
+      await landing.keyboard.press('/');
+      assert(await input.evaluate(element => document.activeElement === element));
+      assert.equal(await viewportObservation(landing, 'compact-landing-390x844'), true);
+      await screenshot(landing, 'contract-compact-landing-390x844.png');
+    } finally {
+      await compact.close();
+    }
   });
 
   await check('viewport-narrow', async () => {
