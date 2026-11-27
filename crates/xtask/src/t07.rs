@@ -10,7 +10,7 @@ const STARTUP: &[&str] = &[
 ];
 
 fn run_suite(root: &Path, target: &str, expected: &[&str], records: &mut Vec<Value>) -> Result<()> {
-    let mut args = vec!["test", "--locked", "-p", "ssx-mcp", "--test", target];
+    let args = vec!["test", "--locked", "-p", "ssx-mcp", "--test", target];
     let mut listing = args.clone();
     listing.extend_from_slice(&["--", "--list"]);
     let output = command(root, "cargo", &listing, records)?;
