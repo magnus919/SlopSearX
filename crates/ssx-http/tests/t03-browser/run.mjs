@@ -98,6 +98,7 @@ const requiredByScenario = {
     'progressive-explanations',
     'keyboard-only',
     'viewport-desktop',
+    'compact-landing',
     'viewport-narrow',
     'viewport-320css',
     'reduced-motion',
@@ -1080,7 +1081,7 @@ async function runContract() {
     assert([0, 1].includes(activation.detail), `unexpected activation detail ${activation.detail}`);
   });
 
-  await check('viewport-narrow', async () => {
+  await check('compact-landing', async () => {
     const compact = await newContext({ viewport: { width: 390, height: 844 } });
     try {
       const landing = await compact.newPage();
@@ -1100,7 +1101,9 @@ async function runContract() {
     } finally {
       await compact.close();
     }
+  });
 
+  await check('viewport-narrow', async () => {
     await searchByQuery(page, 'valkey', { categories: 'general' });
     const explanation = page.locator('details.result-explanation');
     await explanation.getByText('Why this result appeared', { exact: true }).click();

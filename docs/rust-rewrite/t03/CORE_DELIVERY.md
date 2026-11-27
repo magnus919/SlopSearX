@@ -89,9 +89,11 @@ visual and assistive-technology acceptance open.
 
 The browser source audit found that the original landing assertions `B:L52`,
 `B:L53`, `B:L56`, `B:L57` and `B:L60` ran at 390 × 844 while their native
-counterparts ran at desktop width. The compact viewport journey now runs
-those five predicates against a fresh native landing page and retains the
-matching viewport observation and screenshot.
+counterparts ran at desktop width. The `compact-landing` journey runs those
+five predicates against a fresh native landing page and retains the matching
+viewport observation and screenshot. Both browser and Rust receipt inventories
+require this journey. The exact-main artifact above predates the compact
+journey. Review its named receipt in the successor run.
 
 ### Grouping lifecycle predicates
 
