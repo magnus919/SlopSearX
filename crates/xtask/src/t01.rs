@@ -114,6 +114,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         "real_stdio_subprocess_preserves_complete_contract_and_clean_shutdown",
         "real_streamable_http_bearer_and_stateless_contract",
         "gateway_paths_and_queries_survive_outbound_http",
+        "gateway_exact_endpoint_routes_explicit_zero_port",
         "real_stdio_gateway_forwards_to_remote_and_owns_session",
         "real_legacy_sse_matches_observed_python_status_and_payloads",
         "legacy_custom_paths_suffixes_method_content_type_and_expiry",

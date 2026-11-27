@@ -44,13 +44,11 @@ pub struct Gateway {
 }
 impl Gateway {
     pub async fn connect(url: String, token: Option<String>, deadline: Duration) -> Result<Self> {
+        let http = crate::http_client::gateway_http(&url)?;
         let mut config = StreamableHttpClientTransportConfig::with_uri(url);
         if let Some(token) = token {
             config = config.auth_header(token);
         }
-        let http = reqwest::Client::builder()
-            .redirect(reqwest::redirect::Policy::none())
-            .build()?;
         config.max_sse_event_size = crate::http_client::MAX_RPC_BYTES;
         let transport = StreamableHttpClientTransport::with_client(
             crate::http_client::BoundedClient(http),

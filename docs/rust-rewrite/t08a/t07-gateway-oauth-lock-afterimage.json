@@ -1,0 +1,279 @@
+{
+  "path": "Cargo.lock",
+  "current_bytes": 101588,
+  "current_sha256": "5aec5f07b1143105a5100447e16d1696f15515e1524b9d9feb55683dcc8c035b",
+  "prior_bytes": 96154,
+  "prior_sha256": "7685919743252d3b8642944fb494f81df2636af3e17a5b58b1767abf1b5e4b0d",
+  "spans": [
+    {
+      "at": 517,
+      "current": "]\n\n[[package]]\nname = \"android_system_properties\"\nversion = \"0.1.6\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"ae221649c9976a6f6c56ae1facf410f3ddb33cc661c4b7b61020a912d4237fbc\"\ndependencies = [\n \"libc\",\n",
+      "prior": ""
+    },
+    {
+      "at": 2976,
+      "current": " \"thiserror 2.0.21\",\n",
+      "prior": " \"thiserror\",\n"
+    },
+    {
+      "at": 6527,
+      "current": "version = \"0.22.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6\"\n\n[[package]]\nname = \"base64\"\n",
+      "prior": ""
+    },
+    {
+      "at": 7616,
+      "current": "\n[[package]]\nname = \"block-buffer\"\nversion = \"0.10.4\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71\"\ndependencies = [\n \"generic-array\",\n]\n",
+      "prior": ""
+    },
+    {
+      "at": 9545,
+      "current": " \"cpufeatures 0.3.1\",\n \"rand_core 0.10.1\",\n]\n\n[[package]]\nname = \"chrono\"\nversion = \"0.4.45\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"1aa79e62e7697b8e29b513a68abacf485adcd1fe8284a4316c5ae868e6633327\"\ndependencies = [\n \"iana-time-zone\",\n \"js-sys\",\n \"num-traits\",\n \"serde\",\n \"wasm-bindgen\",\n \"windows-link\",\n",
+      "prior": " \"cpufeatures\",\n \"rand_core\",\n"
+    },
+    {
+      "at": 13527,
+      "current": "version = \"0.2.17\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280\"\ndependencies = [\n \"libc\",\n]\n\n[[package]]\nname = \"cpufeatures\"\n",
+      "prior": ""
+    },
+    {
+      "at": 14161,
+      "current": "]\n\n[[package]]\nname = \"crypto-common\"\nversion = \"0.1.7\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a\"\ndependencies = [\n \"generic-array\",\n \"typenum\",\n",
+      "prior": ""
+    },
+    {
+      "at": 17189,
+      "current": "version = \"0.10.7\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292\"\ndependencies = [\n \"block-buffer 0.10.4\",\n \"crypto-common 0.1.7\",\n]\n\n[[package]]\nname = \"digest\"\n",
+      "prior": ""
+    },
+    {
+      "at": 17626,
+      "current": " \"block-buffer 0.12.1\",\n",
+      "prior": " \"block-buffer\",\n"
+    },
+    {
+      "at": 17664,
+      "current": " \"crypto-common 0.2.2\",\n",
+      "prior": " \"crypto-common\",\n"
+    },
+    {
+      "at": 24900,
+      "current": "name = \"generic-array\"\nversion = \"0.14.7\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a\"\ndependencies = [\n \"typenum\",\n \"version_check\",\n]\n\n[[package]]\n",
+      "prior": ""
+    },
+    {
+      "at": 25884,
+      "current": " \"rand_core 0.10.1\",\n",
+      "prior": " \"rand_core\",\n"
+    },
+    {
+      "at": 29973,
+      "current": " \"base64 0.23.1\",\n",
+      "prior": " \"base64\",\n"
+    },
+    {
+      "at": 30243,
+      "current": "]\n\n[[package]]\nname = \"iana-time-zone\"\nversion = \"0.1.65\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"e31bc9ad994ba00e440a8aa5c9ef0ec67d5cb5e5cb0cc7f8b744a35b389cc470\"\ndependencies = [\n \"android_system_properties\",\n \"core-foundation-sys\",\n \"iana-time-zone-haiku\",\n \"js-sys\",\n \"log\",\n \"wasm-bindgen\",\n \"windows-core\",\n]\n\n[[package]]\nname = \"iana-time-zone-haiku\"\nversion = \"0.1.2\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"f31827a206f56af32e590ba56d5d2d085f558508192593743f16b2306495269f\"\ndependencies = [\n \"cc\",\n",
+      "prior": ""
+    },
+    {
+      "at": 36968,
+      "current": " \"thiserror 2.0.21\",\n",
+      "prior": " \"thiserror\",\n"
+    },
+    {
+      "at": 39006,
+      "current": " \"sha2 0.11.1\",\n",
+      "prior": " \"sha2\",\n"
+    },
+    {
+      "at": 44381,
+      "current": "name = \"oauth2\"\nversion = \"5.0.0\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"51e219e79014df21a225b1860a479e2dcd7cbd9130f4defd4bd0e191ea31d67d\"\ndependencies = [\n \"base64 0.22.1\",\n \"chrono\",\n \"getrandom 0.2.17\",\n \"http\",\n \"rand 0.8.8\",\n \"serde\",\n \"serde_json\",\n \"serde_path_to_error\",\n \"sha2 0.10.9\",\n \"thiserror 1.0.69\",\n \"url\",\n]\n\n[[package]]\n",
+      "prior": ""
+    },
+    {
+      "at": 47747,
+      "current": " \"base64 0.23.1\",\n",
+      "prior": " \"base64\",\n"
+    },
+    {
+      "at": 50511,
+      "current": "name = \"ppv-lite86\"\nversion = \"0.2.21\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"85eae3c4ed2f50dcfe72643da4befc30deadb458a9b590d720cde2f2b1e97da9\"\ndependencies = [\n \"zerocopy\",\n]\n\n[[package]]\n",
+      "prior": ""
+    },
+    {
+      "at": 52792,
+      "current": " \"thiserror 2.0.21\",\n",
+      "prior": " \"thiserror\",\n"
+    },
+    {
+      "at": 53121,
+      "current": " \"rand 0.10.3\",\n",
+      "prior": " \"rand\",\n"
+    },
+    {
+      "at": 53215,
+      "current": " \"thiserror 2.0.21\",\n",
+      "prior": " \"thiserror\",\n"
+    },
+    {
+      "at": 54015,
+      "current": "version = \"0.8.8\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"e058c7de0b26af77780c769414d6257830bb240f3c38477dbc2c16e5f54d6d4c\"\ndependencies = [\n \"libc\",\n \"rand_chacha\",\n \"rand_core 0.6.4\",\n]\n\n[[package]]\nname = \"rand\"\n",
+      "prior": ""
+    },
+    {
+      "at": 54479,
+      "current": " \"rand_core 0.10.1\",\n]\n\n[[package]]\nname = \"rand_chacha\"\nversion = \"0.3.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"e6c10a63a0fa32252be49d21e7709d4d4baf8d231c2dbce1eaa8141b9b127d88\"\ndependencies = [\n \"ppv-lite86\",\n \"rand_core 0.6.4\",\n]\n\n[[package]]\nname = \"rand_core\"\nversion = \"0.6.4\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c\"\ndependencies = [\n \"getrandom 0.2.17\",\n",
+      "prior": " \"rand_core\",\n"
+    },
+    {
+      "at": 55388,
+      "current": " \"rand_core 0.10.1\",\n",
+      "prior": " \"rand_core\",\n"
+    },
+    {
+      "at": 57654,
+      "current": " \"base64 0.23.1\",\n",
+      "prior": " \"base64\",\n"
+    },
+    {
+      "at": 58586,
+      "current": " \"base64 0.23.1\",\n",
+      "prior": " \"base64\",\n"
+    },
+    {
+      "at": 58705,
+      "current": " \"oauth2\",\n",
+      "prior": ""
+    },
+    {
+      "at": 58849,
+      "current": " \"rand 0.10.3\",\n",
+      "prior": " \"rand\",\n"
+    },
+    {
+      "at": 58931,
+      "current": " \"sha2 0.11.1\",\n",
+      "prior": " \"sha2\",\n"
+    },
+    {
+      "at": 58962,
+      "current": " \"thiserror 2.0.21\",\n",
+      "prior": " \"thiserror\",\n"
+    },
+    {
+      "at": 59110,
+      "current": " \"url\",\n",
+      "prior": ""
+    },
+    {
+      "at": 67531,
+      "current": "version = \"0.10.9\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283\"\ndependencies = [\n \"cfg-if\",\n \"cpufeatures 0.2.17\",\n \"digest 0.10.7\",\n]\n\n[[package]]\nname = \"sha2\"\n",
+      "prior": ""
+    },
+    {
+      "at": 67981,
+      "current": " \"cpufeatures 0.3.1\",\n \"digest 0.11.3\",\n",
+      "prior": " \"cpufeatures\",\n \"digest\",\n"
+    },
+    {
+      "at": 70878,
+      "current": " \"sha2 0.11.1\",\n",
+      "prior": " \"sha2\",\n"
+    },
+    {
+      "at": 71043,
+      "current": " \"base64 0.23.1\",\n",
+      "prior": " \"base64\",\n"
+    },
+    {
+      "at": 71222,
+      "current": " \"sha2 0.11.1\",\n",
+      "prior": " \"sha2\",\n"
+    },
+    {
+      "at": 71528,
+      "current": " \"sha2 0.11.1\",\n",
+      "prior": " \"sha2\",\n"
+    },
+    {
+      "at": 72374,
+      "current": " \"sha2 0.11.1\",\n",
+      "prior": " \"sha2\",\n"
+    },
+    {
+      "at": 72728,
+      "current": " \"base64 0.23.1\",\n",
+      "prior": " \"base64\",\n"
+    },
+    {
+      "at": 72833,
+      "current": " \"sha2 0.11.1\",\n",
+      "prior": " \"sha2\",\n"
+    },
+    {
+      "at": 73105,
+      "current": " \"base64 0.23.1\",\n",
+      "prior": " \"base64\",\n"
+    },
+    {
+      "at": 73293,
+      "current": " \"sha2 0.11.1\",\n",
+      "prior": " \"sha2\",\n"
+    },
+    {
+      "at": 73724,
+      "current": " \"base64 0.23.1\",\n",
+      "prior": " \"base64\",\n"
+    },
+    {
+      "at": 73759,
+      "current": " \"hyper\",\n \"hyper-util\",\n",
+      "prior": ""
+    },
+    {
+      "at": 73792,
+      "current": " \"oauth2\",\n",
+      "prior": ""
+    },
+    {
+      "at": 73870,
+      "current": " \"sha2 0.11.1\",\n",
+      "prior": " \"sha2\",\n"
+    },
+    {
+      "at": 74804,
+      "current": " \"sha2 0.11.1\",\n",
+      "prior": " \"sha2\",\n"
+    },
+    {
+      "at": 78527,
+      "current": "version = \"1.0.69\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52\"\ndependencies = [\n \"thiserror-impl 1.0.69\",\n]\n\n[[package]]\nname = \"thiserror\"\n",
+      "prior": ""
+    },
+    {
+      "at": 78945,
+      "current": " \"thiserror-impl 2.0.21\",\n]\n\n[[package]]\nname = \"thiserror-impl\"\nversion = \"1.0.69\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1\"\ndependencies = [\n \"proc-macro2\",\n \"quote\",\n \"syn 2.0.119\",\n",
+      "prior": " \"thiserror-impl\",\n"
+    },
+    {
+      "at": 87203,
+      "current": " \"serde_derive\",\n",
+      "prior": ""
+    },
+    {
+      "at": 98148,
+      "current": " \"thiserror 2.0.21\",\n",
+      "prior": " \"thiserror\",\n"
+    },
+    {
+      "at": 98329,
+      "current": " \"sha2 0.11.1\",\n",
+      "prior": " \"sha2\",\n"
+    },
+    {
+      "at": 99442,
+      "current": "]\n\n[[package]]\nname = \"zerocopy\"\nversion = \"0.8.63\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"e5fe1f8f1b06191a00962174c61aa5005e0bb391a6d80d07e24d115c01a92ed8\"\ndependencies = [\n \"zerocopy-derive\",\n]\n\n[[package]]\nname = \"zerocopy-derive\"\nversion = \"0.8.63\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"863ad3ac83293fb4d740aedbfdc9240dd8d1a50c1099acd76ce80ce7c7230c7f\"\ndependencies = [\n \"proc-macro2\",\n \"quote\",\n \"syn 2.0.119\",\n",
+      "prior": ""
+    }
+  ]
+}

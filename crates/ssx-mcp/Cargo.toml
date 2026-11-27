@@ -29,6 +29,7 @@ subtle = "=2.6.1"
 sse-stream = "=0.2.6"
 ssx-domain.workspace = true
 ssx-json.workspace = true
+ssx-source-codecs = { workspace = true, features = ["source-gateway-url"] }
 
 # T05 protocol codecs and accepted AWS-LC credential randomness.
 base64 = "=0.23.1"
@@ -41,6 +42,12 @@ aws-lc-rs.workspace = true
 redis.workspace = true
 tokio = { workspace = true, features = ["test-util"] }
 
-[target.'cfg(unix)'.dev-dependencies.nix]
+[target.'cfg(unix)'.dependencies]
+hyper = { version = "=1.12.0", features = ["http1", "server"] }
+hyper-util = { version = "=0.1.21", features = ["tokio"] }
+rmcp = { workspace = true, features = ["auth"] }
+oauth2 = { version = "=5.0.0", default-features = false }
+
+[target.'cfg(unix)'.dependencies.nix]
 version = "=0.31.3"
 features = ["fs"]

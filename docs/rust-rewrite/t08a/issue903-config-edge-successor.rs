@@ -5,6 +5,12 @@
 )]
 #[path = "../a11/replay-scheduling-source.rs"]
 mod a11_replay_source;
+#[allow(
+    clippy::duplicate_mod,
+    reason = "Independent proof roots share the stateless exact-byte inverse"
+)]
+#[path = "rmcp-source-afterimage.rs"]
+mod source_afterimage;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::{path::Path, process::Command};
@@ -16,8 +22,35 @@ const MAX_PHYSICAL_BYTES: u64 = 1_048_576;
 // The gateway codec adds two edges to packages already present in Cargo.lock.
 const T07_LOCK_BYTES: usize = 96228;
 const T07_LOCK_SHA: &str = "d6ae7d6cfee09ca6cfdbffa6faaa7eb955d38d6de38b7d8d7c858c2491b2019f";
+const GATEWAY_LOCK_BYTES: usize = 96107;
+const GATEWAY_LOCK_SHA: &str = "e779fa77be4df46c9ec3005ce81fdf0c0c54319c252e8f055ca72f45506e7409";
+const INSTALLED_GATEWAY_LOCK_BYTES: usize = 96154;
+const INSTALLED_GATEWAY_LOCK_SHA: &str =
+    "7685919743252d3b8642944fb494f81df2636af3e17a5b58b1767abf1b5e4b0d";
+const INSTALLED_GATEWAY_LOCK_SOURCE: &str =
+    include_str!("t07-installed-gateway-lock-afterimage.json");
+const INSTALLED_GATEWAY_LOCK_SOURCE_SHA: &str =
+    "6bc7592a2536777555b2976e51a133bf0cbf7a8f0da15788761110e888013d87";
+const GATEWAY_LOCK_SOURCE: &str = include_str!("t07-gateway-reqwest-lock-afterimage.json");
+const GATEWAY_LOCK_SOURCE_SHA: &str =
+    "bbacc3197f28c25a837ea7a9e75af95eea1d7fdc40f5fdab69cf56bc76b62d90";
+const GATEWAY_WORKSPACE_SOURCE: &str = include_str!("t07-gateway-workspace-afterimage.json");
+const GATEWAY_WORKSPACE_SHA: &str =
+    "8861f11c390df344505a3a4f13453514f4d61036311aec9db8c0d4c38cba6b1f";
+const GATEWAY_MCP_SOURCE: &str = include_str!("t07-gateway-mcp-afterimage.json");
+const GATEWAY_MCP_SHA: &str = "85fedc8fa655401a1899115274963b6b3f526f2e03ca5928e838b28ebdc2cc58";
+const OAUTH_LOCK_SOURCE: &str = include_str!("t07-gateway-oauth-lock-afterimage.json");
+const OAUTH_LOCK_SOURCE_SHA: &str =
+    "9a129a5b09562ae193e757f2f2992fb0f9d4ad23bb969ba11e3b18f908753dd8";
+const OAUTH_LOCK_BYTES: usize = 101588;
+const OAUTH_LOCK_SHA: &str = "5aec5f07b1143105a5100447e16d1696f15515e1524b9d9feb55683dcc8c035b";
+const OAUTH_MCP_SOURCE: &str = include_str!("t07-gateway-oauth-mcp-afterimage.json");
+const OAUTH_MCP_SHA: &str = "0d5fc70fe07b34019f0a0aeffd9843bafd1c5e5ea831a922f89e55b00ad9764f";
 const T07_IDNA_EDGE: usize = 70349;
 const T07_TEXT_EDGE: usize = 70373;
+const T03_READER_PATH: &str = "docs/rust-rewrite/t03/source-successor-v1.rs";
+const T09_T03_READER_SOURCE: &str = include_str!("t09-t03-reader-afterimage.json");
+const T09_T03_READER_SHA: &str = "e4113304ad4054a298f51cf2fabccd1749b2c423560c4e3c7bff9928fa4a5d39";
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -115,7 +148,11 @@ pub(crate) fn current_lock_identity() -> Result<(usize, String)> {
                 == "5f4d339df70efcfa71a6ad6d878d4078c6250cd1a54279c8716123f2276e0c99",
         "T07 lock predecessor identity",
     )?;
-    Ok((T07_LOCK_BYTES, T07_LOCK_SHA.to_owned()))
+    need(
+        sha(OAUTH_LOCK_SOURCE.as_bytes()) == OAUTH_LOCK_SOURCE_SHA,
+        "T07 installed OAuth lock receipt identity",
+    )?;
+    Ok((OAUTH_LOCK_BYTES, OAUTH_LOCK_SHA.to_owned()))
 }
 
 fn git(root: &Path, args: &[&str]) -> Result<Vec<u8>> {
@@ -142,6 +179,38 @@ pub(crate) fn owns(path: &str) -> bool {
     )
 }
 fn t07_codec_lock_prior(current: &[u8]) -> Result<Vec<u8>> {
+    let installed_gateway_lock = source_afterimage::prior(
+        OAUTH_LOCK_SOURCE,
+        OAUTH_LOCK_SOURCE_SHA,
+        "Cargo.lock",
+        current,
+        0o644,
+    )?;
+    need(
+        installed_gateway_lock.len() == INSTALLED_GATEWAY_LOCK_BYTES
+            && sha(&installed_gateway_lock) == INSTALLED_GATEWAY_LOCK_SHA,
+        "T07 installed OAuth lock predecessor identity",
+    )?;
+    let exact_target_lock = source_afterimage::prior(
+        INSTALLED_GATEWAY_LOCK_SOURCE,
+        INSTALLED_GATEWAY_LOCK_SOURCE_SHA,
+        "Cargo.lock",
+        &installed_gateway_lock,
+        0o644,
+    )?;
+    need(
+        exact_target_lock.len() == GATEWAY_LOCK_BYTES
+            && sha(&exact_target_lock) == GATEWAY_LOCK_SHA,
+        "T07 installed gateway lock predecessor identity",
+    )?;
+    let previous = source_afterimage::prior(
+        GATEWAY_LOCK_SOURCE,
+        GATEWAY_LOCK_SOURCE_SHA,
+        "Cargo.lock",
+        &exact_target_lock,
+        0o644,
+    )?;
+    let current = previous.as_slice();
     need(
         current.len() == T07_LOCK_BYTES && sha(current) == T07_LOCK_SHA,
         "T07 exact current lock identity",
@@ -163,17 +232,54 @@ fn t07_codec_lock_prior(current: &[u8]) -> Result<Vec<u8>> {
     .concat())
 }
 
+#[allow(
+    dead_code,
+    reason = "The standalone shared custody reader owns workspace manifest replay"
+)]
+pub(crate) fn gateway_workspace_prior(current: &[u8]) -> Result<Vec<u8>> {
+    source_afterimage::prior(
+        GATEWAY_WORKSPACE_SOURCE,
+        GATEWAY_WORKSPACE_SHA,
+        "Cargo.toml",
+        current,
+        0o644,
+    )
+}
+
 fn project_row(row: &Row, current: &[u8]) -> Result<Vec<u8>> {
     let lock_prior = (row.path == "Cargo.lock")
         .then(|| t07_codec_lock_prior(current))
         .transpose()?;
     let current = lock_prior.as_deref().unwrap_or(current);
-    let preceding = matches!(
-        row.path.as_str(),
-        a11_replay_source::NATIVE_READER | a11_replay_source::SHARED_READER
-    )
-    .then(|| a11_replay_source::prior(&row.path, current))
-    .transpose()?;
+    let preceding = match row.path.as_str() {
+        "crates/ssx-mcp/Cargo.toml" => {
+            let gateway_manifest = source_afterimage::prior(
+                OAUTH_MCP_SOURCE,
+                OAUTH_MCP_SHA,
+                &row.path,
+                current,
+                0o644,
+            )?;
+            Some(source_afterimage::prior(
+                GATEWAY_MCP_SOURCE,
+                GATEWAY_MCP_SHA,
+                &row.path,
+                &gateway_manifest,
+                0o644,
+            )?)
+        }
+        a11_replay_source::NATIVE_READER | a11_replay_source::SHARED_READER => {
+            Some(a11_replay_source::prior(&row.path, current)?)
+        }
+        T03_READER_PATH => Some(source_afterimage::prior(
+            T09_T03_READER_SOURCE,
+            T09_T03_READER_SHA,
+            &row.path,
+            current,
+            0o644,
+        )?),
+        _ => None,
+    };
     let current = preceding.as_deref().unwrap_or(current);
     need(
         current.len() == row.current.bytes,

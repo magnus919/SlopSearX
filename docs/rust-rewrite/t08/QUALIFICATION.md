@@ -1,6 +1,6 @@
 # T08 qualification snapshot
 
-The latest reproduced source is merged commit `ebc21c8177f4b95f3016fd05a7dfea1bb862ff21`. The five hosted T08A standalone targets and both hosted Linux T08 integration targets passed on that commit. Independent final client acceptance and release-owner acceptance of the O04 handoffs are pending. The November 13 and earlier evidence below remains tied to its original revisions.
+The latest verified standalone and integration runs used the PR #1234 merge candidate. Its source tree exactly matches merged commit `67c97567530eba6c35e9ac93f127333585e12f41`. See [the November 26 handoff](#source-bound-t08-handoff-for-the-november-26-merge). Earlier evidence remains tied to the revisions recorded below.
 
 The case inventory at docs/rust-rewrite/t08/inventory.json is a frozen T08 gate input: crates/xtask/src/t08.rs embeds its bytes at compile time and compares the working copy byte-for-byte. Its status and pending fields describe the gate-authoring snapshot, not current qualification status. Use this qualification snapshot and HOSTED_EVIDENCE-2026-11-13.json for current status; changing the inventory requires coordinated gate-owner changes.
 
@@ -134,7 +134,7 @@ Each handoff matched the embedded report and the two retained phase receipts. Th
 
 The #1160 worktree and generated caches were retired after exact-tree verification. Measured logical storage fell by 916,660 KiB. The shared Cargo target, registry and source-bound evidence remain available for review.
 
-## Remaining acceptance
+## November 19 acceptance checkpoint
 
 - **Passed on merged `ebc21c81`:** T08A on all five standalone CLI targets and T08 on Linux x86_64 and ARM64. The November 13 audit remains historical.
 - **PENDING for #903:** independent final acceptance, reviewed O04 handoff/owner acceptance, and measured post-merge cleanup.
@@ -142,4 +142,48 @@ The #1160 worktree and generated caches were retired after exact-tree verificati
 
 Hosted qualification does not imply release or production acceptance. The optional historical root `ssx` Python script remains a standalone client-side wire client (SHA-256 `4c45e876fc79dffc0f7da8ccccc9c6ba67d4f4cc9e0bd9e8194f74184b96c65b`); the native client/backend paths neither invoke nor require it. Portal review found no browser-visible contract change in this integration slice.
 
-Refs #903 and #921. No production activation was performed.
+## Source-bound T08 handoff for the November 26 merge
+
+The Linux x86_64 and ARM64 runtime jobs and the standalone CLI matrix checked
+out candidate `19666b9c89cf3a9000161112ac7356b35bc87c86`. Its Git tree
+`f3000d640d3912df291d96a652cc6d786ba28de6` is the tree merged by PR #1234.
+Both jobs used the pinned Rust 1.99.0 toolchain and Cargo.lock SHA-256
+`5aec5f07b1143105a5100447e16d1696f15515e1524b9d9feb55683dcc8c035b`.
+The candidate run is the execution origin for these receipts.
+[Standalone CLI matrix](https://github.com/magnus919/SlopSearX/actions/runs/45926767246)
+· [Foundation integration](https://github.com/magnus919/SlopSearX/actions/runs/45926767161)
+
+The standalone run passed 295 installed-client cases on each of the four Linux
+and macOS targets and on the advisory Windows target. The integration job
+builds and source-installs `ssx` independently on each Linux architecture.
+The same locked package and default features are used in both jobs. The
+integration job verifies that its own default and installed executables have
+matching hashes. The standalone and integration jobs produced different
+same-target executable hashes, so the separate job receipts identify the
+executables they exercised. Independent review accepted the runtime results
+for both Linux hosts. Issue #903 still needs evidence from the accepted
+standalone executable in the native-server integration and review of that
+handoff by O04.
+
+| Target | Standalone installed image SHA-256 | Integration installed image SHA-256 | Integration handoff SHA-256 |
+| --- | --- | --- | --- |
+| `x86_64-unknown-linux-gnu` | `76253578aed8c0fdbaf898319dccee63c1847234e9c87af897869c421be799bb` | `e8cbf345be9057574582eb16ca386c4f435cd40648c29f708d59662c1ab69340` | `3eb9b97dab75e6436066c46f0a922d77ee50e658188a7e63649ff49a0fb44aad` |
+| `aarch64-unknown-linux-gnu` | `4483d9e1625864cae6dcfd0b52bb34628c085c457a9afd909dcb9ddf976c5ca2` | `d8557f8ce5f0ad3aa08c7c26348cfeff6da771bec46decb4a877dcfc1e58118b` | `d9408d358ffcfb6fc01ad2b6379d527fd64210dd9870564f3f509a89b88b061e` |
+
+Each Linux integration archive passed all 17 ordered cases with the default
+CLI and again with the clean source install. The two large page values reached
+the adapter as exact decimal strings. Each had a distinct first miss followed
+by a repeat hit, and the loopback upstream saw two page requests. The raw
+stdout and stderr files match the two embedded receipts. Both phases recorded
+SIGKILL for the private server and Valkey at cleanup, waited on those children,
+joined the upstream fixture, and retired the private socket.
+[x86_64 runtime archive](https://github.com/magnus919/SlopSearX/actions/runs/45926767161/artifacts/15167867694)
+· [ARM64 runtime archive](https://github.com/magnus919/SlopSearX/actions/runs/45926767161/artifacts/15168018751)
+
+O04 can use the installation guide and the two source-bound handoff
+manifests to reproduce the client for release composition. Release packages
+need evidence for the binaries actually shipped. Each handoff records
+`production_activation=false`. Release archives, signing, promotion and
+production install, upgrade, and uninstall remain in O04 scope.
+[Installation guide](../t08a/README.md#build-and-source-installation)
+· [O04 release composition](https://github.com/magnus919/SlopSearX/issues/921)

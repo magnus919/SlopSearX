@@ -56,9 +56,57 @@ Local raw logs, per-command exits, source inventories and storage measurements a
 
 - Complete source-assertion ownership/evidence reconciliation and review the new CI job against the protected workflow contract.
 - Reconcile reviewed successor source identities for changed shared implementation paths; preserve historical bindings. Any future machine enforcement metadata is a separate compatibility change with narrow comparisons and negative controls.
-- Chromium, Firefox and Playwright WebKit run the full deterministic journey set in the T03 gate. Real Apple Safari, 200% browser zoom, manual visual review and screen-reader (VoiceOver/NVDA) execution remain recorded validation gaps, not passes.
+- Complete the interactive visual and screen-reader review on an authorized desktop. Record unavailable VoiceOver or NVDA environments as validation gaps.
 - Measure/enforce portal byte, rendering and client performance budgets separately from upstream latency.
 - Complete exact-head hosted CI, portal/image acceptance and required independent review before merge. This core slice is not acceptance evidence for O04 production composition or an upstream engine's live behavior.
+
+## Portal evidence after PR #1241
+
+The exact-main [T03 job](https://github.com/magnus919/SlopSearX/actions/runs/45969208731/job/140405204440)
+passed on `ee12cbf2e0baa99939671a04789ca8c4e287d95f`. Its
+[artifact](https://github.com/magnus919/SlopSearX/actions/runs/45969208731/artifacts/15184591478)
+contains 18 Chromium, Firefox and Playwright WebKit browser receipts, 11
+executed Rust HTTP tests and 22 source-bound formatter comparisons. The
+comparisons await source review for fixture equivalence.
+
+[Apple Safari 27.2](https://github.com/magnus919/SlopSearX/actions/runs/45960593856)
+passed all seven journeys on candidate `87aa81209dcdd0814ce25ad52a43d89e20ad583c`,
+whose source tree matches the merge. The
+[Safari capture bundle](https://github.com/magnus919/SlopSearX/actions/runs/45960593856/artifacts/15180817473)
+shows the desktop and narrow layouts and escaped result content. The page-two
+capture ends above the pagination controls. The navigation assertion comes
+from the WebDriver journey.
+
+The [compact-layout fix](https://github.com/magnus919/SlopSearX/pull/1241) was
+also tested locally in Chromium 151.0.7922.34 against the offline native portal
+fixture. The disposable extension set the active tab to 200% with
+`chrome.tabs.setZoom` and read back factor 2 with `chrome.tabs.getZoom`. The
+effective viewport was 720 CSS pixels wide. Keyboard query editing, source
+attribution, result activation, and pagination worked. The stacked form
+covered 30 sampled hit-test points on the focused result link before the fix
+and zero after it. The zoom exercise covered Chromium and left interactive
+visual and assistive-technology acceptance open.
+
+The browser source audit found that the original landing assertions `B:L52`,
+`B:L53`, `B:L56`, `B:L57` and `B:L60` ran at 390 × 844 while their native
+counterparts ran at desktop width. The `compact-landing` journey runs those
+five predicates against a fresh native landing page and retains the matching
+viewport observation and screenshot. Both browser and Rust receipt inventories
+require this journey. The exact-main artifact above predates the compact
+journey. Review its named receipt in the successor run.
+
+### Grouping lifecycle predicates
+
+The independent source review proposes intentional differences for `F:L746`
+and `F:L792`. Those frozen formatter tests inject `expired`, `partial` and
+`empty` directly into an HTML formatting call. The Python HTTP route projects
+groups from its current response and produces `available` or `unavailable`.
+The Rust portal also projects each current response. It gives results with
+unsupported identity metadata a per-result explanation and renders an empty
+response without result cards. A public portal grouping snapshot does not
+persist across responses, so the expiry label has no corresponding public
+lifecycle. These findings await source-owner disposition. The frozen
+assertions and their acceptance states are preserved.
 
 ## Bounded publication-date proof presentation (#984)
 
@@ -77,15 +125,17 @@ assertions still require their original acceptance evidence. Current-main date
 roundtrip and profiling controls remain alongside the empty-date-control journey
 and source/media evidence in this candidate.
 
-The HTTP receipt validator applies 17 frozen formatter literal predicates to
+The HTTP receipt validator applies 18 frozen formatter literal predicates to
 named native responses for landing, result, malformed-content and error paths.
 The landing-form fixture starts with the darker theme and checks that the
 response declares that default. Each result includes its original source row and
 current HTTP receipt binding under `retained_formatter_assertions`. The browser
 theme journey also checks that switching to the darker theme exposes a visible
 button named “Use dark mode”. The check covers the entire
-malformed-content response for the forbidden URL scheme and rejects missing,
-duplicate or mismatched evidence. Source-owner review of fixture equivalence
+malformed-content response for the forbidden URL scheme. A separate
+`state-local` response uses the frozen loopback URL and verifies both
+the ineligible handoff label and its literal-IP reason (F:L747 and F:L748).
+The gate rejects missing, duplicate or mismatched evidence. Source-owner review of fixture equivalence
 remains pending. The historical inventory and its acceptance states are
 preserved. The compact-results budget uses the original query and single ordinary result
 in a direct native formatter fixture. The native renderer derives grouping
@@ -128,3 +178,10 @@ metadata, result count, or snapshot remainder. Machine formats and their schemas
 are unchanged. Pure renderer cases execute within the existing static formatter
 test; they remain candidate evidence for F:L680/L681/L688/L689 and do not establish
 HTTP upstream availability, hosted browser, human, or full T03 acceptance.
+
+## Search summary landmark
+
+The `results-normal` journey records whether the browser saw a visible
+`complementary` landmark named `Search summary`, the predicate in frozen browser
+assertion B:L96. The T03 validator requires `search_summary_visible: true` in
+each contract browser receipt and a null value for other scenarios.

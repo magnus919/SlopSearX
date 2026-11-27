@@ -288,8 +288,32 @@ fn example_images(root: &Path, records: &mut Vec<Value>) -> Result<(PathBuf, Pat
         driver.ok_or("T08 actual driver artifact missing")?,
     ))
 }
+struct QualifiedCli {
+    path: PathBuf,
+    sha256: String,
+    standalone_receipt: PathBuf,
+}
+
+fn qualified_cli(path: PathBuf, expected: &Value, receipt: PathBuf) -> Result<QualifiedCli> {
+    let expected = expected.as_str().ok_or("T08A CLI image SHA-256 missing")?;
+    let raw = fs::read(&receipt).map_err(|e| e.to_string())?;
+    let witness: Value = serde_json::from_slice(&raw).map_err(|e| e.to_string())?;
+    need(
+        witness["case"] == "bool-value"
+            && witness["child_waited"] == true
+            && witness["image_sha256"] == expected
+            && image(&path)? == expected,
+        "T08 CLI image differs from the successful standalone child",
+    )?;
+    Ok(QualifiedCli {
+        path,
+        sha256: expected.into(),
+        standalone_receipt: receipt,
+    })
+}
+
 struct Images<'a> {
-    cli: &'a Path,
+    cli: &'a QualifiedCli,
     server: &'a Path,
     driver: &'a Path,
 }
@@ -308,7 +332,11 @@ fn run_driver(
         driver,
     } = images;
     need(!output.exists(), "T08 receipt root must be fresh")?;
-    let cli_sha = image(cli)?;
+    let cli_sha = image(&cli.path)?;
+    need(
+        cli_sha == cli.sha256,
+        "T08 CLI image changed after standalone qualification",
+    )?;
     let server_sha = image(server)?;
     let driver_sha = image(driver)?;
     let valkey_sha = image(valkey)?;
@@ -318,7 +346,7 @@ fn run_driver(
         &[],
         t08a::NativeChildScope::FullCorpus,
         &[
-            ("T08_NATIVE_CLI_BINARY", cli),
+            ("T08_NATIVE_CLI_BINARY", cli.path.as_path()),
             ("T08_NATIVE_SERVER_BINARY", server),
             ("T08_RECEIPTS", output),
             ("SLOPSEARX_TEST_VALKEY_SERVER", valkey),
@@ -330,7 +358,7 @@ fn run_driver(
         records,
     )?;
     need(
-        image(cli)? == cli_sha
+        image(&cli.path)? == cli_sha
             && image(server)? == server_sha
             && image(driver)? == driver_sha
             && image(valkey)? == valkey_sha,
@@ -406,8 +434,26 @@ pub(crate) fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     fs::create_dir_all(target.join("rust-evidence")).map_err(|e| e.to_string())?;
     fs::create_dir(&output).map_err(|e| e.to_string())?;
     let (server, driver) = example_images(root, records)?;
-    let (cli, default_sha) = t08a::default_shipping_floor(root, records)?;
-    t08a::runtime_audit(root, &cli, records)?;
+    t08a::check(root, records)?;
+    let standalone = records
+        .last()
+        .filter(|record| record["plan"] == "T08A")
+        .ok_or("T08A final qualification record missing")?;
+    let standalone_dir = target.join("rust-evidence/t08a-native");
+    let cli = qualified_cli(
+        PathBuf::from(
+            standalone["standalone_default_image"]["path"]
+                .as_str()
+                .ok_or("T08A default CLI path missing")?,
+        ),
+        &standalone["standalone_default_image"]["sha256"],
+        standalone_dir.join("bool-value.json"),
+    )?;
+    let installed = qualified_cli(
+        standalone_dir.join("install/bin/ssx"),
+        &standalone["installed_image"]["sha256"],
+        standalone_dir.join("installed/bool-value.json"),
+    )?;
     t08a::runtime_audit(root, &server, records)?;
     let tree = command(
         root,
@@ -449,23 +495,6 @@ pub(crate) fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         &ids,
         records,
     )?;
-    let install = output.join("install");
-    command(
-        root,
-        "cargo",
-        &[
-            "install",
-            "--debug",
-            "--locked",
-            "--path",
-            "crates/ssx-cli",
-            "--root",
-            install.to_str().ok_or("T08 install path UTF8")?,
-        ],
-        records,
-    )?;
-    let installed = install.join("bin/ssx");
-    t08a::runtime_audit(root, &installed, records)?;
     let installed_receipt = run_driver(
         root,
         &output.join("installed"),
@@ -486,7 +515,7 @@ pub(crate) fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     )?;
     let source = command(root, "git", &["rev-parse", "HEAD"], records)?;
     let toolchain = command(root, "rustc", &["--version", "--verbose"], records)?;
-    let handoff = json!({"plan":"T08","source_revision":source.trim(),"lock_sha256":image(&root.join("Cargo.lock"))?,"toolchain":toolchain,"native_host":host,"default_cli_sha256":default_sha,"installed_cli_sha256":image(&installed)?,"server_assembly_sha256":image(&server)?,"driver_sha256":image(&driver)?,"valkey_sha256":image(&valkey)?,"default_receipt":output.join("default/completed.json"),"installed_receipt":output.join("installed/completed.json"),"cases":ids,"optional_python_wire_client":{"sha256":OPTIONAL_WIRE_SHA,"disposition":"historical standalone stdlib wire script; no backend imports; neither native runtime invokes or requires it"},"supported_client_source_install_targets":["x86_64-unknown-linux-gnu","aarch64-unknown-linux-gnu","x86_64-apple-darwin","aarch64-apple-darwin","x86_64-pc-windows-msvc"],"installation_guide":"docs/rust-rewrite/t08a/README.md","backend_scope":"real production-component qualification process, not foundation ssx-server or production startup","component_regression":"T08A exact-head CI retains original531 and separate30 native-discovery cases; this gate does not relabel or replace those receipts","downstream":"O04/#921 owns release archives/signing/promotion and production install/upgrade/uninstall","production_activation":false});
+    let handoff = json!({"plan":"T08","source_revision":source.trim(),"lock_sha256":image(&root.join("Cargo.lock"))?,"toolchain":toolchain,"native_host":host,"default_cli_sha256":cli.sha256,"installed_cli_sha256":installed.sha256,"standalone_qualification":{"plan":"T08A","default_child_receipt":cli.standalone_receipt,"installed_child_receipt":installed.standalone_receipt},"server_assembly_sha256":image(&server)?,"driver_sha256":image(&driver)?,"valkey_sha256":image(&valkey)?,"default_receipt":output.join("default/completed.json"),"installed_receipt":output.join("installed/completed.json"),"cases":ids,"optional_python_wire_client":{"sha256":OPTIONAL_WIRE_SHA,"disposition":"historical standalone stdlib wire script; no backend imports; neither native runtime invokes or requires it"},"supported_client_source_install_targets":["x86_64-unknown-linux-gnu","aarch64-unknown-linux-gnu","x86_64-apple-darwin","aarch64-apple-darwin","x86_64-pc-windows-msvc"],"installation_guide":"docs/rust-rewrite/t08a/README.md","backend_scope":"real production-component qualification process, not foundation ssx-server or production startup","component_regression":"T08A runs its standalone corpus on the same default and installed executables before native-server integration","downstream":"O04/#921 owns release archives/signing/promotion and production install/upgrade/uninstall","production_activation":false});
     fs::write(
         output.join("O04-HANDOFF.json"),
         serde_json::to_vec_pretty(&handoff).map_err(|e| e.to_string())?,

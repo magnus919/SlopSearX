@@ -9,6 +9,48 @@ use rmcp::{
 };
 use std::{collections::HashMap, sync::Arc};
 pub const MAX_RPC_BYTES: usize = 4 * 1024 * 1024;
+
+pub(crate) fn gateway_http(url: &str) -> crate::Result<reqwest::Client> {
+    let source = ssx_source_codecs::source_url::SourceUrl::parse(url)?;
+    let parsed = reqwest::Url::parse(url)?;
+    if !source.is_absolute()
+        || source.lexical_userinfo_present()
+        || source.fragment_component().is_some()
+    {
+        return Err("invalid MCP remote URL".into());
+    }
+    let default_port = match parsed.scheme() {
+        "http" => Some(80),
+        "https" => Some(443),
+        _ => None,
+    };
+    let port = match parsed.port() {
+        None | Some(0) => default_port,
+        port => port,
+    };
+    let valid_port = source
+        .effective_origin_port()
+        .and_then(|p| p.parse::<u16>().ok());
+    let host = source.raw_host();
+    let same_host = match parsed.host() {
+        Some(url::Host::Domain(domain)) => host.eq_ignore_ascii_case(domain),
+        Some(url::Host::Ipv4(address)) => host
+            .parse()
+            .is_ok_and(|host: std::net::Ipv4Addr| host == address),
+        Some(url::Host::Ipv6(address)) => host
+            .parse()
+            .is_ok_and(|host: std::net::Ipv6Addr| host == address),
+        None => false,
+    };
+    if !same_host || source.scheme() != parsed.scheme() || port.is_none() || port != valid_port {
+        return Err("MCP remote URL has an ambiguous origin".into());
+    }
+
+    let target = source.raw_path().parse::<axum::http::uri::PathAndQuery>()?;
+    Ok(reqwest::Client::builder()
+        .exact_endpoint(parsed, target)
+        .build()?)
+}
 #[derive(Clone)]
 pub struct BoundedClient(pub reqwest::Client);
 fn invalid(message: impl Into<String>) -> StreamableHttpError<reqwest::Error> {

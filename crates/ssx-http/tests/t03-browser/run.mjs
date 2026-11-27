@@ -98,6 +98,7 @@ const requiredByScenario = {
     'progressive-explanations',
     'keyboard-only',
     'viewport-desktop',
+    'compact-landing',
     'viewport-narrow',
     'viewport-320css',
     'reduced-motion',
@@ -134,6 +135,7 @@ let evidenceDirectory = '';
 let baseUrl = '';
 let scenario = '';
 let dateRoundtripEvidence = null;
+let searchSummaryVisible = null;
 
 function sha256(bytes) {
   return createHash('sha256').update(bytes).digest('hex');
@@ -643,7 +645,8 @@ async function runContract() {
     );
     assert(await explanation.getByText('structurally eligible', { exact: true }).isVisible());
     const summary = page.getByRole('complementary', { name: 'Search summary' });
-    assert(await summary.isVisible());
+    searchSummaryVisible = await summary.isVisible();
+    assert.equal(searchSummaryVisible, true);
     assert(await summary.getByText('Source status', { exact: true }).isVisible());
     const jsonView = page.getByRole('link', { name: 'Open JSON view ↗', exact: true });
     assert(await jsonView.isVisible());
@@ -931,6 +934,12 @@ async function runContract() {
     const response = await searchByQuery(page, 'malicious', { categories: 'general' });
     assert.equal(response.status(), 200);
     assert(await page.getByRole('heading', { name: '<img src=x onerror=alert(1)> & source' }).isVisible());
+    const snippet = page.getByRole('article').locator('.result-content');
+    assert(await snippet.isVisible());
+    assert.equal(await snippet.innerText(), 'safe match <svg onload=alert(1)> <em onclick=alert(1)>unsafe</em>');
+    const highlight = snippet.locator('strong');
+    assert(await highlight.isVisible());
+    assert.equal(await highlight.innerText(), 'safe match');
     assert.equal(await page.locator('img,svg').count(), 0);
     assert.equal(await page.locator('a[href^="javascript:"]').count(), 0);
     assert.equal(await page.locator('script').count(), 1);
@@ -1072,6 +1081,28 @@ async function runContract() {
     assert([0, 1].includes(activation.detail), `unexpected activation detail ${activation.detail}`);
   });
 
+  await check('compact-landing', async () => {
+    const compact = await newContext({ viewport: { width: 390, height: 844 } });
+    try {
+      const landing = await compact.newPage();
+      attachPageEvidence(landing);
+      await navigate(landing, '/');
+      assert(await landing.getByRole('heading', { name: 'Search SlopSearX.', exact: true }).isVisible());
+      const input = landing.getByRole('searchbox', { name: 'Search SlopSearX', exact: true });
+      assert(await input.isVisible());
+      await landing.getByRole('button', { name: 'Use darker mode', exact: true }).click();
+      assert.equal(await landing.locator('html').getAttribute('data-theme'), 'darker');
+      assert(await landing.getByRole('button', { name: 'Use dark mode', exact: true }).isVisible());
+      await input.blur();
+      await landing.keyboard.press('/');
+      assert(await input.evaluate(element => document.activeElement === element));
+      assert.equal(await viewportObservation(landing, 'compact-landing-390x844'), true);
+      await screenshot(landing, 'contract-compact-landing-390x844.png');
+    } finally {
+      await compact.close();
+    }
+  });
+
   await check('viewport-narrow', async () => {
     await searchByQuery(page, 'valkey', { categories: 'general' });
     const explanation = page.locator('details.result-explanation');
@@ -1091,6 +1122,9 @@ async function runContract() {
     assert.equal(longResponse.status(), 200);
     assert.equal(await viewportObservation(page, 'long-content-320css'), true);
     await screenshot(page, 'contract-long-content-320css.png');
+    const searchPanel = page.locator('.results-shell > .search-panel');
+    assert.equal(await searchPanel.evaluate(panel => getComputedStyle(panel).position), 'static',
+      'the stacked search form must scroll away instead of covering focused results');
     // A classic scrollbar can leave 305 CSS pixels available in a 320-pixel viewport.
     await page.setViewportSize({ width: 305, height: 640 });
     assert.equal(await viewportObservation(page, 'long-content-with-scrollbar-space'), true);
@@ -1363,6 +1397,7 @@ async function main() {
     http_error_responses: httpErrorResponses,
     http_error_console_statuses: httpErrorConsoleStatuses,
     engine_console_parity: engineConsoleParity,
+    search_summary_visible: searchSummaryVisible,
     page_errors: pageErrors,
     browser_closed: browserClosed,
     artifacts,
@@ -1410,6 +1445,7 @@ main().catch(async (error) => {
         console_errors: consoleErrors,
         page_errors: pageErrors,
         engine_console_parity: browserEngine === 'chromium' ? 'chromium' : 'not-captured',
+        search_summary_visible: searchSummaryVisible,
         browser_closed: browserClosed,
         artifacts,
         budgets,

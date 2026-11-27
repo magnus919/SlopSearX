@@ -1,0 +1,14 @@
+{
+  "path": "crates/ssx-mcp/Cargo.toml",
+  "current_bytes": 1652,
+  "current_sha256": "fc07a066970d2fd1f6cf38cb5296cfa798ce8e36aeec8cfc1c50c577a524b387",
+  "prior_bytes": 1391,
+  "prior_sha256": "6f90a22de43b6a24273e5e45934a4ea14df6389b52f9879db7707d4d44a5eaf7",
+  "spans": [
+    {
+      "at": 1311,
+      "current": "[target.'cfg(unix)'.dependencies]\nhyper = { version = \"=1.12.0\", features = [\"http1\", \"server\"] }\nhyper-util = { version = \"=0.1.21\", features = [\"tokio\"] }\nrmcp = { workspace = true, features = [\"auth\"] }\noauth2 = { version = \"=5.0.0\", default-features = false }\n\n[target.'cfg(unix)'.dependencies.nix]\n",
+      "prior": "[target.'cfg(unix)'.dev-dependencies.nix]\n"
+    }
+  ]
+}

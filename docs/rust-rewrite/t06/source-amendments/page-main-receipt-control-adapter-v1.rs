@@ -142,6 +142,14 @@ pub(crate) fn parent(
     expected: &str,
     supplied: &[u8],
 ) -> Result<Option<Vec<u8>>> {
+    if path == RAW_GATEWAY {
+        let (physical, mode) = regular(root, path)?;
+        need(
+            supplied == physical,
+            "T06 raw gateway requires actual current source",
+        )?;
+        return raw_gateway_prior(root, &physical, mode, expected).map(Some);
+    }
     if path == RMCP_TRANSPORT {
         let (physical, mode) = regular(root, path)?;
         need(
@@ -212,6 +220,7 @@ pub(crate) fn reader_parent(
 }
 pub(crate) fn controls(root: &Path) -> Result<()> {
     rmcp_transport_controls(root)?;
+    raw_gateway_controls(root)?;
     current_controls(root)?;
     let capsule = load(root)?;
     for frozen in &capsule.frozen_predecessors {
@@ -1037,5 +1046,412 @@ fn rmcp_transport_controls(root: &Path) -> Result<()> {
         rmcp_transport_prior(&changed, 0o644, RMCP_TRANSPORT_PRIOR).is_err(),
         "rmcp oversized input rejected",
     )?;
+    Ok(())
+}
+
+// RawGateway now delegates URL validation and client construction to the
+// shared exact-target client. Fix the source projection to that single edit.
+const RAW_GATEWAY: &str = "crates/ssx-mcp/src/opaque.rs";
+const RAW_GATEWAY_BASELINE: &str = "93da466abdb56e015474493337f537c2a6ec7b31";
+const RAW_GATEWAY_BLOB: &str = "54314e969672a3c1ebac774da35ce3f634652da6";
+const RAW_GATEWAY_PRIOR: &str = "c89e508d9d4d2c86f6d0f0f8cbf8f35690e83e63da94a4ca342c28da60526d41";
+const RAW_GATEWAY_CURRENT: &str =
+    "5800bb552fbca40f0a0bf6e11fcd8b5b5cf71aab402e2478067a22e2f45a1b17";
+const RAW_GATEWAY_OLD: &str = r#"        let parsed = reqwest::Url::parse(&url)?;
+        if !parsed.username().is_empty()
+            || parsed.password().is_some()
+            || parsed.fragment().is_some()
+        {
+            return Err("invalid MCP remote URL".into());
+        }
+        let http = reqwest::Client::builder()
+            .redirect(reqwest::redirect::Policy::none())
+            .build()?;"#;
+const RAW_GATEWAY_NEW: &str = "        let http = crate::http_client::gateway_http(&url)?;";
+
+// Startup cancellation keeps the accepted request-target change as its
+// predecessor. The complete accepted and physical byte identities are pinned.
+const STARTUP_BASELINE: &str = "1e18b746b45a7c2ec31be623911687767d87ed9f";
+const STARTUP_PRIOR_BLOB: &str = "dfc36638d78ce22abb9b0da7ae0c90bf2784b684";
+const STARTUP_CURRENT: &str = "fcbb1970c46a1394fb158a41e7a0e2d2cc2162a933e2a491ec58d1afda6ff36a";
+const STARTUP_CURRENT_BYTES: usize = 87822;
+
+const STDIO_BASELINE: &str = "316f1822ec93e0fe1dfe5939e3e9018833aa02e9";
+const STDIO_PRIOR_BLOB: &str = "625c045e4f6a42dd4902e998088943bd82034805";
+const STDIO_CURRENT: &str = "e2e944c50cac65e71935d6d47fcb2eb3fe444bca642c646ebac834da129def1c";
+const STDIO_OLD: &str = r#"    pub async fn stdio(self) -> Result<()> {
+        let wire: std::sync::Arc<std::sync::Mutex<WireState>> = Default::default();
+        let handler = RawForwarder {
+            gateway: self.clone(),
+            wire: wire.clone(),
+        };
+        let result = stdio_handler(
+            handler,
+            std::sync::Arc::new(self.catalogs.clone()),
+            wire,
+            crate::output_limits::OutputLimits::HTTP,
+        )
+        .await;
+        self.close().await?;
+        result
+    }
+"#;
+const STDIO_NEW: &str = r#"    pub async fn stdio(self) -> Result<()> {
+        self.stdio_with_io(
+            tokio::io::stdin(),
+            tokio::io::stdout(),
+            tokio_util::sync::CancellationToken::new(),
+        )
+        .await
+    }
+
+    /// Serve MCP over caller-owned streams and close the upstream session on exit.
+    ///
+    /// Cancellation stops the stdio service without waiting for input EOF.
+    pub async fn stdio_with_io<I, O>(
+        self,
+        input: I,
+        output: O,
+        cancel: tokio_util::sync::CancellationToken,
+    ) -> Result<()>
+    where
+        I: tokio::io::AsyncRead + Unpin,
+        O: tokio::io::AsyncWrite + Unpin,
+    {
+        let wire: std::sync::Arc<std::sync::Mutex<WireState>> = Default::default();
+        let stop = cancel.child_token();
+        let _stop_on_drop = stop.clone().drop_guard();
+        let forwarding = std::sync::Arc::new(tokio::sync::RwLock::new(()));
+        let handler = RawForwarder {
+            gateway: self.clone(),
+            wire: wire.clone(),
+            stop: stop.clone(),
+            forwarding: forwarding.clone(),
+        };
+        let result = stdio_handler_io(
+            handler,
+            std::sync::Arc::new(self.catalogs.clone()),
+            wire,
+            crate::output_limits::OutputLimits::HTTP,
+            cancel,
+            input,
+            output,
+        )
+        .await;
+        // The SDK's response drain can finish before its handler tasks. Stop
+        // and join their HTTP futures before retiring the shared session.
+        stop.cancel();
+        let _drained = forwarding.write().await;
+        self.close().await?;
+        result
+    }
+"#;
+const FORWARDER_OLD: &str = r#"struct RawForwarder {
+    gateway: RawGateway,
+    wire: std::sync::Arc<std::sync::Mutex<WireState>>,
+}
+impl RawForwarder {
+    fn decode<T: serde::de::DeserializeOwned>(
+        value: Value,
+    ) -> std::result::Result<T, rmcp::ErrorData> {
+        serde_json::from_value(value)
+            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))
+    }
+    async fn forward<T: serde::de::DeserializeOwned>(
+        &self,
+        context: rmcp::service::RequestContext<rmcp::RoleServer>,
+    ) -> std::result::Result<T, rmcp::ErrorData> {
+"#;
+const FORWARDER_NEW: &str = r#"struct RawForwarder {
+    gateway: RawGateway,
+    stop: tokio_util::sync::CancellationToken,
+    forwarding: std::sync::Arc<tokio::sync::RwLock<()>>,
+    wire: std::sync::Arc<std::sync::Mutex<WireState>>,
+}
+impl RawForwarder {
+    fn decode<T: serde::de::DeserializeOwned>(
+        value: Value,
+    ) -> std::result::Result<T, rmcp::ErrorData> {
+        serde_json::from_value(value)
+            .map_err(|e| rmcp::ErrorData::internal_error(e.to_string(), None))
+    }
+    async fn forward<T: serde::de::DeserializeOwned>(
+        &self,
+        context: rmcp::service::RequestContext<rmcp::RoleServer>,
+    ) -> std::result::Result<T, rmcp::ErrorData> {
+        let _active = self.forwarding.read().await;
+        tokio::select! {
+            biased;
+            _ = self.stop.cancelled() => Err(rmcp::ErrorData::internal_error("gateway stopping", None)),
+            result = self.exchange_rpc(context) => result,
+        }
+    }
+
+    async fn exchange_rpc<T: serde::de::DeserializeOwned>(
+        &self,
+        context: rmcp::service::RequestContext<rmcp::RoleServer>,
+    ) -> std::result::Result<T, rmcp::ErrorData> {
+"#;
+
+const AUTH_BASELINE: &str = "40d2236234bec724c03a7e05448c411e715e46cb";
+const AUTH_RECORD: &str = r#####"{
+  "path": "crates/ssx-mcp/src/opaque.rs",
+  "prior": {
+    "sha256": "e2e944c50cac65e71935d6d47fcb2eb3fe444bca642c646ebac834da129def1c",
+    "bytes": 89540,
+    "mode": 420
+  },
+  "prior_git_blob": "b2cb99c1298edecd401f1316e7175f78cf16c833",
+  "current": {
+    "sha256": "bc106324406905af3e20915e02ad39f7088d3d00202b64830f35497cf683fdb1",
+    "bytes": 100668,
+    "mode": 420
+  },
+  "edits": [
+    {
+      "current_offset": 44043,
+      "old": "",
+      "new": "/// Supplies bearer credentials for an already configured remote MCP endpoint.\npub trait GatewayAuthorizer: Send + Sync {\n    /// Return the last cached bearer without doing I/O or waiting for refresh.\n    fn cached_bearer(&self) -> Option<String>;\n\n    /// Recognize an insufficient-scope challenge on HTTP 403 without doing I/O.\n    fn supports_scope_upgrade(&self, _challenges: &[reqwest::header::HeaderValue]) -> bool {\n        false\n    }\n\n    /// Respond to a 401 or a recognized 403 from the MCP endpoint. Cache any\n    /// returned bearer so concurrent requests and session cleanup can use it.\n    fn authorize<'a>(\n        &'a self,\n        status: reqwest::StatusCode,\n        sent_bearer: Option<&'a str>,\n        challenges: &'a [reqwest::header::HeaderValue],\n    ) -> futures_util::future::BoxFuture<'a, Result<Option<String>>>;\n}\n\n#[derive(Clone)]\nenum GatewayBearer {\n    Static(Option<String>),\n    Refreshable {\n        authorizer: std::sync::Arc<dyn GatewayAuthorizer>,\n        timeout: Duration,\n    },\n}\n\nimpl GatewayBearer {\n    fn cached(&self) -> Option<String> {\n        match self {\n            Self::Static(token) => token.clone(),\n            Self::Refreshable { authorizer, .. } => authorizer.cached_bearer(),\n        }\n    }\n}\n\n"
+    },
+    {
+      "current_offset": 45386,
+      "old": "    token: Option<String>,\n",
+      "new": "    bearer: GatewayBearer,\n"
+    },
+    {
+      "current_offset": 45701,
+      "old": "        let deadline = tokio::time::Instant::now() + self.deadline;\n        let mut request = self\n            .http\n            .post(&self.url)\n            .header(\"accept\", \"application/json, text/event-stream\")\n            .header(\"content-type\", \"application/json\")\n            .header(\"mcp-protocol-version\", self.protocol.as_str())\n            .body(body.to_owned());\n        if let Some(token) = &self.token {\n            request = request.bearer_auth(token);\n",
+      "new": "        let mut deadline = tokio::time::Instant::now() + self.deadline;\n        let request: Envelope = serde_json::from_str(body)?;\n        let attempted_session = self.session.lock().unwrap().clone();\n        let send = |bearer: Option<&str>, deadline| {\n            let mut outgoing = self\n                .http\n                .post(&self.url)\n                .header(\"accept\", \"application/json, text/event-stream\")\n                .header(\"content-type\", \"application/json\")\n                .header(\"mcp-protocol-version\", self.protocol.as_str())\n                .body(body.to_owned());\n            if let Some(token) = bearer {\n                outgoing = outgoing.bearer_auth(token);\n            }\n            if let Some(session) = &attempted_session {\n                outgoing = outgoing.header(\"mcp-session-id\", session.as_str());\n            }\n            tokio::time::timeout_at(deadline, outgoing.send())\n        };\n        let sent = self.bearer.cached();\n        let mut response = send(sent.as_deref(), deadline).await??;\n        let status = response.status();\n        if matches!(\n            status,\n            reqwest::StatusCode::UNAUTHORIZED | reqwest::StatusCode::FORBIDDEN\n        ) && request.method.as_deref() != Some(\"notifications/cancelled\")\n            && let GatewayBearer::Refreshable {\n                authorizer,\n                timeout,\n            } = &self.bearer\n        {\n            let challenges: Vec<_> = response\n                .headers()\n                .get_all(reqwest::header::WWW_AUTHENTICATE)\n                .iter()\n                .cloned()\n                .collect();\n            if status == reqwest::StatusCode::UNAUTHORIZED\n                || authorizer.supports_scope_upgrade(&challenges)\n            {\n                drop(response);\n                // Authorization may involve an interactive browser. Retain the\n                // remaining HTTP budget for replay and the resulting body.\n                let remaining = deadline.saturating_duration_since(tokio::time::Instant::now());\n                let renewed = tokio::time::timeout(\n                    *timeout,\n                    authorizer.authorize(status, sent.as_deref(), &challenges),\n                )\n                .await?\n                .map_err(|_| \"remote MCP authorization failed\")?;\n                let token = renewed\n                    .as_deref()\n                    .filter(|token| !token.is_empty())\n                    .ok_or_else(|| format!(\"remote MCP HTTP status {status}\"))?;\n                deadline = tokio::time::Instant::now() + remaining;\n                response = send(Some(token), deadline).await??;\n            }\n"
+    },
+    {
+      "current_offset": 48378,
+      "old": "        let attempted_session = self.session.lock().unwrap().clone();\n        if let Some(session) = &attempted_session {\n            request = request.header(\"mcp-session-id\", session.as_str());\n",
+      "new": "        if !response.status().is_success() {\n            return Err(format!(\"remote MCP HTTP status {}\", response.status()).into());\n"
+    },
+    {
+      "current_offset": 48521,
+      "old": "        let mut response = tokio::time::timeout_at(deadline, request.send()).await??;\n",
+      "new": ""
+    },
+    {
+      "current_offset": 49564,
+      "old": "        if !response.status().is_success() {\n            return Err(format!(\"remote MCP HTTP status {}\", response.status()).into());\n        }\n",
+      "new": ""
+    },
+    {
+      "current_offset": 49983,
+      "old": "        let request: Envelope = serde_json::from_str(body)?;\n",
+      "new": ""
+    },
+    {
+      "current_offset": 51658,
+      "old": "",
+      "new": "        Self::connect_with_bearer(url, GatewayBearer::Static(token), deadline, cancel).await\n    }\n\n    /// Connect using a cached bearer and allow one authorization retry per exchange.\n    /// Startup shares one overall budget for HTTP and interactive authorization.\n    pub async fn connect_with_authorizer(\n        url: String,\n        authorizer: std::sync::Arc<dyn GatewayAuthorizer>,\n        deadline: Duration,\n        authorization_timeout: Duration,\n        cancel: &tokio_util::sync::CancellationToken,\n    ) -> Result<Self> {\n        Self::connect_with_bearer(\n            url,\n            GatewayBearer::Refreshable {\n                authorizer,\n                timeout: authorization_timeout,\n            },\n            deadline,\n            cancel,\n        )\n        .await\n    }\n\n    async fn connect_with_bearer(\n        url: String,\n        bearer: GatewayBearer,\n        deadline: Duration,\n        cancel: &tokio_util::sync::CancellationToken,\n    ) -> Result<Self> {\n"
+    },
+    {
+      "current_offset": 52705,
+      "old": "",
+      "new": "        let startup_timeout = match &bearer {\n            GatewayBearer::Static(_) => deadline,\n            GatewayBearer::Refreshable { timeout, .. } => deadline.saturating_add(*timeout),\n        };\n"
+    },
+    {
+      "current_offset": 52973,
+      "old": "            token,\n",
+      "new": "            bearer,\n"
+    },
+    {
+      "current_offset": 53186,
+      "old": "        let initialize = tokio::time::timeout(deadline, async {\n",
+      "new": "        let initialize = tokio::time::timeout(startup_timeout, async {\n"
+    },
+    {
+      "current_offset": 61241,
+      "old": "            if let Some(token) = &self.token {\n",
+      "new": "            if let Some(token) = self.bearer.cached() {\n"
+    },
+    {
+      "current_offset": 85864,
+      "old": "                token: None,\n",
+      "new": "                bearer: GatewayBearer::Static(None),\n"
+    },
+    {
+      "current_offset": 86587,
+      "old": "",
+      "new": "    #[tokio::test]\n    async fn gateway_refresh_replays_rpc_once_and_keeps_control_requests_noninteractive()\n    -> Result<()> {\n        use axum::{\n            http::{Method, Request, StatusCode},\n            response::IntoResponse,\n        };\n        use std::sync::{Arc, Mutex};\n\n        const TARGET: &str = \"/keep/%2e%2E/mcp?\";\n        const RPC: &str =\n            r#\"{\"jsonrpc\":\"2.0\",\"id\":9,\"method\":\"tools/call\",\"params\":{\"name\":\"search\"}}\"#;\n        const CANCEL: &str =\n            r#\"{\"jsonrpc\":\"2.0\",\"method\":\"notifications/cancelled\",\"params\":{\"requestId\":9}}\"#;\n        const CHALLENGE: &str = r#\"Bearer error=\"invalid_token\"\"#;\n        const SCOPE: &str = r#\"Bearer error=\"insufficient_scope\", scope=\"search\"\"#;\n        const FORBIDDEN: &str =\n            r#\"{\"jsonrpc\":\"2.0\",\"id\":8,\"method\":\"tools/call\",\"params\":{\"name\":\"search\"}}\"#;\n        const SCOPED: &str =\n            r#\"{\"jsonrpc\":\"2.0\",\"id\":10,\"method\":\"tools/call\",\"params\":{\"name\":\"search\"}}\"#;\n\n        struct Authorizer(Mutex<Option<String>>);\n        impl GatewayAuthorizer for Authorizer {\n            fn cached_bearer(&self) -> Option<String> {\n                self.0.lock().unwrap().clone()\n            }\n\n            fn supports_scope_upgrade(&self, challenges: &[reqwest::header::HeaderValue]) -> bool {\n                challenges == [SCOPE]\n            }\n\n            fn authorize<'a>(\n                &'a self,\n                status: reqwest::StatusCode,\n                sent_bearer: Option<&'a str>,\n                challenges: &'a [reqwest::header::HeaderValue],\n            ) -> futures_util::future::BoxFuture<'a, Result<Option<String>>> {\n                Box::pin(async move {\n                    let replacement = match (status, sent_bearer) {\n                        (StatusCode::UNAUTHORIZED, Some(\"expired\")) => {\n                            assert_eq!(challenges, &[CHALLENGE]);\n                            // Make authorization take longer than the HTTP budget.\n                            tokio::time::sleep(Duration::from_millis(2100)).await;\n                            \"renewed\"\n                        }\n                        (StatusCode::FORBIDDEN, Some(\"renewed\")) => {\n                            assert_eq!(challenges, &[SCOPE]);\n                            \"denied\"\n                        }\n                        _ => panic!(\"unexpected credential authorization\"),\n                    };\n                    *self.0.lock().unwrap() = Some(replacement.into());\n                    Ok(Some(replacement.into()))\n                })\n            }\n        }\n\n        let (observed, mut requests) = tokio::sync::mpsc::unbounded_channel();\n        let router = axum::Router::new().fallback(move |request: Request<axum::body::Body>| {\n            let observed = observed.clone();\n            async move {\n                let (parts, body) = request.into_parts();\n                let bearer = parts.headers[\"authorization\"].to_str().unwrap().to_owned();\n                let body = axum::body::to_bytes(body, 4096).await.unwrap();\n                let body = String::from_utf8(body.to_vec()).unwrap();\n                let reply = match (parts.method.clone(), bearer.as_str(), body.as_str()) {\n                    (Method::POST, _, FORBIDDEN) => StatusCode::FORBIDDEN.into_response(),\n                    (Method::POST, _, SCOPED) => {\n                        (StatusCode::FORBIDDEN, [(\"www-authenticate\", SCOPE)]).into_response()\n                    }\n                    (Method::POST, \"Bearer renewed\", RPC) => {\n                        axum::Json(json!({\"jsonrpc\":\"2.0\",\"id\":9,\"result\":{\"content\":[]}}))\n                            .into_response()\n                    }\n                    (Method::DELETE, \"Bearer denied\", \"\") => StatusCode::NO_CONTENT.into_response(),\n                    _ => (\n                        StatusCode::UNAUTHORIZED,\n                        [\n                            (\"www-authenticate\", CHALLENGE),\n                            (\"mcp-session-id\", \"denied-session\"),\n                        ],\n                    )\n                        .into_response(),\n                };\n                observed\n                    .send((\n                        parts.method,\n                        parts.uri.path_and_query().unwrap().to_string(),\n                        parts.headers[\"mcp-session-id\"].to_str().unwrap().to_owned(),\n                        parts.headers[\"mcp-protocol-version\"]\n                            .to_str()\n                            .unwrap()\n                            .to_owned(),\n                        bearer,\n                        body,\n                    ))\n                    .unwrap();\n                reply\n            }\n        });\n        let host =\n            crate::harness::Host::start(router, tokio_util::sync::CancellationToken::new()).await?;\n        let url = format!(\"http://{}{TARGET}\", host.address);\n        let gateway = RawGateway {\n            http: crate::http_client::gateway_http(&url)?,\n            url,\n            bearer: GatewayBearer::Refreshable {\n                authorizer: Arc::new(Authorizer(Mutex::new(Some(\"expired\".into())))),\n                timeout: Duration::from_secs(3),\n            },\n            catalogs: BTreeMap::new(),\n            deadline: Duration::from_secs(2),\n            session: Arc::new(Mutex::new(Some(Arc::new(\"active-session\".into())))),\n            initialize_result: None,\n            protocol: \"2025-11-25\".into(),\n        };\n\n        assert!(gateway.exchange(CANCEL).await.is_err());\n        assert!(gateway.exchange(RPC).await?.is_some());\n        // A second RPC is denied even after replacement. Its failure ends this\n        // exchange without asking the authorizer for another bearer.\n        assert!(gateway.exchange(FORBIDDEN).await.is_err());\n        assert!(gateway.exchange(SCOPED).await.is_err());\n        gateway.close().await?;\n        assert!(gateway.session.lock().unwrap().is_none());\n\n        for (method, bearer, body) in [\n            (Method::POST, \"Bearer expired\", CANCEL),\n            (Method::POST, \"Bearer expired\", RPC),\n            (Method::POST, \"Bearer renewed\", RPC),\n            (Method::POST, \"Bearer renewed\", FORBIDDEN),\n            (Method::POST, \"Bearer renewed\", SCOPED),\n            (Method::POST, \"Bearer denied\", SCOPED),\n            (Method::DELETE, \"Bearer denied\", \"\"),\n        ] {\n            assert_eq!(\n                requests.try_recv()?,\n                (\n                    method,\n                    TARGET.into(),\n                    \"active-session\".into(),\n                    \"2025-11-25\".into(),\n                    bearer.into(),\n                    body.into(),\n                )\n            );\n        }\n        assert!(requests.try_recv().is_err());\n        Ok(())\n    }\n\n"
+    },
+    {
+      "current_offset": 93544,
+      "old": "            token: None,\n",
+      "new": "            bearer: GatewayBearer::Static(None),\n"
+    }
+  ]
+}"#####;
+
+fn auth_source(root: &Path, raw: &[u8], mode: u32) -> Result<Vec<u8>> {
+    let row: Row = serde_json::from_str(AUTH_RECORD).map_err(|error| error.to_string())?;
+    let prior = inverse(&row, raw, mode)?;
+    need(
+        row.path == RAW_GATEWAY,
+        "T06 raw gateway authorizer path differs",
+    )?;
+    let tree = Command::new("git")
+        .args(["ls-tree", AUTH_BASELINE, "--", RAW_GATEWAY])
+        .current_dir(root)
+        .output()
+        .map_err(|error| error.to_string())?;
+    let blob = Command::new("git")
+        .args(["cat-file", "blob", &row.prior_git_blob])
+        .current_dir(root)
+        .output()
+        .map_err(|error| error.to_string())?;
+    need(
+        tree.status.success()
+            && tree.stdout
+                == format!("100644 blob {}\t{RAW_GATEWAY}\n", row.prior_git_blob).as_bytes()
+            && blob.status.success()
+            && blob.stdout == prior,
+        "T06 raw gateway authorizer predecessor Git identity differs",
+    )?;
+    Ok(prior)
+}
+
+fn startup_source(raw: &[u8], mode: u32) -> Result<Vec<u8>> {
+    inverse(
+        &Row {
+            path: RAW_GATEWAY.into(),
+            prior: Material {
+                sha256: STARTUP_CURRENT.into(),
+                bytes: STARTUP_CURRENT_BYTES,
+                mode: 0o644,
+            },
+            prior_git_blob: STDIO_PRIOR_BLOB.into(),
+            current: Material {
+                sha256: STDIO_CURRENT.into(),
+                bytes: 89540,
+                mode: 0o644,
+            },
+            edits: vec![
+                Edit {
+                    current_offset: 54626,
+                    old: STDIO_OLD.into(),
+                    new: STDIO_NEW.into(),
+                },
+                Edit {
+                    current_offset: 57632,
+                    old: FORWARDER_OLD.into(),
+                    new: FORWARDER_NEW.into(),
+                },
+            ],
+        },
+        raw,
+        mode,
+    )
+}
+
+fn raw_gateway_prior(root: &Path, raw: &[u8], mode: u32, expected: &str) -> Result<Vec<u8>> {
+    need(
+        expected == RAW_GATEWAY_PRIOR,
+        "T06 raw gateway historical binding differs",
+    )?;
+    startup_source(&auth_source(root, raw, mode)?, mode)?;
+    let accepted = Command::new("git")
+        .args(["cat-file", "blob", STARTUP_PRIOR_BLOB])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    need(
+        accepted.status.success(),
+        "T06 raw gateway startup predecessor missing",
+    )?;
+    inverse(
+        &Row {
+            path: RAW_GATEWAY.into(),
+            prior: Material {
+                sha256: RAW_GATEWAY_PRIOR.into(),
+                bytes: 85717,
+                mode: 0o644,
+            },
+            prior_git_blob: RAW_GATEWAY_BLOB.into(),
+            current: Material {
+                sha256: RAW_GATEWAY_CURRENT.into(),
+                bytes: 85398,
+                mode: 0o644,
+            },
+            edits: vec![Edit {
+                current_offset: 48167,
+                old: RAW_GATEWAY_OLD.into(),
+                new: RAW_GATEWAY_NEW.into(),
+            }],
+        },
+        &accepted.stdout,
+        mode,
+    )
+}
+
+fn raw_gateway_controls(root: &Path) -> Result<()> {
+    let (raw, mode) = regular(root, RAW_GATEWAY)?;
+    let prior = raw_gateway_prior(root, &raw, mode, RAW_GATEWAY_PRIOR)?;
+    let auth_predecessor = auth_source(root, &raw, mode)?;
+    let stdio_predecessor = startup_source(&auth_predecessor, mode)?;
+    let stdio_tree = Command::new("git")
+        .args(["ls-tree", STDIO_BASELINE, "--", RAW_GATEWAY])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    let stdio_blob = Command::new("git")
+        .args(["cat-file", "blob", STDIO_PRIOR_BLOB])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    need(
+        stdio_tree.status.success()
+            && stdio_tree.stdout
+                == format!("100644 blob {STDIO_PRIOR_BLOB}\t{RAW_GATEWAY}\n").as_bytes()
+            && stdio_blob.status.success()
+            && stdio_blob.stdout == stdio_predecessor,
+        "T06 raw gateway stdio predecessor Git identity differs",
+    )?;
+    let startup_tree = Command::new("git")
+        .args(["ls-tree", STARTUP_BASELINE, "--", RAW_GATEWAY])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    need(
+        startup_tree.status.success()
+            && startup_tree.stdout
+                == format!("100644 blob {STARTUP_PRIOR_BLOB}\t{RAW_GATEWAY}\n").as_bytes(),
+        "T06 raw gateway startup predecessor Git identity differs",
+    )?;
+    let tree = Command::new("git")
+        .args(["ls-tree", RAW_GATEWAY_BASELINE, "--", RAW_GATEWAY])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    let blob = Command::new("git")
+        .args(["cat-file", "blob", RAW_GATEWAY_BLOB])
+        .current_dir(root)
+        .output()
+        .map_err(|e| e.to_string())?;
+    need(
+        tree.status.success()
+            && tree.stdout == format!("100644 blob {RAW_GATEWAY_BLOB}\t{RAW_GATEWAY}\n").as_bytes()
+            && blob.status.success()
+            && blob.stdout == prior,
+        "T06 raw gateway exact Git predecessor differs",
+    )?;
+    let mut changed = raw.clone();
+    changed[0] ^= 1;
+    for (bytes, mode, expected) in [
+        (changed.as_slice(), 0o644, RAW_GATEWAY_PRIOR),
+        (prior.as_slice(), 0o644, RAW_GATEWAY_PRIOR),
+        (auth_predecessor.as_slice(), 0o644, RAW_GATEWAY_PRIOR),
+        (stdio_predecessor.as_slice(), 0o644, RAW_GATEWAY_PRIOR),
+        (raw.as_slice(), 0o755, RAW_GATEWAY_PRIOR),
+        (raw.as_slice(), 0o644, RAW_GATEWAY_CURRENT),
+    ] {
+        need(
+            raw_gateway_prior(root, bytes, mode, expected).is_err(),
+            "T06 raw gateway accepted altered bytes, mode, or historical binding",
+        )?;
+    }
     Ok(())
 }
