@@ -96,18 +96,9 @@ The maintainer set Windows support to best effort on 2026-11-22. Keep the
 GitHub-hosted Windows x64 build, install, ordinary loopback TLS, and runtime
 coverage. Report the full CurrentUser Root install and removal sequence as
 unverified until it passes on an authorized disposable Windows environment.
-Retain previous failure and cleanup receipts. The ordinary TLS tests cover
-explicit CA configuration. Only the independent store witness can qualify
-the default platform trust path.
-
-The macOS gate still requires a supported establishment and removal route.
-Preserve per-run CA identity, default trust and wrong-hostname controls, exact
-removal, rejection after removal, and restoration and cleanup evidence. The
-gateway fixture paths (`crates/ssx-gateway/tests/platform_support/` and
-`.github/workflows/rust-client-platforms.yml`) remain on the unmerged
-`codex/preview-1056-t07-source-integration-20261027` branch. The matching
-GitHub dependency update removes the #1075 edge after this decision lands
-and keeps #1075 open.
+Retain previous failure and cleanup receipts for both optional store-mutation
+investigations. T07 owns the installed Apple Silicon gateway HTTPS checks
+described in [ADR 010](../adr/010-support-apple-silicon-macos.md).
 
 Where a native GitHub `blocked_by` edge differs from the plan table, the native
 edge is authoritative for start decisions; this table records plan intent, not
