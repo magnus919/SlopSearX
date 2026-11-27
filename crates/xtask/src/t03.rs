@@ -3326,6 +3326,14 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     let output = capture(root, command, Duration::from_secs(600), records)?;
     completed_tests(&output)?;
     let http = validate_http(&http_dir, &output, &binary, &binary_sha)?;
+    let http_receipt_count = http["http_receipts"]
+        .as_array()
+        .ok_or("validated HTTP receipts missing")?
+        .len();
+    let http_process_count = http["processes"]
+        .as_array()
+        .ok_or("validated HTTP processes missing")?
+        .len();
     let compact_budgets =
         compact_formatter_budgets(root, &manifest, &http["compact_formatter"], records)?;
     records.push(json!({"plan":"T03","role":"compact-formatter-budgets","source_sha256":source_sha,"evidence":compact_budgets}));
@@ -3422,7 +3430,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         sources(root)? == before && hash(&regular(&binary, 256 * 1024 * 1024)?) == binary_sha,
         "source or executed fixture image changed during gate",
     )?;
-    records.push(json!({"plan":"T03","role":"native-browser-acceptance","source_inputs":before,"source_sha256":source_sha,"server_binary":{"path":binary,"sha256":binary_sha},"http_tests":HTTP_TESTS,"http_receipts":108,"http_processes":13,"browser_scenarios":browser_rows,"controls":negative,"evidence_directory":run,"scope":"real native HTTP plus deterministic Chromium and Firefox browser journeys and measured synthetic budgets; actual Safari, manual visual/assistive technology and 200% zoom acceptance remain separate"}));
+    records.push(json!({"plan":"T03","role":"native-browser-acceptance","source_inputs":before,"source_sha256":source_sha,"server_binary":{"path":binary,"sha256":binary_sha},"http_tests":HTTP_TESTS,"http_receipts":http_receipt_count,"http_processes":http_process_count,"browser_scenarios":browser_rows,"controls":negative,"evidence_directory":run,"scope":"real native HTTP plus deterministic Chromium and Firefox browser journeys and measured synthetic budgets; actual Safari, manual visual/assistive technology and 200% zoom acceptance remain separate"}));
     Ok(())
 }
 
