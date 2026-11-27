@@ -91,7 +91,7 @@ def test_registry_lookup_classifies_permanent_http_failure(monkeypatch: pytest.M
     assert len(calls) == 1
 
 
-GHCR_DIGEST_PIN = "ghcr.io/magnus919/slopsearx@sha256:91194d146d205b1cf4688c1989da8f5f6b599a9627be23fd1ee7a4e488fda5b7"
+GHCR_DIGEST_PIN = "ghcr.io/magnus919/slopsearx@sha256:76efa296aeede6b04bd47ddabbf50226f4001af38801454b48f4bf4487cec58f"
 
 
 def test_existing_compose_source_build_remains_fail_closed() -> None:
