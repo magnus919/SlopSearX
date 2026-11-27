@@ -11,6 +11,21 @@ struct Args {
     remote: String,
     #[arg(long, env = "MCP_REMOTE_TOKEN", hide_env_values = true)]
     token: Option<String>,
+    #[arg(long, env = "MCP_REMOTE_OAUTH", value_parser = env_flag)]
+    oauth: bool,
+    #[arg(long, env = "MCP_REMOTE_OAUTH_CALLBACK_PORT", default_value_t = 8765)]
+    oauth_callback_port: u16,
+    #[arg(long, env = "MCP_REMOTE_OAUTH_NO_BROWSER", value_parser = env_flag)]
+    oauth_no_browser: bool,
+    #[arg(long, env = "MCP_REMOTE_TOKEN_FILE", hide_env_values = true)]
+    oauth_token_file: Option<std::path::PathBuf>,
+}
+
+fn env_flag(value: &str) -> Result<bool, std::convert::Infallible> {
+    Ok(matches!(
+        value.trim().to_ascii_lowercase().as_str(),
+        "true" | "1" | "yes"
+    ))
 }
 
 #[cfg(unix)]
@@ -28,7 +43,11 @@ async fn main() -> ExitCode {
 
 #[cfg(unix)]
 async fn run(args: Args) -> Result<(), &'static str> {
-    use ssx_mcp::opaque::RawGateway;
+    use ssx_mcp::{
+        gateway_oauth::{AUTHORIZATION_TIMEOUT, GatewayOAuth},
+        opaque::RawGateway,
+    };
+    use std::sync::Arc;
     use std::time::Duration;
     use tokio::signal::unix::{SignalKind, signal};
     use tokio_util::sync::CancellationToken;
@@ -48,8 +67,25 @@ async fn run(args: Args) -> Result<(), &'static str> {
         let mut input = stdio::Bridge::stdin().map_err(|_| "Could not open gateway input")?;
         let mut output = stdio::Bridge::stdout().map_err(|_| "Could not open gateway output")?;
         let token = args.token.filter(|value| !value.is_empty());
-        let connection =
-            RawGateway::connect_cancellable(args.remote, token, Duration::from_secs(30), &cancel);
+        if args.oauth && token.is_some() {
+            return Err("--oauth and --token are mutually exclusive");
+        }
+        let connection = async {
+            let request_timeout = Duration::from_secs(30);
+            let connected = if args.oauth {
+                let remote = args.remote.trim().to_owned();
+                let token_file = args.oauth_token_file.filter(|path| !path.as_os_str().is_empty());
+                let authorizer = GatewayOAuth::open(
+                    &remote, token_file, args.oauth_callback_port, args.oauth_no_browser,
+                )
+                .await
+                .map_err(|_| "Could not load OAuth credentials. Check the remote URL and token file permissions, or specify a fresh --oauth-token-file.")?;
+                RawGateway::connect_with_authorizer(remote, Arc::new(authorizer), request_timeout, AUTHORIZATION_TIMEOUT, &cancel).await
+            } else {
+                RawGateway::connect_cancellable(args.remote, token, request_timeout, &cancel).await
+            };
+            connected.map_err(|_| "Could not connect to the remote MCP server")
+        };
         tokio::pin!(connection);
         let connected = tokio::select! {
             result = &mut connection => result,
@@ -63,7 +99,7 @@ async fn run(args: Args) -> Result<(), &'static str> {
             Err(_) if cancel.is_cancelled() => {
                 return input.stop().map_err(|_| "Gateway input failed");
             }
-            Err(_) => return Err("Could not connect to the remote MCP server"),
+            Err(message) => return Err(message),
         };
         let service = gateway
             .stdio_with_io(input.stream(), output.stream(), cancel.clone())

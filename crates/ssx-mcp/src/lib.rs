@@ -1,6 +1,8 @@
 //! Native search surfaces and shared MCP transports. T01 Registry remains a qualification fixture.
 pub mod evidence;
 pub mod gateway;
+#[cfg(unix)]
+pub mod gateway_oauth;
 pub mod harness;
 pub mod http_client;
 pub mod legacy;
