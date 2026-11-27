@@ -80,6 +80,12 @@ const FOUNDATION_SUCCESSOR_OFFSET: usize = 113137;
 const FOUNDATION_SUCCESSOR: &str = r###""Mandatory prerequisites partition on both existing architectures; xtask tests complement the F03 workspace suite, which excludes xtask. Native deadlines, mutation control, tool/isolation/Valkey/compiler/source provenance and the workflow aggregation remain required.""###;
 const PRIOR_FOUNDATION_SUCCESSOR: &str = r###""Mandatory prerequisites partition on both existing architectures; exact original commands and native deadlines retained; fresh tool/isolation/Valkey/compiler/source provenance; no inherited targets or dropped gates. Separate 130-minute outer workflow job cap; native command deadlines and all gates remain unchanged.""###;
 
+const INSTALLED_GATEWAY_CATALOG_BYTES: usize = 192929;
+const INSTALLED_GATEWAY_CATALOG_SHA: &str =
+    "2f16fcede3857de2627d1a4977aaf5dd2425afe3ef7b361de3322a7679e76433";
+const INSTALLED_GATEWAY_ROW_OFFSET: usize = 87895;
+const INSTALLED_GATEWAY_ROW_BYTES: usize = 4065;
+
 const APPLE_SILICON_CATALOG_BYTES: usize = 188864;
 const APPLE_SILICON_CATALOG_SHA: &str =
     "469e6ac4cea610677c62113d10da9f13b52e0eff17e168bb2e73bf1e54213569";
@@ -106,7 +112,7 @@ fn hash(raw: &[u8]) -> String {
 }
 pub(super) fn physical_bytes(path: &str, expected: usize) -> usize {
     if path == PATH && expected == PRIOR_BYTES {
-        APPLE_SILICON_CATALOG_BYTES
+        INSTALLED_GATEWAY_CATALOG_BYTES
     } else {
         expected
     }
@@ -115,10 +121,16 @@ pub(super) fn project(path: &str, expected: usize, raw: Vec<u8>) -> Result<Vec<u
     if path != PATH || expected != PRIOR_BYTES {
         return Ok(raw);
     }
+    if raw.len() != INSTALLED_GATEWAY_CATALOG_BYTES || hash(&raw) != INSTALLED_GATEWAY_CATALOG_SHA {
+        return Err("O02 catalog successor: exact installed-gateway catalog required".into());
+    }
+    let mut raw = raw;
+    raw.drain(
+        INSTALLED_GATEWAY_ROW_OFFSET..INSTALLED_GATEWAY_ROW_OFFSET + INSTALLED_GATEWAY_ROW_BYTES,
+    );
     if raw.len() != APPLE_SILICON_CATALOG_BYTES || hash(&raw) != APPLE_SILICON_CATALOG_SHA {
         return Err("O02 catalog successor: exact Apple Silicon catalog required".into());
     }
-    let mut raw = raw;
     let start = APPLE_SILICON_CLI_SUCCESSOR_OFFSET;
     let end = start + APPLE_SILICON_CLI_SUCCESSOR.len();
     if raw.get(start..end) != Some(APPLE_SILICON_CLI_SUCCESSOR.as_bytes()) {
@@ -220,9 +232,14 @@ pub(super) fn controls(root: &std::path::Path) {
     let raw = std::fs::read(root.join(PATH)).unwrap();
     let prior = project(PATH, PRIOR_BYTES, raw.clone()).unwrap();
     assert_eq!(hash(&prior), PRIOR_SHA);
+    let mut before_gateway = raw.clone();
+    before_gateway.drain(
+        INSTALLED_GATEWAY_ROW_OFFSET..INSTALLED_GATEWAY_ROW_OFFSET + INSTALLED_GATEWAY_ROW_BYTES,
+    );
     for mutant in [
         vec![],
         prior,
+        before_gateway,
         {
             let mut bytes = raw.clone();
             bytes[0] ^= 1;
@@ -234,7 +251,7 @@ pub(super) fn controls(root: &std::path::Path) {
     }
     assert_eq!(
         physical_bytes(PATH, PRIOR_BYTES),
-        APPLE_SILICON_CATALOG_BYTES
+        INSTALLED_GATEWAY_CATALOG_BYTES
     );
     assert_eq!(physical_bytes("unlisted", 7), 7);
 }
