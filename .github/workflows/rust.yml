@@ -741,6 +741,9 @@ jobs:
       - name: Native search and discovery through authenticated transports
         run: cargo xtask check T06 --output target/rust-evidence/T06.json
 
+      - name: Native gateway parity and lifecycle qualification
+        run: cargo xtask check T07 --output target/rust-evidence/T07.json
+
       - name: MCP transport and gateway qualification
         run: cargo xtask check T01 --output target/rust-evidence/T01.json
 
@@ -1229,6 +1232,7 @@ jobs:
             target/rust-evidence/T04.json
             target/rust-evidence/T05.json
             target/rust-evidence/T06.json
+            target/rust-evidence/T07.json
             target/rust-evidence/F05.json
             target/rust-evidence/F06.json
             target/rust-evidence/F09.json
@@ -1304,7 +1308,7 @@ jobs:
               exit 1
             fi
           }
-          for plan in F03 F04 T04 T05 T06 T01 F05 F06 F09 F12 F11 F13 F14 F15 T02 F07 W00 W01 W02 W03 W04 W05 W11 W06 W08 O03 O01 F08 F10 T09 A01 A02 A03 A04 A05 A06 A07 A08 A09 A10 A11 A13 A14 A12; do test -s "target/rust-evidence/$plan.json"; done
+          for plan in F03 F04 T04 T05 T06 T07 T01 F05 F06 F09 F12 F11 F13 F14 F15 T02 F07 W00 W01 W02 W03 W04 W05 W11 W06 W08 O03 O01 F08 F10 T09 A01 A02 A03 A04 A05 A06 A07 A08 A09 A10 A11 A13 A14 A12; do test -s "target/rust-evidence/$plan.json"; done
           require_file target/rust-feature-graph.txt
           for partition in prerequisites core runtime adapters; do
             require_file "target/rust-evidence/partitions/$partition/workspace.jsonl"

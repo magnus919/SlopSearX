@@ -40,6 +40,7 @@ mod t03;
 mod t04;
 mod t05;
 mod t06;
+mod t07;
 mod t08;
 mod t08a;
 mod t08a_child;
@@ -565,6 +566,7 @@ fn execute(root: &Path, id: &str, records: &mut Vec<Value>) -> Result<()> {
         "T04" => t04::check(root, records),
         "T05" => t05::check(root, records),
         "T06" => t06::check(root, records),
+        "T07" => t07::check(root, records),
         "F05" => f05::check(root, records),
         "F06" => f06::check(root, records),
         "F07" => f07::check(root, records),
@@ -830,6 +832,8 @@ fn main() {
         "source-bound real native HTTP and deterministic Chromium browser journeys with measured synthetic budgets; actual Safari, manual visual/assistive technology and 200% zoom acceptance remain separate"
     } else if id == "T06" {
         "source-bound native search/discovery through shared authenticated HTTP, stdio and legacy with real service/snapshot authorities; exactly two accepted outer-params diagnostic differences; production startup T02/W09 separate"
+    } else if id == "T07" {
+        "source-bound direct/gateway MCP surface parity, error envelopes and cancellation/session lifecycle; installed Apple Silicon public-root HTTPS is separately bound to its exact binary and source revision in hosted CI"
     } else if id == "T05" {
         "OAuth wire endpoints and all-network transport authentication with real clients/private Valkey; no provider, production cutover or browser identity claim"
     } else if id == "T04" {
