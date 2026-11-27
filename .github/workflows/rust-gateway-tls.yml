@@ -40,6 +40,7 @@ jobs:
           test "$(uname -m)" = arm64
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           rustc -vV | tee "$run_dir/evidence/rustc.txt"
+          cargo --version --verbose | tee "$run_dir/evidence/cargo.txt"
           grep -Fx 'host: aarch64-apple-darwin' "$run_dir/evidence/rustc.txt"
           export CARGO_TARGET_DIR="$run_dir/target"
           cargo install --locked --path crates/ssx-gateway --root "$run_dir/installed"

@@ -2051,7 +2051,7 @@
             {
               "name": "Install the exact native gateway",
               "shell": "bash",
-              "run": "set -euo pipefail\nrun_dir=\"$RUNNER_TEMP/ssx-gateway-tls\"\nmkdir -m 700 -p \"$run_dir/evidence\"\ntest \"$(uname -m)\" = arm64\ntest \"$(git rev-parse HEAD)\" = \"$GITHUB_SHA\"\nrustc -vV | tee \"$run_dir/evidence/rustc.txt\"\ngrep -Fx 'host: aarch64-apple-darwin' \"$run_dir/evidence/rustc.txt\"\nexport CARGO_TARGET_DIR=\"$run_dir/target\"\ncargo install --locked --path crates/ssx-gateway --root \"$run_dir/installed\"\ncp -p \"$run_dir/installed/bin/ssx-gateway\" \"$run_dir/evidence/ssx-gateway\"\nfile \"$run_dir/evidence/ssx-gateway\" | tee \"$run_dir/evidence/gateway-file.txt\"\ngrep -Eq 'Mach-O.*arm64' \"$run_dir/evidence/gateway-file.txt\"\n"
+              "run": "set -euo pipefail\nrun_dir=\"$RUNNER_TEMP/ssx-gateway-tls\"\nmkdir -m 700 -p \"$run_dir/evidence\"\ntest \"$(uname -m)\" = arm64\ntest \"$(git rev-parse HEAD)\" = \"$GITHUB_SHA\"\nrustc -vV | tee \"$run_dir/evidence/rustc.txt\"\ncargo --version --verbose | tee \"$run_dir/evidence/cargo.txt\"\ngrep -Fx 'host: aarch64-apple-darwin' \"$run_dir/evidence/rustc.txt\"\nexport CARGO_TARGET_DIR=\"$run_dir/target\"\ncargo install --locked --path crates/ssx-gateway --root \"$run_dir/installed\"\ncp -p \"$run_dir/installed/bin/ssx-gateway\" \"$run_dir/evidence/ssx-gateway\"\nfile \"$run_dir/evidence/ssx-gateway\" | tee \"$run_dir/evidence/gateway-file.txt\"\ngrep -Eq 'Mach-O.*arm64' \"$run_dir/evidence/gateway-file.txt\"\n"
             },
             {
               "name": "Verify disposable HTTPS route tool",
