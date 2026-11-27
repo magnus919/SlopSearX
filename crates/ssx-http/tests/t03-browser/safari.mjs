@@ -190,30 +190,6 @@ try {
   })));
   receipt.cases.push('untouched-date-controls');
 
-  await navigate('/search?q=malicious&categories=general');
-  await resultsPage('malicious', 1);
-  const snippet = await execute(`
-    const content = document.querySelector('article[data-result-card] .result-content');
-    content?.scrollIntoView({ block: 'center' });
-    const highlight = content?.querySelector('strong');
-    const bounds = content?.getBoundingClientRect();
-    return {
-      visible: bounds?.height > 0 && bounds.bottom > 0 && bounds.top < innerHeight
-        && getComputedStyle(content).visibility === 'visible',
-      text: content?.innerText,
-      highlight: highlight?.innerText,
-      unexpectedElements: content?.querySelectorAll('img,svg,em').length,
-    };
-  `);
-  assert.deepEqual(snippet, {
-    visible: true,
-    text: 'safe match <svg onload=alert(1)> <em onclick=alert(1)>unsafe</em>',
-    highlight: 'safe match',
-    unexpectedElements: 0,
-  });
-  await screenshot('escaped-result-snippet');
-  receipt.cases.push('escaped-result-snippet');
-
   await navigate('/search?q=valkey&categories=general');
   await resultsPage('valkey', 1);
   const next = await element('a[aria-label="Try next result page"]');
@@ -231,14 +207,8 @@ try {
   receipt.cases.push('pagination-history');
 
   // WebDriver sizes the outer window. Qualify only the content size Safari reports.
-  receipt.viewports = [];
-  for (const [width, height] of [[1440, 900], [390, 844], [320, 640]]) {
-    if (width === 320) {
-      await navigate('/search?q=long&categories=general');
-      await resultsPage('long', 1);
-    }
+  async function sizeViewport(width, height) {
     const sample = { requested: { width, height }, attempts: [] };
-    receipt.viewports.push(sample);
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const window = await call('/window/rect');
       const content = await execute(`
@@ -258,6 +228,16 @@ try {
       });
       await delay(200);
     }
+    return sample;
+  }
+
+  receipt.viewports = [];
+  for (const [width, height] of [[1440, 900], [390, 844], [320, 640]]) {
+    if (width === 320) {
+      await navigate('/search?q=long&categories=general');
+      await resultsPage('long', 1);
+    }
+    receipt.viewports.push(await sizeViewport(width, height));
     await screenshot('viewport-' + width + 'x' + height);
   }
   for (const { requested, attempts } of receipt.viewports) {
@@ -267,6 +247,33 @@ try {
     assert(content.scrollWidth <= content.clientWidth, 'Safari horizontal overflow at ' + size);
     receipt.cases.push('viewport-' + size);
   }
+
+  // Frame the full snippet in the desktop viewport before taking its screenshot.
+  const snippetViewport = await sizeViewport(1440, 900);
+  const { content: snippetContent } = snippetViewport.attempts.at(-1);
+  assert.equal(snippetContent.width + 'x' + snippetContent.height, '1440x900');
+  await navigate('/search?q=malicious&categories=general');
+  await resultsPage('malicious', 1);
+  const snippet = await execute(`
+    const content = document.querySelector('article[data-result-card] .result-content');
+    const highlight = content?.querySelector('strong');
+    const bounds = content?.getBoundingClientRect();
+    return {
+      visible: bounds?.height > 0 && bounds.top >= 0 && bounds.bottom <= innerHeight
+        && getComputedStyle(content).visibility === 'visible',
+      text: content?.innerText,
+      highlight: highlight?.innerText,
+      unexpectedElements: content?.querySelectorAll('img,svg,em').length,
+    };
+  `);
+  assert.deepEqual(snippet, {
+    visible: true,
+    text: 'safe match <svg onload=alert(1)> <em onclick=alert(1)>unsafe</em>',
+    highlight: 'safe match',
+    unexpectedElements: 0,
+  });
+  await screenshot('escaped-result-snippet');
+  receipt.cases.push('escaped-result-snippet');
 } catch (error) {
   receipt.error = error.message;
   throw error;
