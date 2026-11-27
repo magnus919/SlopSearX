@@ -2031,6 +2031,79 @@
       "state": "additive",
       "successor": "Native Rust upstream-contract runner; local default uses frozen offline adapter fixtures; live provider checks require manual run_live=true or the existing explicitly enabled weekly repository variable; retain exact-host/path/query, one-request, timeout, body, no-proxy/no-retry/no-redirect, sanitization, report, and exit contracts. This is only the upstream-probe slice; full O02 acceptance and F01/G08 source retirement remain pending."
     },
+    "rust-gateway-tls.yml:apple-silicon": {
+      "source": {
+        "job": {
+          "name": "Installed gateway HTTPS (Apple Silicon)",
+          "runs-on": "macos-15",
+          "timeout-minutes": 35,
+          "env": {
+            "CARGO_BUILD_JOBS": "2",
+            "CARGO_INCREMENTAL": "0"
+          },
+          "steps": [
+            {
+              "uses": "actions/checkout@v7",
+              "with": {
+                "persist-credentials": false
+              }
+            },
+            {
+              "name": "Install the exact native gateway",
+              "shell": "bash",
+              "run": "set -euo pipefail\nrun_dir=\"$RUNNER_TEMP/ssx-gateway-tls\"\nmkdir -m 700 -p \"$run_dir/evidence\"\ntest \"$(uname -m)\" = arm64\ntest \"$(git rev-parse HEAD)\" = \"$GITHUB_SHA\"\nrustc -vV | tee \"$run_dir/evidence/rustc.txt\"\ngrep -Fx 'host: aarch64-apple-darwin' \"$run_dir/evidence/rustc.txt\"\nexport CARGO_TARGET_DIR=\"$run_dir/target\"\ncargo install --locked --path crates/ssx-gateway --root \"$run_dir/installed\"\ncp -p \"$run_dir/installed/bin/ssx-gateway\" \"$run_dir/evidence/ssx-gateway\"\nfile \"$run_dir/evidence/ssx-gateway\" | tee \"$run_dir/evidence/gateway-file.txt\"\ngrep -Eq 'Mach-O.*arm64' \"$run_dir/evidence/gateway-file.txt\"\n"
+            },
+            {
+              "name": "Verify disposable HTTPS route tool",
+              "shell": "bash",
+              "run": "set -euo pipefail\nrun_dir=\"$RUNNER_TEMP/ssx-gateway-tls\"\nurl=https://github.com/cloudflare/cloudflared/releases/download/2026.11.2/cloudflared-darwin-arm64.tgz\ncurl --fail --show-error --silent --location --max-time 90 --output \"$run_dir/cloudflared.tgz\" \"$url\"\ncd \"$run_dir\"\n# The signed release asset digest differs from the release-note checksum.\narchive_digest=f6d58eeec91ad1ec5fd1f7e4a587303772929b2625be5d24068033851c36ff55\nprintf '%s  cloudflared.tgz\\n' \"$archive_digest\" | shasum -a 256 -c -\ntar -xzf cloudflared.tgz cloudflared\ncodesign --verify --strict -R='identifier \"cloudflared\" and anchor apple generic and certificate leaf[subject.OU] = \"68WVV388M8\"' cloudflared\n./cloudflared --version | tee evidence/cloudflared-version.txt\n"
+            },
+            {
+              "name": "Qualify default and additive HTTPS trust",
+              "shell": "bash",
+              "run": "set -euo pipefail\nrun_dir=\"$RUNNER_TEMP/ssx-gateway-tls\"\nnode scripts/rust-gateway-tls-qualification.mjs \\\n  \"$run_dir/installed/bin/ssx-gateway\" \"$run_dir/cloudflared\" \\\n  \"$run_dir\" \"$run_dir/evidence/T07.json\"\ntest -s \"$run_dir/evidence/T07.json\"\ncmp \"$run_dir/installed/bin/ssx-gateway\" \"$run_dir/evidence/ssx-gateway\"\ntest -z \"$(git status --porcelain)\"\n"
+            },
+            {
+              "name": "Retain T07 installed-gateway evidence",
+              "uses": "actions/upload-artifact@v7",
+              "with": {
+                "name": "native-gateway-t07-${{ github.sha }}",
+                "path": "${{ runner.temp }}/ssx-gateway-tls/evidence/",
+                "if-no-files-found": "error"
+              }
+            }
+          ]
+        },
+        "workflow": {
+          "name": "Installed gateway TLS",
+          "on": {
+            "pull_request": {
+              "branches": [
+                "main"
+              ],
+              "paths": [
+                ".github/workflows/rust-gateway-tls.yml",
+                "scripts/rust-gateway-tls-qualification.mjs",
+                "crates/ssx-gateway/**",
+                "crates/ssx-mcp/**",
+                "vendor/rmcp/**",
+                "vendor/ssx-gateway-reqwest/**",
+                "Cargo.toml",
+                "Cargo.lock",
+                "rust-toolchain.toml"
+              ]
+            },
+            "workflow_dispatch": null
+          },
+          "permissions": {
+            "contents": "read"
+          }
+        }
+      },
+      "owner": "T07",
+      "state": "additive",
+      "successor": "Qualify all five TLS trust cases using the exact installed Apple Silicon gateway without OS trust changes."
+    },
     "rust-t02-image.yml:t02-image": {
       "source": {
         "workflow": {

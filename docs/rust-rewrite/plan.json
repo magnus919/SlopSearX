@@ -667,7 +667,8 @@
       "acceptance": [
         "Direct-versus-gateway tool/resource/prompt and error comparisons pass",
         "Startup failure, cancellation, disconnect and shutdown are tested in fresh processes; multiple instances do not share global session state",
-        "Client installs on supported targets without Python and does not receive server engine keys; auth material is protected/redacted"
+        "Client installs on supported targets without Python and does not receive server engine keys; auth material is protected/redacted",
+        "On a disposable GitHub-hosted Apple Silicon runner, run the exact installed gateway against publicly trusted HTTPS with default trust, reject an untrusted chain and a wrong hostname, and verify that an explicit private CA bundle enables private HTTPS while retaining public trust. Attach evidence tied to the installed artifact and source revision. OS trust-store changes are outside this release gate."
       ],
       "sources": [
         "slopsearx/mcp/gateway.py",
