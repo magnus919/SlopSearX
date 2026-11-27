@@ -127,15 +127,45 @@ async function withFixture(task) {
   }
 }
 
+async function publicDnsStatus(hostname) {
+  const query = new URL('https://cloudflare-dns.com/dns-query');
+  query.search = new URLSearchParams({ name: hostname, type: 'A' });
+  const response = await fetch(query, {
+    headers: { accept: 'application/dns-json' },
+    redirect: 'error',
+    signal: AbortSignal.timeout(3000),
+  });
+  if (!response.ok) {
+    await response.body?.cancel();
+    return { ready: false, reason: 'public DNS query returned HTTP ' + response.status };
+  }
+  const answer = await response.json();
+  const ready = answer.Status === 0 && Array.isArray(answer.Answer)
+    && answer.Answer.some(({ type }) => type === 1);
+  const status = Number.isInteger(answer.Status) ? String(answer.Status) : 'unknown';
+  return { ready, reason: 'public DNS has no A record (status ' + status + ')' };
+}
+
 async function waitForPublicRoute(tunnel, fixture, log) {
   const deadline = Date.now() + 75000;
   let reason = 'no public hostname announced';
   let address;
+  let dnsReady = false;
   while (Date.now() < deadline && tunnel.child.exitCode === null && tunnel.child.signalCode === null) {
     address ??= log().match(routePattern)?.[1];
     if (address) {
       const endpoint = address + fixture.endpoint;
       try {
+        if (!dnsReady) {
+          // Avoid populating the runner resolver's negative cache before tunnel DNS is published.
+          const result = await publicDnsStatus(new URL(address).hostname);
+          if (!result.ready) {
+            reason = result.reason;
+            await sleep(2000);
+            continue;
+          }
+          dnsReady = true;
+        }
         const reply = await fetch(endpoint + '/ready', {
           redirect: 'error', signal: AbortSignal.timeout(3000),
         });
@@ -149,7 +179,8 @@ async function waitForPublicRoute(tunnel, fixture, log) {
       } catch (error) {
         // Report error categories only. Keep URLs, fixture markers and tunnel credentials out of CI logs.
         const code = error.cause?.code ?? error.name;
-        reason = 'readiness request failed (' + (/^[A-Za-z0-9_]+$/.test(code) ? code : 'unknown') + ')';
+        reason = (dnsReady ? 'readiness request' : 'public DNS query') + ' failed ('
+          + (/^[A-Za-z0-9_]+$/.test(code) ? code : 'unknown') + ')';
       }
     }
     await sleep(1000);
