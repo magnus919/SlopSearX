@@ -325,7 +325,11 @@ startup with a clear message.
   ```
 
   It reuses valid Python gateway token files at the same per-remote path.
-  The native gateway requires a regular file with owner-only permissions.
+  Stop the Python gateway before sharing its token file with the native
+  gateway, or configure separate token paths. Native gateways sharing a
+  local token file coordinate refreshes through a private sibling lock file.
+  Keep the lock file in place while any gateway uses that token path.
+  The native gateway requires regular files with owner-only permissions.
   For an existing file, verify its ownership and set permissions to
   `0600`. If its JSON is damaged or belongs to a different authorization
   server, select a fresh path with `--oauth-token-file` and sign in again.

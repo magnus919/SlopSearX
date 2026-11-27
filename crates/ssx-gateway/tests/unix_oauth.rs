@@ -166,7 +166,7 @@ async fn installed_oauth_gateway_signs_in_coalesces_refresh_and_reuses_saved_cre
     let remote_url = format!("{origin}/mcp");
     let fixture = Arc::new(Fixture {
         origin: origin.clone(),
-        stale_calls: Barrier::new(2),
+        stale_calls: Barrier::new(3),
         exchanges: AtomicUsize::new(0),
         refreshes: AtomicUsize::new(0),
         initializations_with_renewed_bearer: AtomicUsize::new(0),
@@ -218,11 +218,21 @@ async fn installed_oauth_gateway_signs_in_coalesces_refresh_and_reuses_saved_cre
         let initialized: Value = serde_json::from_str(&stdout.next_line().await?.ok_or("no initialize reply")?)?;
         assert_eq!(initialized["id"], 42);
         assert_eq!(initialized["result"]["protocolVersion"], "2025-11-25");
-        stdin.write_all(b"{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}\n").await?;
+        let mut peer = child(&remote_url, &file)?;
+        let mut peer_in = peer.stdin.take().unwrap();
+        let mut peer_out = BufReader::new(peer.stdout.take().unwrap()).lines();
+        peer_in.write_all(INIT).await?;
+        let initialized: Value = serde_json::from_str(&peer_out.next_line().await?.ok_or("no peer initialize reply")?)?;
+        assert_eq!(initialized["result"]["protocolVersion"], "2025-11-25");
+        let notify = b"{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}\n";
+        stdin.write_all(notify).await?;
+        peer_in.write_all(notify).await?;
         for id in [43, 44] {
             let call = json!({"jsonrpc":"2.0","id":id,"method":"tools/call","params":{"name":"probe","arguments":{}}});
             stdin.write_all(format!("{call}\n").as_bytes()).await?;
         }
+        let call = json!({"jsonrpc":"2.0","id":45,"method":"tools/call","params":{"name":"probe","arguments":{}}});
+        peer_in.write_all(format!("{call}\n").as_bytes()).await?;
         let mut seen = Vec::new();
         for _ in 0..2 {
             let reply: Value = serde_json::from_str(&stdout.next_line().await?.ok_or("no tool reply")?)?;
@@ -231,6 +241,11 @@ async fn installed_oauth_gateway_signs_in_coalesces_refresh_and_reuses_saved_cre
         }
         seen.sort();
         assert_eq!(seen, [43, 44]);
+        let reply: Value = serde_json::from_str(&peer_out.next_line().await?.ok_or("no peer tool reply")?)?;
+        assert_eq!(reply["id"], 45);
+        assert_eq!(reply["result"]["content"][0]["text"], "renewed");
+        drop(peer_in);
+        assert!(peer.wait().await?.success());
         drop(stdin);
         assert!(gateway.wait().await?.success());
 
@@ -251,7 +266,7 @@ async fn installed_oauth_gateway_signs_in_coalesces_refresh_and_reuses_saved_cre
         assert_eq!(fixture.exchanges.load(Ordering::SeqCst), 1);
         assert_eq!(fixture.refreshes.load(Ordering::SeqCst), 1);
         assert_eq!(fixture.initializations_with_renewed_bearer.load(Ordering::SeqCst), 1);
-        assert_eq!(fixture.deletes.load(Ordering::SeqCst), 2);
+        assert_eq!(fixture.deletes.load(Ordering::SeqCst), 3);
         Ok::<_, Box<dyn std::error::Error>>(())
     }).await;
     server.abort();

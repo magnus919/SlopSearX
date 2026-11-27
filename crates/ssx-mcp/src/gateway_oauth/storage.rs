@@ -1,5 +1,9 @@
 //! Local credential storage compatible with the Python gateway's OAuth file.
 
+use nix::{
+    errno::Errno,
+    fcntl::{Flock, FlockArg},
+};
 use serde::{Deserialize, Serialize};
 use serde_json::value::RawValue;
 use sha2::{Digest, Sha256};
@@ -95,7 +99,67 @@ pub fn load(path: &Path) -> io::Result<TokenDocument> {
     })
 }
 
-pub fn save(path: &Path, document: &TokenDocument) -> io::Result<()> {
+pub struct Transaction {
+    path: PathBuf,
+    _lock: Flock<File>,
+    document: TokenDocument,
+}
+
+impl Transaction {
+    pub fn document(&self) -> &TokenDocument {
+        &self.document
+    }
+
+    pub fn save(&self, document: &TokenDocument) -> io::Result<()> {
+        save(&self.path, document)
+    }
+}
+
+pub fn try_begin(path: &Path) -> io::Result<Option<Transaction>> {
+    let name = path.file_name().ok_or_else(|| {
+        io::Error::new(io::ErrorKind::InvalidInput, "OAuth token file name missing")
+    })?;
+    let parent = token_parent(path);
+    DirBuilder::new()
+        .recursive(true)
+        .mode(0o700)
+        .create(parent)?;
+    // The token JSON is replaced by rename. Lock a stable sibling so all
+    // gateways still coordinate after the token's inode changes.
+    let digest: String = Sha256::digest(name.as_encoded_bytes())
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect();
+    let lock_path = parent.join(format!(".slopsearx-oauth-{digest}.lock"));
+    let file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .mode(0o600)
+        .custom_flags(nix::libc::O_NOFOLLOW | nix::libc::O_NONBLOCK)
+        .open(lock_path)?;
+    check_private_file(&file.metadata()?)?;
+    let lock = match Flock::lock(file, FlockArg::LockExclusiveNonblock) {
+        Ok(lock) => lock,
+        Err((_, Errno::EWOULDBLOCK)) => return Ok(None),
+        Err((_, error)) => return Err(error.into()),
+    };
+    let document = load(path)?;
+    Ok(Some(Transaction {
+        path: path.to_owned(),
+        _lock: lock,
+        document,
+    }))
+}
+
+fn token_parent(path: &Path) -> &Path {
+    path.parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or(Path::new("."))
+}
+
+fn save(path: &Path, document: &TokenDocument) -> io::Result<()> {
     let data = serde_json::to_vec(document).map_err(|_| {
         io::Error::new(
             io::ErrorKind::InvalidData,
@@ -113,14 +177,7 @@ pub fn save(path: &Path, document: &TokenDocument) -> io::Result<()> {
         Err(error) if error.kind() == io::ErrorKind::NotFound => (),
         Err(error) => return Err(error),
     }
-    let parent = path
-        .parent()
-        .filter(|parent| !parent.as_os_str().is_empty())
-        .unwrap_or(Path::new("."));
-    DirBuilder::new()
-        .recursive(true)
-        .mode(0o700)
-        .create(parent)?;
+    let parent = token_parent(path);
 
     let tmp = parent.join(format!(".slopsearx-oauth-{}.tmp", Uuid::new_v4()));
     let mut file: File = OpenOptions::new()
@@ -192,10 +249,13 @@ mod tests {
             "tokens": {"token_type": "Bearer", "access_token": "old", "refresh_token": "refresh"},
             "future_extension": {"untouched": [1, true, null]}
         });
-        save(&path, &TokenDocument::default())?;
+        let transaction = try_begin(&path)?.ok_or("OAuth test lock unexpectedly busy")?;
+        transaction.save(&TokenDocument::default())?;
+        drop(transaction);
         // Python serializes the complete document into an indented JSON file.
         fs::write(&path, serde_json::to_vec_pretty(&original)?)?;
-        let mut document = load(&path)?;
+        let transaction = try_begin(&path)?.ok_or("OAuth test lock unexpectedly busy")?;
+        let mut document = transaction.document().clone();
         assert_eq!(
             serde_json::from_str::<serde_json::Value>(
                 document.section(Section::ClientInfo).unwrap().get()
@@ -205,19 +265,23 @@ mod tests {
         let fresh =
             json!({"token_type": "Bearer", "access_token": "new", "refresh_token": "refresh"});
         document.set_section(Section::Tokens, serde_json::value::to_raw_value(&fresh)?);
-        save(&path, &document)?;
+        assert!(try_begin(&path)?.is_none());
+        transaction.save(&document)?;
+        assert!(try_begin(&path)?.is_none());
+        drop(transaction);
+        let next = try_begin(&path)?.ok_or("OAuth test lock was not released")?;
         let mut expected = original;
         expected["tokens"] = fresh;
-        assert_eq!(
-            serde_json::from_slice::<serde_json::Value>(&fs::read(&path)?)?,
-            expected
-        );
+        assert_eq!(serde_json::to_value(next.document())?, expected);
         assert_eq!(fs::metadata(&path)?.permissions().mode() & 0o777, 0o600);
         assert_eq!(
             fs::metadata(path.parent().unwrap())?.permissions().mode() & 0o777,
             0o700
         );
-        assert_eq!(fs::read_dir(path.parent().unwrap())?.count(), 1);
+        let mut siblings = fs::read_dir(path.parent().unwrap())?.collect::<io::Result<Vec<_>>>()?;
+        siblings.retain(|entry| entry.path() != path);
+        assert_eq!(siblings.len(), 1);
+        assert_eq!(siblings[0].metadata()?.permissions().mode() & 0o777, 0o600);
         Ok(())
     }
 

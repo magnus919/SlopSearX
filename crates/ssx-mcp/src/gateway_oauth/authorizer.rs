@@ -3,7 +3,7 @@
 use super::{
     callback::LoopbackCallback,
     protocol::{OAuthProtocol, RegisteredClient, valid_bearer},
-    storage::{self, Section, TokenDocument},
+    storage::{self, Section, TokenDocument, Transaction},
 };
 use crate::{Result, opaque::GatewayAuthorizer};
 use futures_util::future::BoxFuture;
@@ -19,11 +19,7 @@ use std::{
     sync::{Arc, RwLock},
     time::Duration,
 };
-use tokio::{
-    process::Command,
-    sync::{Mutex, OwnedMutexGuard},
-    task::spawn_blocking,
-};
+use tokio::{process::Command, task::spawn_blocking};
 use url::Url;
 
 /// The existing Python gateway allows five minutes to complete a browser sign-in.
@@ -34,7 +30,6 @@ pub struct GatewayOAuth {
     path: PathBuf,
     callback_port: u16,
     no_browser: bool,
-    document: Arc<Mutex<TokenDocument>>,
     cached: Arc<RwLock<Option<Bearer>>>,
 }
 
@@ -66,7 +61,6 @@ impl GatewayOAuth {
             path,
             callback_port,
             no_browser,
-            document: Arc::new(Mutex::new(document)),
             cached: Arc::new(RwLock::new(cached)),
         })
     }
@@ -102,21 +96,29 @@ impl GatewayOAuth {
             .as_ref()
             .and_then(|(_, parameters)| parameters.scope.as_deref());
 
-        let document = self.document.clone().lock_owned().await;
-        if let Some(cached) = self.cached.read().unwrap().as_ref()
-            && Some(cached.value.as_str()) != sent_bearer
-            && (!scope_upgrade || scopes_cover(&cached.scopes, challenged))
+        let transaction = loop {
+            let path = self.path.clone();
+            if let Some(transaction) = spawn_blocking(move || storage::try_begin(&path)).await?? {
+                break transaction;
+            }
+            tokio::time::sleep(Duration::from_millis(50)).await;
+        };
+        let document = transaction.document();
+        let client: Option<RegisteredClient> = section(document, Section::ClientInfo)?;
+        let tokens: Option<OAuthTokenResponse> = section(document, Section::Tokens)?;
+        let bearer = tokens.as_ref().map(Bearer::from_tokens).transpose()?;
+        if let Some(bearer) = bearer.as_ref()
+            && Some(bearer.value.as_str()) != sent_bearer
+            && (!scope_upgrade || scopes_cover(&bearer.scopes, challenged))
         {
-            return Ok(Some(cached.value.clone()));
+            let value = bearer.value.clone();
+            *self.cached.write().unwrap() = Some(Bearer {
+                value: value.clone(),
+                scopes: bearer.scopes.clone(),
+            });
+            return Ok(Some(value));
         }
-
-        let client: Option<RegisteredClient> = section(&document, Section::ClientInfo)?;
-        let tokens: Option<OAuthTokenResponse> = section(&document, Section::Tokens)?;
-        let granted = tokens
-            .as_ref()
-            .map(Bearer::from_tokens)
-            .transpose()?
-            .map_or_else(Vec::new, |bearer| bearer.scopes);
+        let granted = bearer.map_or_else(Vec::new, |bearer| bearer.scopes);
         let mut protocol =
             OAuthProtocol::discover(&self.remote, challenge.as_ref().map(|(header, _)| *header))
                 .await?;
@@ -136,7 +138,7 @@ impl GatewayOAuth {
             protocol.configure_client(client, redirect)?;
             if let Some(tokens) = protocol.refresh(client, tokens, granted.clone()).await? {
                 return self
-                    .persist(document, client, true, &protocol, tokens)
+                    .persist(transaction, client, true, &protocol, tokens)
                     .await
                     .map(Some);
             }
@@ -171,14 +173,14 @@ impl GatewayOAuth {
         let tokens = protocol
             .exchange(&code, &browser.state, issuer.as_deref())
             .await?;
-        self.persist(document, &client, retain_registration, &protocol, tokens)
+        self.persist(transaction, &client, retain_registration, &protocol, tokens)
             .await
             .map(Some)
     }
 
     async fn persist(
         &self,
-        mut document: OwnedMutexGuard<TokenDocument>,
+        transaction: Transaction,
         client: &RegisteredClient,
         retain_registration: bool,
         protocol: &OAuthProtocol,
@@ -196,6 +198,7 @@ impl GatewayOAuth {
             }
         }
         let bearer = Bearer::from_tokens(&tokens)?;
+        let document = transaction.document();
         let mut updated = document.clone();
         let mut registration: BTreeMap<String, Box<RawValue>> = if retain_registration {
             serde_json::from_str(
@@ -214,15 +217,13 @@ impl GatewayOAuth {
         updated.set_section(Section::ClientInfo, to_raw_value(&registration)?);
         updated.set_section(Section::Tokens, to_raw_value(&tokens)?);
 
-        let path = self.path.clone();
         let cache = self.cached.clone();
-        // The owned gate moves with the disk write. If the caller cancels,
-        // another request still cannot observe a partly published credential.
+        // Keep the file lease through publication, even if the caller cancels.
         spawn_blocking(move || {
-            storage::save(&path, &updated)?;
-            *document = updated;
+            transaction.save(&updated)?;
             let value = bearer.value.clone();
             *cache.write().unwrap() = Some(bearer);
+            drop(transaction);
             Ok(value)
         })
         .await?
