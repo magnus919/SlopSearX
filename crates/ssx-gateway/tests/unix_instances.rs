@@ -73,6 +73,18 @@ async fn remote(State(fixture): State<Fixture>, request: Request<Body>) -> Respo
             }
         }))
         .into_response(),
+        "resources/list" => Json(json!({
+            "jsonrpc":"2.0", "id":id, "result":{"resources":[]}
+        }))
+        .into_response(),
+        "resources/templates/list" => Json(json!({
+            "jsonrpc":"2.0", "id":id, "result":{"resourceTemplates":[]}
+        }))
+        .into_response(),
+        "prompts/list" => Json(json!({
+            "jsonrpc":"2.0", "id":id, "result":{"prompts":[]}
+        }))
+        .into_response(),
         "tools/call" => {
             assert_eq!(request["params"]["name"], fixture.tool);
             Json(json!({
