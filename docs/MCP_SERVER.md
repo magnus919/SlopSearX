@@ -318,7 +318,8 @@ startup with a clear message.
   `MCP_REMOTE_OAUTH_NO_BROWSER`, and `MCP_REMOTE_TOKEN_FILE` (§3.2).
 
   The native `ssx-gateway` executable on Unix accepts the same OAuth
-  flags and environment variables. For example:
+  flags and environment variables. Use HTTPS for remote OAuth servers.
+  Local development can use HTTP on a loopback origin. For example:
 
   ```bash
   ssx-gateway --remote https://slopsearx.example/mcp --oauth --oauth-no-browser

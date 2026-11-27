@@ -2,7 +2,7 @@
 
 use super::{
     callback::LoopbackCallback,
-    protocol::{OAuthProtocol, RegisteredClient, valid_bearer},
+    protocol::{self, OAuthProtocol, RegisteredClient, valid_bearer},
     storage::{self, Section, TokenDocument, Transaction},
 };
 use crate::{Result, opaque::GatewayAuthorizer};
@@ -46,6 +46,7 @@ impl GatewayOAuth {
         no_browser: bool,
     ) -> Result<Self> {
         let url = Url::parse(remote).map_err(|_| "Invalid OAuth remote URL")?;
+        protocol::check_remote(&url)?;
         let path = match path {
             Some(path) => path,
             None => storage::default_path(remote)?,
@@ -324,5 +325,20 @@ async fn wait_for_browser(
             Ok(result?)
         }
         _ = child.wait() => Ok(callback.await?),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn rejects_a_cleartext_remote_before_opening_credentials() {
+        let result =
+            GatewayOAuth::open("http://resource.test/mcp", Some(PathBuf::new()), 0, true).await;
+        assert!(matches!(
+            result,
+            Err(error) if error.downcast_ref() == Some(&protocol::ProtocolError::Endpoint)
+        ));
     }
 }

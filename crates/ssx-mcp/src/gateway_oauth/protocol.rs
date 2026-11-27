@@ -7,7 +7,7 @@ use rmcp::transport::auth::{
 };
 use serde::{Deserialize, Serialize};
 use std::{error::Error, fmt};
-use url::Url;
+use url::{Host, Url};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ProtocolError {
@@ -59,9 +59,9 @@ impl OAuthProtocol {
     /// MCP RPCs retain their exact-target transport. OAuth visits the discovery
     /// and authorization-server endpoints under RMCP's separate address,
     /// redirect, and metadata policies. Credential exchanges use its
-    /// no-redirect client. Explicit cleartext endpoints stay on the resource origin.
+    /// no-redirect client. Cleartext is limited to the loopback resource origin.
     pub async fn discover(remote: &Url, challenge: Option<&str>) -> Result<Self, ProtocolError> {
-        check_endpoint(remote.as_str(), remote)?;
+        check_remote(remote)?;
         let credentials = InMemoryCredentialStore::new();
         let mut manager = AuthorizationManager::new(remote.clone())
             .await
@@ -231,12 +231,27 @@ pub fn valid_bearer(tokens: &OAuthTokenResponse) -> Option<&str> {
     .then_some(bearer)
 }
 
+pub fn check_remote(remote: &Url) -> Result<(), ProtocolError> {
+    validate_endpoint(remote, remote)
+}
+
 fn check_endpoint(endpoint: &str, remote: &Url) -> Result<(), ProtocolError> {
     let endpoint = Url::parse(endpoint).map_err(|_| ProtocolError::Endpoint)?;
-    let allowed_scheme = endpoint.scheme() == "https"
-        || (endpoint.scheme() == "http" && endpoint.origin() == remote.origin());
+    validate_endpoint(&endpoint, remote)
+}
+
+fn validate_endpoint(endpoint: &Url, remote: &Url) -> Result<(), ProtocolError> {
+    let host = endpoint.host().ok_or(ProtocolError::Endpoint)?;
+    let allowed_scheme = match endpoint.scheme() {
+        "https" => true,
+        "http" if endpoint.origin() == remote.origin() => match host {
+            Host::Domain(name) => name == "localhost",
+            Host::Ipv4(address) => address.is_loopback(),
+            Host::Ipv6(address) => address.is_loopback(),
+        },
+        _ => false,
+    };
     if !allowed_scheme
-        || endpoint.host().is_none()
         || !endpoint.username().is_empty()
         || endpoint.password().is_some()
         || endpoint.fragment().is_some()
@@ -411,8 +426,22 @@ mod tests {
                 Err(ProtocolError::Endpoint)
             );
         }
+        for host in ["resource.test", "192.168.0.10", "[fc00::1]"] {
+            let origin = format!("http://{host}:1234");
+            let remote = Url::parse(&format!("{origin}/mcp")).unwrap();
+            assert_eq!(check_remote(&remote), Err(ProtocolError::Endpoint));
+            assert_eq!(
+                check_endpoint(&format!("{origin}/token"), &remote),
+                Err(ProtocolError::Endpoint)
+            );
+        }
+        for host in ["localhost", "127.0.0.1", "[::1]"] {
+            let origin = format!("http://{host}:1234");
+            let remote = Url::parse(&format!("{origin}/mcp")).unwrap();
+            assert!(check_remote(&remote).is_ok());
+            assert!(check_endpoint(&format!("{origin}/token"), &remote).is_ok());
+        }
         let loopback = Url::parse("http://127.0.0.1:1234/mcp").unwrap();
-        assert!(check_endpoint("http://127.0.0.1:1234/token", &loopback).is_ok());
         assert_eq!(
             check_endpoint("http://127.0.0.1:2345/token", &loopback),
             Err(ProtocolError::Endpoint)
