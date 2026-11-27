@@ -183,6 +183,7 @@ mcp:
 | `MCP_REMOTE_OAUTH_CALLBACK_PORT` | `8765` | gateway loopback redirect port (`--oauth-callback-port`) |
 | `MCP_REMOTE_OAUTH_NO_BROWSER` | false | gateway prints the authorize URL instead of opening a browser (`--oauth-no-browser`) |
 | `MCP_REMOTE_TOKEN_FILE` | empty | gateway token file path override (`--oauth-token-file`); defaults to `~/.config/slopsearx/oauth/<hash>.json` |
+| `MCP_REMOTE_CA_BUNDLE` | empty | adds a PEM CA bundle for private HTTPS in native `ssx-gateway` (`--ca-bundle`). Platform roots remain enabled. |
 
 Engine credentials, Valkey URL, and the HTTP service settings (`VALKEY_URL`,
 `MAX_CONCURRENT_ENGINES`, `PER_CLIENT_REQUESTS`, `FAIL_CLOSED`, …) are shared
@@ -290,7 +291,7 @@ package — no Valkey, no engine API keys, no search wiring. If the remote
 server is unreachable or the credentials are wrong, the gateway fails at
 startup with a clear message.
 
-**Gateway authentication** matches the remote's mode:
+**Gateway authentication** matches the remote's mode.
 
 - **Static token** (remote runs in default serve mode): pass
   `--token <token>` or `MCP_REMOTE_TOKEN` (prefer the env var so the token
@@ -324,6 +325,12 @@ startup with a clear message.
   ```bash
   ssx-gateway --remote https://slopsearx.example/mcp --oauth --oauth-no-browser
   ```
+
+  For private HTTPS, the native gateway accepts a PEM CA bundle via
+  `--ca-bundle /path/to/roots.pem` or `MCP_REMOTE_CA_BUNDLE=/path/to/roots.pem`.
+  The bundle adds trust for MCP and OAuth HTTPS requests while keeping the
+  platform default roots. Use a nonempty regular file up to 4 MiB. Invalid
+  bundles fail with a diagnostic that omits the path.
 
   It reuses valid Python gateway token files at the same per-remote path.
   Stop the Python gateway before sharing its token file with the native

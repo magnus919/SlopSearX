@@ -153,11 +153,22 @@ impl ReqwestOAuthHttpClient {
     fn with_resolver(
         resolver: Arc<metadata_resolver::MetadataAddressResolver>,
     ) -> Result<Self, AuthError> {
+        Self::with_resolver_and_roots(resolver, &[])
+    }
+
+    fn with_resolver_and_roots(
+        resolver: Arc<metadata_resolver::MetadataAddressResolver>,
+        roots: &[reqwest::Certificate],
+    ) -> Result<Self, AuthError> {
         let build = |redirect: reqwest::redirect::Policy| {
-            ReqwestClient::builder()
+            let mut builder = ReqwestClient::builder()
                 .timeout(DEFAULT_HTTP_TIMEOUT)
                 .redirect(redirect)
-                .dns_resolver(resolver.clone())
+                .dns_resolver(resolver.clone());
+            if !roots.is_empty() {
+                builder = builder.tls_certs_merge(roots.iter().cloned());
+            }
+            builder
                 .build()
                 .map_err(|error| AuthError::InternalError(error.to_string()))
         };
@@ -1519,9 +1530,18 @@ impl AuthorizationManager {
     /// [`AuthorizationManager::new_allowing_private_addresses`] for deployments
     /// whose authorization server is reached at a private address.
     pub async fn new<U: IntoUrl>(base_url: U) -> Result<Self, AuthError> {
+        Self::new_with_root_certificates(base_url, &[]).await
+    }
+
+    /// Create an auth manager with additive roots and the default resolver and
+    /// redirect policies. Platform roots remain enabled.
+    pub async fn new_with_root_certificates<U: IntoUrl>(
+        base_url: U,
+        roots: &[reqwest::Certificate],
+    ) -> Result<Self, AuthError> {
         let base_url = base_url.into_url()?;
         let resolver = metadata_resolver::MetadataAddressResolver::new(&base_url);
-        Self::new_filtered(base_url, resolver).await
+        Self::new_filtered_with_roots(base_url, resolver, roots).await
     }
 
     /// Like [`AuthorizationManager::new`], but hosts named by discovered
@@ -1544,9 +1564,20 @@ impl AuthorizationManager {
         base_url: Url,
         resolver: metadata_resolver::MetadataAddressResolver,
     ) -> Result<Self, AuthError> {
+        Self::new_filtered_with_roots(base_url, resolver, &[]).await
+    }
+
+    async fn new_filtered_with_roots(
+        base_url: Url,
+        resolver: metadata_resolver::MetadataAddressResolver,
+        roots: &[reqwest::Certificate],
+    ) -> Result<Self, AuthError> {
         Self::new_inner(
             base_url,
-            Arc::new(ReqwestOAuthHttpClient::with_resolver(Arc::new(resolver))?),
+            Arc::new(ReqwestOAuthHttpClient::with_resolver_and_roots(
+                Arc::new(resolver),
+                roots,
+            )?),
             OAuthHttpRedirectPolicy::Stop,
         )
         .await

@@ -1,0 +1,55 @@
+{
+  "schema": "T07_RMCP_AUTH_ADDITIVE_ROOTS_SUCCESSOR_V1",
+  "scope": "Add configured gateway roots to the existing filtered OAuth clients while retaining the redirect policy.",
+  "prior_redirect_sha256": "4369485b29c893e40c3f339c544976a5f27863feb339191e28410642a061b399",
+  "row": {
+    "path": "vendor/rmcp/src/transport/auth.rs",
+    "prior": {
+      "bytes": 439885,
+      "sha256": "dab36c0d921f524f260eae3d6a3432c8d74a17799abdf3f003c0f69375e2f634",
+      "mode": "0644"
+    },
+    "current": {
+      "bytes": 440997,
+      "sha256": "ccabfe5dba9274ee6f580fae3f5186f02467316e4e7f4c0904a87cc491876025",
+      "mode": "0644"
+    },
+    "edits": [
+      {
+        "at": 5808,
+        "remove_utf8": "",
+        "insert_utf8": "        Self::with_resolver_and_roots(resolver, &[])\n    }\n\n    fn with_resolver_and_roots(\n        resolver: Arc<metadata_resolver::MetadataAddressResolver>,\n        roots: &[reqwest::Certificate],\n    ) -> Result<Self, AuthError> {\n"
+      },
+      {
+        "at": 5868,
+        "remove_utf8": "            ReqwestClient::builder()\n",
+        "insert_utf8": "            let mut builder = ReqwestClient::builder()\n"
+      },
+      {
+        "at": 5988,
+        "remove_utf8": "                .dns_resolver(resolver.clone())\n",
+        "insert_utf8": "                .dns_resolver(resolver.clone());\n            if !roots.is_empty() {\n                builder = builder.tls_certs_merge(roots.iter().cloned());\n            }\n            builder\n"
+      },
+      {
+        "at": 55753,
+        "remove_utf8": "",
+        "insert_utf8": "        Self::new_with_root_certificates(base_url, &[]).await\n    }\n\n    /// Create an auth manager with additive roots and the default resolver and\n    /// redirect policies. Platform roots remain enabled.\n    pub async fn new_with_root_certificates<U: IntoUrl>(\n        base_url: U,\n        roots: &[reqwest::Certificate],\n    ) -> Result<Self, AuthError> {\n"
+      },
+      {
+        "at": 55881,
+        "remove_utf8": "        Self::new_filtered(base_url, resolver).await\n",
+        "insert_utf8": "        Self::new_filtered_with_roots(base_url, resolver, roots).await\n"
+      },
+      {
+        "at": 56858,
+        "remove_utf8": "",
+        "insert_utf8": "        Self::new_filtered_with_roots(base_url, resolver, &[]).await\n    }\n\n    async fn new_filtered_with_roots(\n        base_url: Url,\n        resolver: metadata_resolver::MetadataAddressResolver,\n        roots: &[reqwest::Certificate],\n    ) -> Result<Self, AuthError> {\n"
+      },
+      {
+        "at": 56905,
+        "remove_utf8": "            Arc::new(ReqwestOAuthHttpClient::with_resolver(Arc::new(resolver))?),\n",
+        "insert_utf8": "            Arc::new(ReqwestOAuthHttpClient::with_resolver_and_roots(\n                Arc::new(resolver),\n                roots,\n            )?),\n"
+      }
+    ]
+  }
+}

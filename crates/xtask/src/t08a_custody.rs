@@ -322,6 +322,12 @@ const RMCP_AUTH_REDIRECT_SHA: &str =
     "4369485b29c893e40c3f339c544976a5f27863feb339191e28410642a061b399";
 const RMCP_AUTH_REDIRECT_EDITS: usize = 13;
 
+const RMCP_AUTH_ADDITIVE_ROOTS: &str =
+    include_str!("../../../docs/rust-rewrite/t07/additive-roots-rmcp-successor-v1.json");
+const RMCP_AUTH_ADDITIVE_ROOTS_SHA: &str =
+    "159170ce928f5dbb7d0bfa3229d3c2539b5b9a5df896605e690506007a51d02d";
+const RMCP_AUTH_ADDITIVE_ROOTS_EDITS: usize = 7;
+
 fn rmcp_auth_redirect_prior(path: &str, current: &[u8], mode: &str) -> Result<Vec<u8>> {
     need(
         digest(RMCP_AUTH_REDIRECT.as_bytes()) == RMCP_AUTH_REDIRECT_SHA,
@@ -336,8 +342,22 @@ fn rmcp_auth_redirect_prior(path: &str, current: &[u8], mode: &str) -> Result<Ve
             && row["path"] == path,
         "closed RMCP auth redirect patch and predecessor",
     )?;
-    let prior = inverse(row, current, mode, RMCP_AUTH_REDIRECT_EDITS)?;
-    let mut altered = current.to_vec();
+    need(
+        digest(RMCP_AUTH_ADDITIVE_ROOTS.as_bytes()) == RMCP_AUTH_ADDITIVE_ROOTS_SHA,
+        "compiled RMCP auth additive-root patch identity",
+    )?;
+    let roots: Value = serde_json::from_str(RMCP_AUTH_ADDITIVE_ROOTS).map_err(|e| e.to_string())?;
+    let roots_row = &roots["row"];
+    need(
+        roots["schema"] == "T07_RMCP_AUTH_ADDITIVE_ROOTS_SUCCESSOR_V1"
+            && roots["prior_redirect_sha256"] == RMCP_AUTH_REDIRECT_SHA
+            && roots_row["path"] == path
+            && roots_row["prior"] == row["current"],
+        "closed RMCP auth additive-root patch and predecessor",
+    )?;
+    let current = inverse(roots_row, current, mode, RMCP_AUTH_ADDITIVE_ROOTS_EDITS)?;
+    let prior = inverse(row, &current, mode, RMCP_AUTH_REDIRECT_EDITS)?;
+    let mut altered = current;
     altered.push(b'\n');
     need(
         inverse(row, &altered, mode, RMCP_AUTH_REDIRECT_EDITS).is_err(),

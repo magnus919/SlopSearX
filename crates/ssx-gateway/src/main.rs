@@ -19,6 +19,8 @@ struct Args {
     oauth_no_browser: bool,
     #[arg(long, env = "MCP_REMOTE_TOKEN_FILE", hide_env_values = true)]
     oauth_token_file: Option<std::path::PathBuf>,
+    #[arg(long, env = "MCP_REMOTE_CA_BUNDLE", hide_env_values = true)]
+    ca_bundle: Option<std::path::PathBuf>,
 }
 
 fn env_flag(value: &str) -> Result<bool, std::convert::Infallible> {
@@ -45,6 +47,7 @@ async fn main() -> ExitCode {
 async fn run(args: Args) -> Result<(), &'static str> {
     use ssx_mcp::{
         gateway_oauth::{AUTHORIZATION_TIMEOUT, GatewayOAuth},
+        gateway_roots,
         opaque::RawGateway,
     };
     use std::sync::Arc;
@@ -67,22 +70,45 @@ async fn run(args: Args) -> Result<(), &'static str> {
         let mut input = stdio::Bridge::stdin().map_err(|_| "Could not open gateway input")?;
         let mut output = stdio::Bridge::stdout().map_err(|_| "Could not open gateway output")?;
         let token = args.token.filter(|value| !value.is_empty());
+        let ca_path = args.ca_bundle.filter(|path| !path.as_os_str().is_empty());
         if args.oauth && token.is_some() {
             return Err("--oauth and --token are mutually exclusive");
         }
+        let roots = gateway_roots::load_ca_bundle(ca_path.as_deref())
+            .await
+            .map_err(|_| "Could not load additive gateway CA bundle")?;
         let connection = async {
             let request_timeout = Duration::from_secs(30);
             let connected = if args.oauth {
                 let remote = args.remote.trim().to_owned();
                 let token_file = args.oauth_token_file.filter(|path| !path.as_os_str().is_empty());
-                let authorizer = GatewayOAuth::open(
-                    &remote, token_file, args.oauth_callback_port, args.oauth_no_browser,
+                let authorizer = GatewayOAuth::open_with_roots(
+                    &remote,
+                    token_file,
+                    args.oauth_callback_port,
+                    args.oauth_no_browser,
+                    roots.clone(),
                 )
                 .await
                 .map_err(|_| "Could not load OAuth credentials. Check the remote URL and token file permissions, or specify a fresh --oauth-token-file.")?;
-                RawGateway::connect_with_authorizer(remote, Arc::new(authorizer), request_timeout, AUTHORIZATION_TIMEOUT, &cancel).await
+                RawGateway::connect_with_authorizer_and_roots(
+                    remote,
+                    Arc::new(authorizer),
+                    request_timeout,
+                    AUTHORIZATION_TIMEOUT,
+                    &cancel,
+                    &roots,
+                )
+                .await
             } else {
-                RawGateway::connect_cancellable(args.remote, token, request_timeout, &cancel).await
+                RawGateway::connect_cancellable_with_roots(
+                    args.remote,
+                    token,
+                    request_timeout,
+                    &cancel,
+                    &roots,
+                )
+                .await
             };
             connected.map_err(|_| "Could not connect to the remote MCP server")
         };
