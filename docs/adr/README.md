@@ -10,8 +10,9 @@ use a new record and link the successor.
 - [002 — Browser identity and tenant isolation](002-browser-identity-and-tenant-isolation.md)
 - [003 — Rust workspace and contract boundaries](003-rust-workspace-and-contract-boundaries.md)
 - [004 — Valkey authority and Rust cutover](004-rust-valkey-authority-and-migration.md)
-- [005 — Native protocol, TLS and platform contract](005-rust-protocol-tls-and-platforms.md)
+- [005 — Native protocol, TLS and platform contract](005-rust-protocol-tls-and-platforms.md) · macOS scope superseded by [ADR 010](010-support-apple-silicon-macos.md).
 - [006 — Bounded adapter HTTP sessions](006-adapter-http-bounds.md)
 - [007 — Native shared execution and client admission](007-native-shared-search-execution.md)
 - [008 — Native runtime roots and server activation (proposed)](008-native-runtime-roots-and-server-activation.md)
 - [009 — rmcp security baseline amendment](009-upgrade-rmcp-security-baseline.md)
+- [010 — Apple Silicon macOS support](010-support-apple-silicon-macos.md)

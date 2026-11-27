@@ -15,6 +15,12 @@ use std::{
     time::Duration,
 };
 const BINDINGS: &str = include_str!("../../../docs/rust-rewrite/t08a/bindings.json");
+pub(crate) const SUPPORTED_NATIVE_TARGETS: &[&str] = &[
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+    "aarch64-apple-darwin",
+    "x86_64-pc-windows-msvc",
+];
 const PRIVATE_LIB_LINT_ARGS: &[&str] = &[
     "clippy",
     "--locked",
@@ -316,15 +322,7 @@ pub(crate) fn native_host(root: &Path, records: &mut Vec<Value>) -> Result<Strin
         .filter_map(|line| line.strip_prefix("host: "))
         .collect::<Vec<_>>();
     ensure(
-        hosts.len() == 1
-            && matches!(
-                hosts[0],
-                "x86_64-unknown-linux-gnu"
-                    | "aarch64-unknown-linux-gnu"
-                    | "x86_64-apple-darwin"
-                    | "aarch64-apple-darwin"
-                    | "x86_64-pc-windows-msvc"
-            ),
+        hosts.len() == 1 && SUPPORTED_NATIVE_TARGETS.contains(&hosts[0]),
         "T08A supported actual native host required",
     )?;
     Ok(hosts[0].to_owned())

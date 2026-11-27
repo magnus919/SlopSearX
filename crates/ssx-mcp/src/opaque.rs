@@ -1266,7 +1266,17 @@ impl RawGateway {
         deadline: Duration,
         cancel: &tokio_util::sync::CancellationToken,
     ) -> Result<Self> {
-        Self::connect_with_bearer(url, GatewayBearer::Static(token), deadline, cancel).await
+        Self::connect_cancellable_with_roots(url, token, deadline, cancel, &[]).await
+    }
+
+    pub async fn connect_cancellable_with_roots(
+        url: String,
+        token: Option<String>,
+        deadline: Duration,
+        cancel: &tokio_util::sync::CancellationToken,
+        roots: &[reqwest::Certificate],
+    ) -> Result<Self> {
+        Self::connect_with_bearer(url, GatewayBearer::Static(token), deadline, cancel, roots).await
     }
 
     /// Connect using a cached bearer and allow one authorization retry per exchange.
@@ -1278,6 +1288,25 @@ impl RawGateway {
         authorization_timeout: Duration,
         cancel: &tokio_util::sync::CancellationToken,
     ) -> Result<Self> {
+        Self::connect_with_authorizer_and_roots(
+            url,
+            authorizer,
+            deadline,
+            authorization_timeout,
+            cancel,
+            &[],
+        )
+        .await
+    }
+
+    pub async fn connect_with_authorizer_and_roots(
+        url: String,
+        authorizer: std::sync::Arc<dyn GatewayAuthorizer>,
+        deadline: Duration,
+        authorization_timeout: Duration,
+        cancel: &tokio_util::sync::CancellationToken,
+        roots: &[reqwest::Certificate],
+    ) -> Result<Self> {
         Self::connect_with_bearer(
             url,
             GatewayBearer::Refreshable {
@@ -1286,6 +1315,7 @@ impl RawGateway {
             },
             deadline,
             cancel,
+            roots,
         )
         .await
     }
@@ -1295,8 +1325,9 @@ impl RawGateway {
         bearer: GatewayBearer,
         deadline: Duration,
         cancel: &tokio_util::sync::CancellationToken,
+        roots: &[reqwest::Certificate],
     ) -> Result<Self> {
-        let http = crate::http_client::gateway_http(&url)?;
+        let http = crate::http_client::gateway_http_with_roots(&url, roots)?;
         let startup_timeout = match &bearer {
             GatewayBearer::Static(_) => deadline,
             GatewayBearer::Refreshable { timeout, .. } => deadline.saturating_add(*timeout),

@@ -11,6 +11,13 @@ use std::{collections::HashMap, sync::Arc};
 pub const MAX_RPC_BYTES: usize = 4 * 1024 * 1024;
 
 pub(crate) fn gateway_http(url: &str) -> crate::Result<reqwest::Client> {
+    gateway_http_with_roots(url, &[])
+}
+
+pub(crate) fn gateway_http_with_roots(
+    url: &str,
+    roots: &[reqwest::Certificate],
+) -> crate::Result<reqwest::Client> {
     let source = ssx_source_codecs::source_url::SourceUrl::parse(url)?;
     let parsed = reqwest::Url::parse(url)?;
     if !source.is_absolute()
@@ -47,9 +54,11 @@ pub(crate) fn gateway_http(url: &str) -> crate::Result<reqwest::Client> {
     }
 
     let target = source.raw_path().parse::<axum::http::uri::PathAndQuery>()?;
-    Ok(reqwest::Client::builder()
-        .exact_endpoint(parsed, target)
-        .build()?)
+    let mut builder = reqwest::Client::builder().exact_endpoint(parsed, target);
+    if !roots.is_empty() {
+        builder = builder.tls_certs_merge(roots.iter().cloned());
+    }
+    Ok(builder.build()?)
 }
 #[derive(Clone)]
 pub struct BoundedClient(pub reqwest::Client);

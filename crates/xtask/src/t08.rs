@@ -515,7 +515,7 @@ pub(crate) fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     )?;
     let source = command(root, "git", &["rev-parse", "HEAD"], records)?;
     let toolchain = command(root, "rustc", &["--version", "--verbose"], records)?;
-    let handoff = json!({"plan":"T08","source_revision":source.trim(),"lock_sha256":image(&root.join("Cargo.lock"))?,"toolchain":toolchain,"native_host":host,"default_cli_sha256":cli.sha256,"installed_cli_sha256":installed.sha256,"standalone_qualification":{"plan":"T08A","default_child_receipt":cli.standalone_receipt,"installed_child_receipt":installed.standalone_receipt},"server_assembly_sha256":image(&server)?,"driver_sha256":image(&driver)?,"valkey_sha256":image(&valkey)?,"default_receipt":output.join("default/completed.json"),"installed_receipt":output.join("installed/completed.json"),"cases":ids,"optional_python_wire_client":{"sha256":OPTIONAL_WIRE_SHA,"disposition":"historical standalone stdlib wire script; no backend imports; neither native runtime invokes or requires it"},"supported_client_source_install_targets":["x86_64-unknown-linux-gnu","aarch64-unknown-linux-gnu","x86_64-apple-darwin","aarch64-apple-darwin","x86_64-pc-windows-msvc"],"installation_guide":"docs/rust-rewrite/t08a/README.md","backend_scope":"real production-component qualification process, not foundation ssx-server or production startup","component_regression":"T08A runs its standalone corpus on the same default and installed executables before native-server integration","downstream":"O04/#921 owns release archives/signing/promotion and production install/upgrade/uninstall","production_activation":false});
+    let handoff = json!({"plan":"T08","source_revision":source.trim(),"lock_sha256":image(&root.join("Cargo.lock"))?,"toolchain":toolchain,"native_host":host,"default_cli_sha256":cli.sha256,"installed_cli_sha256":installed.sha256,"standalone_qualification":{"plan":"T08A","default_child_receipt":cli.standalone_receipt,"installed_child_receipt":installed.standalone_receipt},"server_assembly_sha256":image(&server)?,"driver_sha256":image(&driver)?,"valkey_sha256":image(&valkey)?,"default_receipt":output.join("default/completed.json"),"installed_receipt":output.join("installed/completed.json"),"cases":ids,"optional_python_wire_client":{"sha256":OPTIONAL_WIRE_SHA,"disposition":"historical standalone stdlib wire script; no backend imports; neither native runtime invokes or requires it"},"supported_client_source_install_targets":t08a::SUPPORTED_NATIVE_TARGETS,"installation_guide":"docs/rust-rewrite/t08a/README.md","backend_scope":"real production-component qualification process, not foundation ssx-server or production startup","component_regression":"T08A runs its standalone corpus on the same default and installed executables before native-server integration","downstream":"O04/#921 owns release archives/signing/promotion and production install/upgrade/uninstall","production_activation":false});
     fs::write(
         output.join("O04-HANDOFF.json"),
         serde_json::to_vec_pretty(&handoff).map_err(|e| e.to_string())?,
@@ -523,4 +523,24 @@ pub(crate) fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
     .map_err(|e| e.to_string())?;
     records.push(json!({"T08_O04_handoff":handoff,"default_actual_receipt":default,"installed_actual_receipt":installed_receipt}));
     Ok(())
+}
+
+#[cfg(test)]
+#[test]
+fn native_cli_workflow_matches_supported_targets() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let workflow = fs::read_to_string(root.join(".github/workflows/rust-cli.yml")).unwrap();
+    let workflow: Value = serde_saphyr::from_str(&workflow).unwrap();
+    let jobs = &workflow["jobs"];
+    let required = jobs["native-cli"]["strategy"]["matrix"]["include"]
+        .as_array()
+        .unwrap();
+    let windows = &jobs["native-cli-windows"]["with"];
+    assert_eq!(windows["advisory"], true);
+    let targets: Vec<_> = required
+        .iter()
+        .map(|row| row["target"].as_str().unwrap())
+        .chain(std::iter::once(windows["target"].as_str().unwrap()))
+        .collect();
+    assert_eq!(targets, t08a::SUPPORTED_NATIVE_TARGETS);
 }
