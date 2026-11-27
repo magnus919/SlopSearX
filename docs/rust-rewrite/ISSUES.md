@@ -82,14 +82,14 @@ Dependencies are hard finish-to-start: accepted/merged predecessor work and its 
 | [#946 — G08](https://github.com/magnus919/SlopSearX/issues/946) | Remove all backend Python source and runtime dependencies | retirement | [#945 — G07](https://github.com/magnus919/SlopSearX/issues/945), [#934 — O05](https://github.com/magnus919/SlopSearX/issues/934), [#935 — O06](https://github.com/magnus919/SlopSearX/issues/935), [#941 — O08](https://github.com/magnus919/SlopSearX/issues/941), [#942 — O09](https://github.com/magnus919/SlopSearX/issues/942) |
 | [#947 — G09](https://github.com/magnus919/SlopSearX/issues/947) | Verify final Rust-only release and close rewrite acceptance | release | [#946 — G08](https://github.com/magnus919/SlopSearX/issues/946), [#1080 — S01](https://github.com/magnus919/SlopSearX/issues/1080) |
 
-## Live follow-up blockers that are not plan work packages
+## Platform trust-store follow-ups
 
-Two platform follow-ups track native gateway qualification in
+Two non-blocking platform follow-ups track trust-store mutation experiments for
 [#902 — T07](https://github.com/magnus919/SlopSearX/issues/902).
 
 | Issue | Effect |
 | --- | --- |
-| [#1073 — macOS platform trust](https://github.com/magnus919/SlopSearX/issues/1073) | Hard predecessor of T07. Require a complete user-domain trust and cleanup witness on disposable Intel and ARM macOS. |
+| [#1073 — macOS platform trust](https://github.com/magnus919/SlopSearX/issues/1073) | Optional follow-up outside the T07 release gate. The installed Apple Silicon gateway must pass public HTTPS, certificate and hostname rejection, and additive CA-bundle checks on a disposable runner. [Platform decision](../adr/010-support-apple-silicon-macos.md). |
 | [#1075 — Windows platform trust](https://github.com/magnus919/SlopSearX/issues/1075) | Open best-effort follow-up. The full Windows CurrentUser Root witness is outside the T07 release gate. |
 
 The maintainer set Windows support to best effort on 2026-11-22. Keep the

@@ -15,3 +15,4 @@ use a new record and link the successor.
 - [007 — Native shared execution and client admission](007-native-shared-search-execution.md)
 - [008 — Native runtime roots and server activation (proposed)](008-native-runtime-roots-and-server-activation.md)
 - [009 — rmcp security baseline amendment](009-upgrade-rmcp-security-baseline.md)
+- [010 — Apple Silicon macOS support](010-support-apple-silicon-macos.md)

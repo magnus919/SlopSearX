@@ -26,6 +26,8 @@ Use reqwest 0.13.5 with its documented default rustls/platform-verifier path for
 
 ## Supported targets and pins
 
+[ADR 010](010-support-apple-silicon-macos.md) supersedes the original macOS target set below and defines the required macOS gateway TLS evidence.
+
 The existing **published** container platform set is Linux `amd64` and `arm64`; F02 preserves those as mandatory server, worker and MCP server image targets. Native `ssx` and gateway client binaries target Linux x86_64/aarch64, macOS x86_64/aarch64 and Windows x86_64 as a deliberate new distribution goal. macOS/Windows are not current backend guarantees. A client target becomes supported only after O04 clean-install, TLS/CA, invocation and artifact-signature tests on that target; unavailable targets stay marked pending rather than advertised. Container images are non-root, carry required CA/TLS assets, have health/signal behavior and immutable digest promotion. Linux `musl`, 32-bit targets and native macOS/Windows **servers** are outside the initial release matrix unless separately accepted with equivalent gates.
 
 The candidate toolchain is stable Rust **1.99.0**, confirmed by the [Rust release announcement](https://blog.rust-lang.org/2026/10/01/Rust-1.99.0/). F03 commits `rust-toolchain.toml`, exact Cargo manifest requirements and `Cargo.lock`; native builds use `--locked`. F03 checks the foundation on its available Linux host. O04 later builds and qualifies every shipping target after the server, worker, gateway and client crates exist. These are **candidate exact direct-dependency pins**, verified against current primary crate documentation on 2026-10-15, not a claim that the combined graph already compiles:
