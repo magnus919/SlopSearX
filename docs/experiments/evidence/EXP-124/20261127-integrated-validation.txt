@@ -1,0 +1,42 @@
+Main 6cb482a4f2bdbb832bbf3c0cb37a42cbb6c6c681. Candidate 3eb229be85bafb3869c89d5cb59946400afaa207. Rust 1.99.0 aarch64-apple-darwin.
+T08A source inventory: 408 entries checked for mode, byte count and SHA-256. Zero mismatches.
+
+cargo test --locked -j 2 -p xtask --bin xtask -- snapshot_fixture_amendment_actual missing_empty_malformed_stale_and_incomplete_fail scholarly_successor altered_t06_bindings_cannot_self_certify --test-threads=1
+running 7 tests
+test a06::tests::scholarly_successor_a06_binds_original_test_artifact ... ok
+test a06::tests::snapshot_fixture_amendment_actual_artifact_consumer ... ok
+test snapshot_fixture_amendment::tests::scholarly_successor_rejects_wrong_pin_and_unreviewed_source ... ok
+test snapshot_fixture_amendment::tests::snapshot_fixture_amendment_actual_f01_source_consumer ... ok
+test t06::tests::altered_t06_bindings_cannot_self_certify ... ok
+test tests::missing_empty_malformed_stale_and_incomplete_fail ... ok
+test w03::snapshot_fixture_tests::snapshot_fixture_amendment_actual_w03_original_source_consumer ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 274 filtered out; finished in 37.55s
+
+
+cargo test --locked --offline -j 2 -p ssx-mcp --test t06_source_bindings -- --test-threads=1
+running 5 tests
+test lock_amendment::tests::changed_entry_sdk_and_unrelated_lock_mutants_cannot_use_the_amendment ... ok
+test lock_amendment::tests::exact_security_lock_successor_retains_historical_profile_and_shared_runtime_disclosure ... ok
+test lock_amendment::tests::inverse_scope_rejects_missing_duplicate_extra_and_tampered_package_spans ... ok
+test lock_amendment::tests::source_path_row_hash_manifest_git_mode_and_missing_material_controls_fail_closed ... ok
+test original_profiles_strategies_tool_surface_and_observations_match_reviewed_source_bindings ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 30.45s
+
+
+Changed-file pre-commit:
+trim trailing whitespace.................................................Passed
+fix end of files.........................................................Passed
+check yaml...........................................(no files to check)Skipped
+check toml...........................................(no files to check)Skipped
+check json...............................................................Passed
+debug statements (python)................................................Passed
+mixed line ending........................................................Passed
+check for merge conflicts................................................Passed
+check for added large files..............................................Passed
+ruff (legacy alias)......................................................Passed
+ruff format..............................................................Passed
+vulture..................................................................Passed
+import-linter............................................................Passed
+mypy.....................................................................Passed
