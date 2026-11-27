@@ -206,6 +206,27 @@ try {
   assert.equal((await resultsPage('valkey', 2)).searchParams.get('pageno'), '2');
   receipt.cases.push('pagination-history');
 
+  await navigate('/search?q=malicious&categories=general');
+  await resultsPage('malicious', 1);
+  const snippet = await execute(`
+    const content = document.querySelector('article[data-result-card] .result-content');
+    const highlight = content?.querySelector('strong');
+    return {
+      visible: content?.getBoundingClientRect().height > 0 && getComputedStyle(content).visibility === 'visible',
+      text: content?.innerText,
+      highlight: highlight?.innerText,
+      unexpectedElements: content?.querySelectorAll('img,svg,em').length,
+    };
+  `);
+  assert.deepEqual(snippet, {
+    visible: true,
+    text: 'safe match <svg onload=alert(1)> <em onclick=alert(1)>unsafe</em>',
+    highlight: 'safe match',
+    unexpectedElements: 0,
+  });
+  await screenshot('escaped-result-snippet');
+  receipt.cases.push('escaped-result-snippet');
+
   // WebDriver sizes the outer window. Qualify only the content size Safari reports.
   receipt.viewports = [];
   for (const [width, height] of [[1440, 900], [390, 844], [320, 640]]) {

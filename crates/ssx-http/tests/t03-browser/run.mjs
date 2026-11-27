@@ -933,6 +933,12 @@ async function runContract() {
     const response = await searchByQuery(page, 'malicious', { categories: 'general' });
     assert.equal(response.status(), 200);
     assert(await page.getByRole('heading', { name: '<img src=x onerror=alert(1)> & source' }).isVisible());
+    const snippet = page.getByRole('article').locator('.result-content');
+    assert(await snippet.isVisible());
+    assert.equal(await snippet.innerText(), 'safe match <svg onload=alert(1)> <em onclick=alert(1)>unsafe</em>');
+    const highlight = snippet.locator('strong');
+    assert(await highlight.isVisible());
+    assert.equal(await highlight.innerText(), 'safe match');
     assert.equal(await page.locator('img,svg').count(), 0);
     assert.equal(await page.locator('a[href^="javascript:"]').count(), 0);
     assert.equal(await page.locator('script').count(), 1);
