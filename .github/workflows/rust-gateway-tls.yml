@@ -8,6 +8,7 @@ name: Installed gateway TLS
       - scripts/rust-gateway-tls-qualification.mjs
       - crates/ssx-gateway/**
       - crates/ssx-mcp/**
+      - crates/ssx-source-codecs/**
       - vendor/rmcp/**
       - vendor/ssx-gateway-reqwest/**
       - Cargo.toml
@@ -71,8 +72,15 @@ jobs:
           cmp "$run_dir/installed/bin/ssx-gateway" "$run_dir/evidence/ssx-gateway"
           test -z "$(git status --porcelain)"
       - name: Retain T07 installed-gateway evidence
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: native-gateway-t07-${{ github.sha }}
           path: ${{ runner.temp }}/ssx-gateway-tls/evidence/
           if-no-files-found: error
+      - name: Retire runner build and fixture artifacts
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf -- "${RUNNER_TEMP:?}/ssx-gateway-tls"

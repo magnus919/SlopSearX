@@ -2065,12 +2065,19 @@
             },
             {
               "name": "Retain T07 installed-gateway evidence",
+              "if": "always()",
               "uses": "actions/upload-artifact@v7",
               "with": {
                 "name": "native-gateway-t07-${{ github.sha }}",
                 "path": "${{ runner.temp }}/ssx-gateway-tls/evidence/",
                 "if-no-files-found": "error"
               }
+            },
+            {
+              "name": "Retire runner build and fixture artifacts",
+              "if": "always()",
+              "shell": "bash",
+              "run": "set -euo pipefail\nrm -rf -- \"${RUNNER_TEMP:?}/ssx-gateway-tls\"\n"
             }
           ]
         },
@@ -2086,6 +2093,7 @@
                 "scripts/rust-gateway-tls-qualification.mjs",
                 "crates/ssx-gateway/**",
                 "crates/ssx-mcp/**",
+                "crates/ssx-source-codecs/**",
                 "vendor/rmcp/**",
                 "vendor/ssx-gateway-reqwest/**",
                 "Cargo.toml",

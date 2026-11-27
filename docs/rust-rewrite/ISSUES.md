@@ -89,7 +89,7 @@ Two non-blocking platform follow-ups track trust-store mutation experiments for
 
 | Issue | Effect |
 | --- | --- |
-| [#1073 — macOS platform trust](https://github.com/magnus919/SlopSearX/issues/1073) | Optional follow-up outside the T07 release gate. The installed Apple Silicon gateway must complete an MCP session over publicly trusted HTTPS using default certificate verification on a disposable runner. [Platform decision](../adr/010-support-apple-silicon-macos.md). |
+| [#1073 — macOS platform trust](https://github.com/magnus919/SlopSearX/issues/1073) | Optional macOS trust-store mutation experiment outside the T07 release gate. [Platform decision](../adr/010-support-apple-silicon-macos.md). |
 | [#1075 — Windows platform trust](https://github.com/magnus919/SlopSearX/issues/1075) | Open best-effort follow-up. The full Windows CurrentUser Root witness is outside the T07 release gate. |
 
 The maintainer set Windows support to best effort on 2026-11-22. Keep the
@@ -97,8 +97,10 @@ GitHub-hosted Windows x64 build, install, ordinary loopback TLS, and runtime
 coverage. Report the full CurrentUser Root install and removal sequence as
 unverified until it passes on an authorized disposable Windows environment.
 Retain previous failure and cleanup receipts for both optional store-mutation
-investigations. T07 owns the installed Apple Silicon gateway HTTPS checks
-described in [ADR 010](../adr/010-support-apple-silicon-macos.md).
+investigations. T07 requires the installed Apple Silicon gateway to complete
+an MCP session over publicly trusted HTTPS using default certificate
+verification on a disposable runner, as described in
+[ADR 010](../adr/010-support-apple-silicon-macos.md).
 
 Where a native GitHub `blocked_by` edge differs from the plan table, the native
 edge is authoritative for start decisions; this table records plan intent, not

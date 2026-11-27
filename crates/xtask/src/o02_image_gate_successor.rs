@@ -80,11 +80,11 @@ const FOUNDATION_SUCCESSOR_OFFSET: usize = 113137;
 const FOUNDATION_SUCCESSOR: &str = r###""Mandatory prerequisites partition on both existing architectures; xtask tests complement the F03 workspace suite, which excludes xtask. Native deadlines, mutation control, tool/isolation/Valkey/compiler/source provenance and the workflow aggregation remain required.""###;
 const PRIOR_FOUNDATION_SUCCESSOR: &str = r###""Mandatory prerequisites partition on both existing architectures; exact original commands and native deadlines retained; fresh tool/isolation/Valkey/compiler/source provenance; no inherited targets or dropped gates. Separate 130-minute outer workflow job cap; native command deadlines and all gates remain unchanged.""###;
 
-const INSTALLED_GATEWAY_CATALOG_BYTES: usize = 192933;
+const INSTALLED_GATEWAY_CATALOG_BYTES: usize = 193262;
 const INSTALLED_GATEWAY_CATALOG_SHA: &str =
-    "bdda46f8890eb1f90f04252fd365869925f5e99292f10908ac11474ec9aa741c";
+    "1c06217ef0e29fffd6cd95538edc0037620c24f905da1d1a0d57b19b61b8e750";
 const INSTALLED_GATEWAY_ROW_OFFSET: usize = 87895;
-const INSTALLED_GATEWAY_ROW_BYTES: usize = 4069;
+const INSTALLED_GATEWAY_ROW_BYTES: usize = 4398;
 
 const APPLE_SILICON_CATALOG_BYTES: usize = 188864;
 const APPLE_SILICON_CATALOG_SHA: &str =
