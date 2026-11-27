@@ -1081,6 +1081,26 @@ async function runContract() {
   });
 
   await check('viewport-narrow', async () => {
+    const compact = await newContext({ viewport: { width: 390, height: 844 } });
+    try {
+      const landing = await compact.newPage();
+      attachPageEvidence(landing);
+      await navigate(landing, '/');
+      assert(await landing.getByRole('heading', { name: 'Search SlopSearX.', exact: true }).isVisible());
+      const input = landing.getByRole('searchbox', { name: 'Search SlopSearX', exact: true });
+      assert(await input.isVisible());
+      await landing.getByRole('button', { name: 'Use darker mode', exact: true }).click();
+      assert.equal(await landing.locator('html').getAttribute('data-theme'), 'darker');
+      assert(await landing.getByRole('button', { name: 'Use dark mode', exact: true }).isVisible());
+      await input.blur();
+      await landing.keyboard.press('/');
+      assert(await input.evaluate(element => document.activeElement === element));
+      assert.equal(await viewportObservation(landing, 'compact-landing-390x844'), true);
+      await screenshot(landing, 'contract-compact-landing-390x844.png');
+    } finally {
+      await compact.close();
+    }
+
     await searchByQuery(page, 'valkey', { categories: 'general' });
     const explanation = page.locator('details.result-explanation');
     await explanation.getByText('Why this result appeared', { exact: true }).click();
