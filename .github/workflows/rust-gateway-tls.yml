@@ -1,0 +1,87 @@
+name: Installed gateway TLS
+
+"on":
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/rust-gateway-tls.yml
+      - scripts/rust-gateway-tls-qualification.mjs
+      - crates/ssx-gateway/**
+      - crates/ssx-mcp/**
+      - crates/ssx-source-codecs/**
+      - vendor/rmcp/**
+      - vendor/ssx-gateway-reqwest/**
+      - Cargo.toml
+      - Cargo.lock
+      - rust-toolchain.toml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apple-silicon:
+    name: Installed gateway HTTPS (Apple Silicon)
+    runs-on: macos-15
+    timeout-minutes: 35
+    env:
+      CARGO_BUILD_JOBS: "2"
+      CARGO_INCREMENTAL: "0"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Install the exact native gateway
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_dir="$RUNNER_TEMP/ssx-gateway-tls"
+          mkdir -m 700 -p "$run_dir/evidence"
+          test "$(uname -m)" = arm64
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          rustc -vV | tee "$run_dir/evidence/rustc.txt"
+          cargo --version --verbose | tee "$run_dir/evidence/cargo.txt"
+          grep -Fx 'host: aarch64-apple-darwin' "$run_dir/evidence/rustc.txt"
+          export CARGO_TARGET_DIR="$run_dir/target"
+          cargo install --locked --path crates/ssx-gateway --root "$run_dir/installed"
+          cp -p "$run_dir/installed/bin/ssx-gateway" "$run_dir/evidence/ssx-gateway"
+          file "$run_dir/evidence/ssx-gateway" | tee "$run_dir/evidence/gateway-file.txt"
+          grep -Eq 'Mach-O.*arm64' "$run_dir/evidence/gateway-file.txt"
+      - name: Verify disposable HTTPS route tool
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_dir="$RUNNER_TEMP/ssx-gateway-tls"
+          url=https://github.com/cloudflare/cloudflared/releases/download/2026.11.2/cloudflared-darwin-arm64.tgz
+          curl --fail --show-error --silent --location --max-time 90 --output "$run_dir/cloudflared.tgz" "$url"
+          cd "$run_dir"
+          # The signed release asset digest differs from the release-note checksum.
+          archive_digest=f6d58eeec91ad1ec5fd1f7e4a587303772929b2625be5d24068033851c36ff55
+          printf '%s  cloudflared.tgz\n' "$archive_digest" | shasum -a 256 -c -
+          tar -xzf cloudflared.tgz cloudflared
+          codesign --verify --strict -R='identifier "cloudflared" and anchor apple generic and certificate leaf[subject.OU] = "68WVV388M8"' cloudflared
+          ./cloudflared --version | tee evidence/cloudflared-version.txt
+      - name: Qualify publicly trusted HTTPS
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_dir="$RUNNER_TEMP/ssx-gateway-tls"
+          node scripts/rust-gateway-tls-qualification.mjs \
+            "$run_dir/installed/bin/ssx-gateway" "$run_dir/cloudflared" \
+            "$run_dir" "$run_dir/evidence/T07.json"
+          test -s "$run_dir/evidence/T07.json"
+          cmp "$run_dir/installed/bin/ssx-gateway" "$run_dir/evidence/ssx-gateway"
+          test -z "$(git status --porcelain)"
+      - name: Retain T07 installed-gateway evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-gateway-t07-${{ github.sha }}
+          path: ${{ runner.temp }}/ssx-gateway-tls/evidence/
+          if-no-files-found: error
+      - name: Retire runner build and fixture artifacts
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf -- "${RUNNER_TEMP:?}/ssx-gateway-tls"
