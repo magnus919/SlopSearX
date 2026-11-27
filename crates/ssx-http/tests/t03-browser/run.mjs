@@ -134,6 +134,7 @@ let evidenceDirectory = '';
 let baseUrl = '';
 let scenario = '';
 let dateRoundtripEvidence = null;
+let searchSummaryVisible = null;
 
 function sha256(bytes) {
   return createHash('sha256').update(bytes).digest('hex');
@@ -643,7 +644,8 @@ async function runContract() {
     );
     assert(await explanation.getByText('structurally eligible', { exact: true }).isVisible());
     const summary = page.getByRole('complementary', { name: 'Search summary' });
-    assert(await summary.isVisible());
+    searchSummaryVisible = await summary.isVisible();
+    assert.equal(searchSummaryVisible, true);
     assert(await summary.getByText('Source status', { exact: true }).isVisible());
     const jsonView = page.getByRole('link', { name: 'Open JSON view ↗', exact: true });
     assert(await jsonView.isVisible());
@@ -1363,6 +1365,7 @@ async function main() {
     http_error_responses: httpErrorResponses,
     http_error_console_statuses: httpErrorConsoleStatuses,
     engine_console_parity: engineConsoleParity,
+    search_summary_visible: searchSummaryVisible,
     page_errors: pageErrors,
     browser_closed: browserClosed,
     artifacts,
@@ -1410,6 +1413,7 @@ main().catch(async (error) => {
         console_errors: consoleErrors,
         page_errors: pageErrors,
         engine_console_parity: browserEngine === 'chromium' ? 'chromium' : 'not-captured',
+        search_summary_visible: searchSummaryVisible,
         browser_closed: browserClosed,
         artifacts,
         budgets,

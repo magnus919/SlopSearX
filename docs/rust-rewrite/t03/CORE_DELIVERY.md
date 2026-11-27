@@ -128,3 +128,10 @@ metadata, result count, or snapshot remainder. Machine formats and their schemas
 are unchanged. Pure renderer cases execute within the existing static formatter
 test; they remain candidate evidence for F:L680/L681/L688/L689 and do not establish
 HTTP upstream availability, hosted browser, human, or full T03 acceptance.
+
+## Search summary landmark
+
+The `results-normal` journey records whether the browser saw a visible
+`complementary` landmark named `Search summary`, the predicate in frozen browser
+assertion B:L96. The T03 validator requires `search_summary_visible: true` in
+each contract browser receipt and a null value for other scenarios.

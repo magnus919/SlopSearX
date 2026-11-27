@@ -1974,6 +1974,7 @@ fn validate_browser(
             "http_error_responses",
             "http_error_console_statuses",
             "engine_console_parity",
+            "search_summary_visible",
             "page_errors",
             "browser_closed",
             "artifacts",
@@ -2034,6 +2035,15 @@ fn validate_browser(
             &format!("browser {field} must be empty"),
         )?;
     }
+    let expected_search_summary = if scenario == "contract" {
+        Value::Bool(true)
+    } else {
+        Value::Null
+    };
+    need(
+        receipt["search_summary_visible"] == expected_search_summary,
+        "browser Search summary visibility differs from the scenario contract",
+    )?;
     let fixture_responses = receipt["synthetic_fixture_responses"]
         .as_array()
         .ok_or("T03 synthetic fixture response evidence missing")?;
