@@ -3,6 +3,8 @@ pub mod evidence;
 pub mod gateway;
 #[cfg(unix)]
 pub mod gateway_oauth;
+#[cfg(unix)]
+pub mod gateway_roots;
 pub mod harness;
 pub mod http_client;
 pub mod legacy;

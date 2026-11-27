@@ -1200,9 +1200,25 @@ const AUTH_RECORD: &str = r#####"{
   ]
 }"#####;
 
+const RAW_GATEWAY_ADDITIVE_ROOTS: &str =
+    include_str!("../../t07/additive-roots-opaque-successor-v1.json");
+const RAW_GATEWAY_ADDITIVE_ROOTS_SHA: &str =
+    "8c15451331aed9f892bb950a0d38212758e0818255c72dd4e74480340269706a";
+
 fn auth_source(root: &Path, raw: &[u8], mode: u32) -> Result<Vec<u8>> {
+    need(
+        digest(RAW_GATEWAY_ADDITIVE_ROOTS.as_bytes()) == RAW_GATEWAY_ADDITIVE_ROOTS_SHA,
+        "T07 raw gateway additive-root patch identity",
+    )?;
+    let roots: Row =
+        serde_json::from_str(RAW_GATEWAY_ADDITIVE_ROOTS).map_err(|error| error.to_string())?;
     let row: Row = serde_json::from_str(AUTH_RECORD).map_err(|error| error.to_string())?;
-    let prior = inverse(&row, raw, mode)?;
+    need(
+        roots.path == RAW_GATEWAY && roots.prior.sha256 == row.current.sha256,
+        "T07 raw gateway additive-root predecessor differs",
+    )?;
+    let authorizer_source = inverse(&roots, raw, mode)?;
+    let prior = inverse(&row, &authorizer_source, mode)?;
     need(
         row.path == RAW_GATEWAY,
         "T06 raw gateway authorizer path differs",

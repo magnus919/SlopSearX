@@ -30,6 +30,7 @@ pub struct GatewayOAuth {
     path: PathBuf,
     callback_port: u16,
     no_browser: bool,
+    roots: Vec<reqwest::Certificate>,
     cached: Arc<RwLock<Option<Bearer>>>,
 }
 
@@ -44,6 +45,16 @@ impl GatewayOAuth {
         path: Option<PathBuf>,
         callback_port: u16,
         no_browser: bool,
+    ) -> Result<Self> {
+        Self::open_with_roots(remote, path, callback_port, no_browser, Vec::new()).await
+    }
+
+    pub async fn open_with_roots(
+        remote: &str,
+        path: Option<PathBuf>,
+        callback_port: u16,
+        no_browser: bool,
+        roots: Vec<reqwest::Certificate>,
     ) -> Result<Self> {
         let url = Url::parse(remote).map_err(|_| "Invalid OAuth remote URL")?;
         protocol::check_remote(&url)?;
@@ -62,6 +73,7 @@ impl GatewayOAuth {
             path,
             callback_port,
             no_browser,
+            roots,
             cached: Arc::new(RwLock::new(cached)),
         })
     }
@@ -120,9 +132,12 @@ impl GatewayOAuth {
             return Ok(Some(value));
         }
         let granted = bearer.map_or_else(Vec::new, |bearer| bearer.scopes);
-        let mut protocol =
-            OAuthProtocol::discover(&self.remote, challenge.as_ref().map(|(header, _)| *header))
-                .await?;
+        let mut protocol = OAuthProtocol::discover(
+            &self.remote,
+            challenge.as_ref().map(|(header, _)| *header),
+            &self.roots,
+        )
+        .await?;
         if let Some(client) = &client
             && client
                 .issuer

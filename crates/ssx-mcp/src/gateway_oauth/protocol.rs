@@ -60,10 +60,14 @@ impl OAuthProtocol {
     /// and authorization-server endpoints under RMCP's separate address,
     /// redirect, and metadata policies. Credential exchanges use its
     /// no-redirect client. Cleartext is limited to the loopback resource origin.
-    pub async fn discover(remote: &Url, challenge: Option<&str>) -> Result<Self, ProtocolError> {
+    pub async fn discover(
+        remote: &Url,
+        challenge: Option<&str>,
+        roots: &[reqwest::Certificate],
+    ) -> Result<Self, ProtocolError> {
         check_remote(remote)?;
         let credentials = InMemoryCredentialStore::new();
-        let mut manager = AuthorizationManager::new(remote.clone())
+        let mut manager = AuthorizationManager::new_with_root_certificates(remote.clone(), roots)
             .await
             .map_err(|_| ProtocolError::Discovery)?;
         let resolution = manager
@@ -366,7 +370,7 @@ mod tests {
         let remote = Url::parse(&format!("{origin}/mcp"))?;
 
         tokio::time::timeout(Duration::from_secs(8), async {
-            let mut protocol = OAuthProtocol::discover(&remote, None).await?;
+            let mut protocol = OAuthProtocol::discover(&remote, None, &[]).await?;
             assert_eq!(protocol.issuer(), Some(origin.as_str()));
             let scopes = protocol.select_initial_scopes().await;
             assert_eq!(scopes, ["search"]);

@@ -1,0 +1,41 @@
+{
+  "path": "crates/ssx-mcp/src/opaque.rs",
+  "prior": {
+    "bytes": 100668,
+    "sha256": "bc106324406905af3e20915e02ad39f7088d3d00202b64830f35497cf683fdb1",
+    "mode": 420
+  },
+  "prior_git_blob": "acfaf096aa822b0f2f3835a3f8395ae3d10b74f3",
+  "current": {
+    "bytes": 101627,
+    "sha256": "dcb312fe433cd8fd1935cc56686f230621e76ea9447d07c517507c885e90cf33",
+    "mode": 420
+  },
+  "edits": [
+    {
+      "current_offset": 51658,
+      "old": "        Self::connect_with_bearer(url, GatewayBearer::Static(token), deadline, cancel).await\n",
+      "new": "        Self::connect_cancellable_with_roots(url, token, deadline, cancel, &[]).await\n    }\n\n    pub async fn connect_cancellable_with_roots(\n        url: String,\n        token: Option<String>,\n        deadline: Duration,\n        cancel: &tokio_util::sync::CancellationToken,\n        roots: &[reqwest::Certificate],\n    ) -> Result<Self> {\n        Self::connect_with_bearer(url, GatewayBearer::Static(token), deadline, cancel, roots).await\n"
+    },
+    {
+      "current_offset": 52542,
+      "old": "",
+      "new": "        Self::connect_with_authorizer_and_roots(\n            url,\n            authorizer,\n            deadline,\n            authorization_timeout,\n            cancel,\n            &[],\n        )\n        .await\n    }\n\n    pub async fn connect_with_authorizer_and_roots(\n        url: String,\n        authorizer: std::sync::Arc<dyn GatewayAuthorizer>,\n        deadline: Duration,\n        authorization_timeout: Duration,\n        cancel: &tokio_util::sync::CancellationToken,\n        roots: &[reqwest::Certificate],\n    ) -> Result<Self> {\n"
+    },
+    {
+      "current_offset": 53303,
+      "old": "",
+      "new": "            roots,\n"
+    },
+    {
+      "current_offset": 53522,
+      "old": "",
+      "new": "        roots: &[reqwest::Certificate],\n"
+    },
+    {
+      "current_offset": 53586,
+      "old": "        let http = crate::http_client::gateway_http(&url)?;\n",
+      "new": "        let http = crate::http_client::gateway_http_with_roots(&url, roots)?;\n"
+    }
+  ]
+}
