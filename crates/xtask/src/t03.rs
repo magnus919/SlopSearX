@@ -589,6 +589,7 @@ fn expected_http() -> Vec<HttpExpected> {
     }
     for query in [
         "malicious",
+        "local",
         "missing",
         "empty",
         "empty-source",
@@ -656,7 +657,7 @@ fn group_for(path: &Path, groups: &BTreeSet<&str>) -> Result<String> {
 fn validate_http(base: &Path, stdout: &str, binary: &Path, binary_sha: &str) -> Result<Value> {
     let expected = expected_http();
     need(
-        expected.len() == 107,
+        expected.len() == 108,
         "compiled HTTP receipt inventory is incomplete",
     )?;
     let groups: BTreeSet<_> = expected.iter().map(|row| row.group).collect();
@@ -922,10 +923,14 @@ const RETAINED_FORMATTER_CHECKS: &[(&str, &str, &[FormatterPredicate])] = &[
             (537, true, "storage is optional"),
         ],
     ),
+    ("states", "state-malicious", &[(551, false, "javascript:")]),
     (
         "states",
-        "state-malicious",
-        &[(551, false, "javascript:"), (747, true, "not eligible")],
+        "state-local",
+        &[
+            (747, true, "not eligible"),
+            (748, true, "non-global literal IP address"),
+        ],
     ),
     (
         "inherited",
@@ -3206,7 +3211,7 @@ pub(crate) fn validator_controls() -> Result<()> {
     let rows:Vec<_>=SCENARIOS.into_iter().flat_map(|scenario|ENGINES.into_iter().map(move |engine|json!({"scenario":scenario,"engine":engine,"source_sha256":"synthetic-validator-input","terminal":{"stop_sent":true,"child_joined":true,"child_exit_success":true,"tree_retired":true,"stdout_eof":true,"stdout_tail_bytes":0,"stderr_bytes":0}}))).collect();
     controls(&rows, "synthetic-validator-input")?;
     need(
-        expected_http().len() == 107 && HTTP_TESTS.len() == 11,
+        expected_http().len() == 108 && HTTP_TESTS.len() == 11,
         "closed HTTP inventory",
     )
 }
@@ -3417,7 +3422,7 @@ pub fn check(root: &Path, records: &mut Vec<Value>) -> Result<()> {
         sources(root)? == before && hash(&regular(&binary, 256 * 1024 * 1024)?) == binary_sha,
         "source or executed fixture image changed during gate",
     )?;
-    records.push(json!({"plan":"T03","role":"native-browser-acceptance","source_inputs":before,"source_sha256":source_sha,"server_binary":{"path":binary,"sha256":binary_sha},"http_tests":HTTP_TESTS,"http_receipts":107,"http_processes":13,"browser_scenarios":browser_rows,"controls":negative,"evidence_directory":run,"scope":"real native HTTP plus deterministic Chromium and Firefox browser journeys and measured synthetic budgets; actual Safari, manual visual/assistive technology and 200% zoom acceptance remain separate"}));
+    records.push(json!({"plan":"T03","role":"native-browser-acceptance","source_inputs":before,"source_sha256":source_sha,"server_binary":{"path":binary,"sha256":binary_sha},"http_tests":HTTP_TESTS,"http_receipts":108,"http_processes":13,"browser_scenarios":browser_rows,"controls":negative,"evidence_directory":run,"scope":"real native HTTP plus deterministic Chromium and Firefox browser journeys and measured synthetic budgets; actual Safari, manual visual/assistive technology and 200% zoom acceptance remain separate"}));
     Ok(())
 }
 
@@ -3454,7 +3459,7 @@ mod tests {
             })
             .collect();
         let comparisons = retained_formatter_comparisons(&manifest, &wire).unwrap();
-        assert_eq!(comparisons.as_array().unwrap().len(), 17);
+        assert_eq!(comparisons.as_array().unwrap().len(), 18);
         let good = wire.clone();
         let target = wire
             .iter_mut()
@@ -3469,6 +3474,17 @@ mod tests {
             retained_formatter_comparisons(&manifest, &wire)
                 .unwrap_err()
                 .contains("F:L551")
+        );
+        wire = good.clone();
+        let local = wire
+            .iter_mut()
+            .find(|receipt| receipt["binding"]["id"] == "state-local")
+            .unwrap();
+        local["observation"]["body"] = json!("not eligible");
+        assert!(
+            retained_formatter_comparisons(&manifest, &wire)
+                .unwrap_err()
+                .contains("F:L748")
         );
         wire = good.clone();
         wire[0]["observation"]["body"] =

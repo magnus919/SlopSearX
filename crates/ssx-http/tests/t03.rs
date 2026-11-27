@@ -765,6 +765,7 @@ async fn malicious_optional_empty_partial_and_unavailable_states_are_truthful() 
     let mut p = Process::start("states", "contract");
     for (query, wanted) in [
         ("malicious", 200),
+        ("local", 200),
         ("missing", 200),
         ("empty", 200),
         ("empty-source", 200),
@@ -792,6 +793,22 @@ async fn malicious_optional_empty_partial_and_unavailable_states_are_truthful() 
                 assert!(body.contains("&lt;img src=x onerror=alert(1)&gt;"));
                 assert!(body.contains("<strong>safe match</strong>"));
                 assert!(!body.contains("class=\"result-link\""));
+            }
+            "local" => {
+                let document = scraper::Html::parse_document(&body);
+                let handoff = scraper::Selector::parse(
+                    r#"#result-1 details.result-explanation [data-status="ineligible"]"#,
+                )
+                .unwrap();
+                let status = document.select(&handoff).next().expect("local handoff");
+                assert_eq!(status.text().collect::<String>(), "not eligible");
+                let disclosure = scraper::ElementRef::wrap(status.parent().unwrap()).unwrap();
+                assert!(
+                    disclosure
+                        .text()
+                        .collect::<String>()
+                        .contains("non-global literal IP address")
+                );
             }
             "missing" => assert!(!body.contains("<time ")),
             "empty" => {
