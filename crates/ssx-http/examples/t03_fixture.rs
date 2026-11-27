@@ -75,7 +75,7 @@ impl SearchEngine for FixtureEngine {
             if request.query == "empty" {
                 return response;
             }
-            if request.query == "empty-source" && self.name == "beta" {
+            if matches!(request.query.as_str(), "empty-source" | "local") && self.name == "beta" {
                 return response;
             }
             let mut result = SearchResult {
@@ -105,6 +105,10 @@ impl SearchEngine for FixtureEngine {
                     result.payload = Some(
                         json!({"schema_version":1,"domain":"<script>domain</script>","type":"<img src=x>","data":{},"provenance":{"engine":self.name,"adapter_fields":[],"inferred_fields":[]}}),
                     );
+                }
+                "local" => {
+                    result.url = "http://127.0.0.1/private".into();
+                    result.title = "Local result".into();
                 }
                 "long" => {
                     result.title = "Long title ".repeat(100);
