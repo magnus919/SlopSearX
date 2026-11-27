@@ -89,7 +89,7 @@ Two non-blocking platform follow-ups track trust-store mutation experiments for
 
 | Issue | Effect |
 | --- | --- |
-| [#1073 — macOS platform trust](https://github.com/magnus919/SlopSearX/issues/1073) | Optional follow-up outside the T07 release gate. The installed Apple Silicon gateway must pass public HTTPS, certificate and hostname rejection, and additive CA-bundle checks on a disposable runner. [Platform decision](../adr/010-support-apple-silicon-macos.md). |
+| [#1073 — macOS platform trust](https://github.com/magnus919/SlopSearX/issues/1073) | Optional follow-up outside the T07 release gate. The installed Apple Silicon gateway must complete an MCP session over publicly trusted HTTPS using default certificate verification on a disposable runner. [Platform decision](../adr/010-support-apple-silicon-macos.md). |
 | [#1075 — Windows platform trust](https://github.com/magnus919/SlopSearX/issues/1075) | Open best-effort follow-up. The full Windows CurrentUser Root witness is outside the T07 release gate. |
 
 The maintainer set Windows support to best effort on 2026-11-22. Keep the

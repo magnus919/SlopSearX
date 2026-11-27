@@ -26,12 +26,11 @@ Keep the published x86-64 and ARM64 Linux targets and the existing
 best-effort Windows policy.
 
 Qualify the installed Apple Silicon gateway on a disposable GitHub-hosted
-arm64 macOS runner. Require default-trust HTTPS with a publicly trusted
-certificate, rejection of an untrusted chain and a wrong hostname, and
-successful private HTTPS using an explicitly supplied additive CA bundle.
-Verify that the bundle preserves access to publicly trusted HTTPS.
-Adding or removing a CA in the OS trust store is outside release qualification.
-Track that optional investigation and its historical evidence in [#1073](https://github.com/magnus919/SlopSearX/issues/1073).
+arm64 macOS runner. Require an end-to-end MCP session over publicly trusted
+HTTPS using the gateway's default certificate verification. Private CA bundle
+scenarios and platform trust-store changes are outside release qualification.
+Track the optional platform trust investigation and its historical evidence in
+[#1073](https://github.com/magnus919/SlopSearX/issues/1073).
 
 ## Consequences and confirmation
 

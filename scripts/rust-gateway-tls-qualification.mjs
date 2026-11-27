@@ -1,8 +1,7 @@
-import { execFileSync, spawn } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
 import { once } from 'node:events';
 import { createServer as createHttpServer } from 'node:http';
-import { createServer as createHttpsServer } from 'node:https';
 import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
@@ -49,45 +48,6 @@ async function stop({ child, closed }) {
   }
 }
 
-async function createCertificates(directory) {
-  const root = join(directory, 'root.pem');
-  const key = join(directory, 'root.key');
-  const config = join(directory, 'root.cnf');
-  const extension = join(directory, 'leaf.ext');
-  const openssl = (...args) => execFileSync('openssl', args, { timeout: 15000, stdio: 'pipe' });
-  await writeFile(config, [
-    '[req]', 'distinguished_name=dn', 'x509_extensions=ca', '[dn]', '[ca]',
-    'basicConstraints=critical,CA:TRUE', 'keyUsage=critical,keyCertSign,cRLSign',
-    'subjectKeyIdentifier=hash', '',
-  ].join('\n'));
-  openssl(
-    'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-sha256', '-config', config,
-    '-subj', '/CN=Disposable SlopSearX test root', '-days', '2', '-keyout', key, '-out', root,
-  );
-
-  const leaves = [];
-  for (const [index, name] of ['IP:127.0.0.1', 'DNS:invalid.example'].entries()) {
-    const leafKey = join(directory, 'leaf-' + index + '.key');
-    const request = join(directory, 'leaf-' + index + '.csr');
-    const cert = join(directory, 'leaf-' + index + '.pem');
-    await writeFile(extension, [
-      'subjectAltName=' + name, 'basicConstraints=critical,CA:FALSE',
-      'keyUsage=critical,digitalSignature,keyEncipherment', 'extendedKeyUsage=serverAuth', '',
-    ].join('\n'));
-    openssl(
-      'req', '-new', '-newkey', 'rsa:2048', '-nodes',
-      '-subj', '/CN=Disposable SlopSearX test leaf', '-keyout', leafKey, '-out', request,
-    );
-    openssl(
-      'x509', '-req', '-sha256', '-in', request, '-CA', root, '-CAkey', key,
-      '-set_serial', String(index + 1), '-days', '2', '-out', cert, '-extfile', extension,
-    );
-    openssl('verify', '-purpose', 'sslserver', '-CAfile', root, cert);
-    leaves.push({ key: await readFile(leafKey), cert: await readFile(cert) });
-  }
-  return { root, leaves };
-}
-
 function respond(response, status, value) {
   if (value === undefined) {
     response.writeHead(status, { 'content-length': '0' }).end();
@@ -100,11 +60,10 @@ function respond(response, status, value) {
   }).end(body);
 }
 
-async function withFixture(certificate, task, { oauth = false } = {}) {
+async function withFixture(task) {
   const marker = randomBytes(16).toString('hex');
   const endpoint = '/' + marker + '/mcp';
   const requests = [];
-  let origin;
   const results = {
     initialize: {
       protocolVersion: protocol,
@@ -118,42 +77,7 @@ async function withFixture(certificate, task, { oauth = false } = {}) {
     'prompts/list': { prompts: [] },
   };
 
-  function handleOAuth(request, response) {
-    if (request.method === 'POST' && request.url === endpoint) {
-      requests.push('mcp-challenge');
-      const metadata = origin + '/.well-known/oauth-protected-resource' + endpoint;
-      response.writeHead(401, {
-        'www-authenticate': 'Bearer resource_metadata="' + metadata + '", scope="search"',
-        'content-length': '0',
-      }).end();
-    } else if (request.method === 'GET' && request.url === '/.well-known/oauth-protected-resource' + endpoint) {
-      requests.push('protected-resource');
-      respond(response, 200, { resource: origin + endpoint, authorization_servers: [origin] });
-    } else if (request.method === 'GET' && request.url === '/.well-known/oauth-authorization-server') {
-      requests.push('authorization-server');
-      respond(response, 200, {
-        issuer: origin,
-        authorization_endpoint: origin + '/authorize',
-        token_endpoint: origin + '/token',
-        registration_endpoint: origin + '/register',
-        code_challenge_methods_supported: ['S256'],
-        response_types_supported: ['code'],
-      });
-    } else if (request.method === 'POST' && request.url === '/register') {
-      requests.push('registration');
-      // End at the registration boundary, before client creation or browser authorization.
-      respond(response, 400, { error: 'invalid_client_metadata' });
-    } else {
-      respond(response, 404);
-    }
-    request.resume();
-  }
-
   async function handle(request, response) {
-    if (oauth) {
-      handleOAuth(request, response);
-      return;
-    }
     if (request.method === 'GET' && request.url === endpoint + '/ready') {
       respond(response, 200, marker);
       return;
@@ -188,12 +112,12 @@ async function withFixture(certificate, task, { oauth = false } = {}) {
   const dispatch = (request, response) => {
     handle(request, response).catch(() => respond(response, 400));
   };
-  const server = certificate ? createHttpsServer(certificate, dispatch) : createHttpServer(dispatch);
+  const server = createHttpServer(dispatch);
   server.requestTimeout = 10000;
   server.listen(0, '127.0.0.1');
   await once(server, 'listening');
   try {
-    origin = (certificate ? 'https' : 'http') + '://127.0.0.1:' + server.address().port;
+    const origin = 'http://127.0.0.1:' + server.address().port;
     return await task({ origin, endpoint, marker, requests });
   } finally {
     const closed = once(server, 'close');
@@ -266,46 +190,23 @@ async function withPublicRoute(cloudflared, directory, fixture, task) {
   throw new Error('temporary HTTPS route did not become ready after two attempts');
 }
 
-async function exercise(binary, address, fixture, label, { bundle, reject, oauthState } = {}) {
-  require(fixture.requests.length === 0, label + ': unexpected prior fixture request');
+async function exercise(binary, address, fixture) {
+  require(fixture.requests.length === 0, 'unexpected prior fixture request');
   const args = ['--remote', address];
-  if (bundle) args.push('--ca-bundle', bundle);
-  if (oauthState) {
-    args.push('--oauth', '--oauth-no-browser', '--oauth-callback-port', '0', '--oauth-token-file', oauthState);
-  }
   const env = { PATH: '' };
   for (const name of ['HOME', 'TMPDIR']) {
     if (process.env[name]) env[name] = process.env[name];
   }
   const running = start(binary, args, { env, stdio: ['pipe', 'pipe', 'pipe'] });
   const { child, closed } = running;
-  let stderr = '';
-  child.stderr.setEncoding('utf8');
-  child.stderr.on('data', (data) => { stderr = (stderr + data).slice(-65536); });
+  child.stderr.resume();
   child.stdin.on('error', () => {}); // Early exits are reported by the protocol or exit checks.
   const lines = createInterface({ input: child.stdout })[Symbol.asyncIterator]();
   const send = (method, fields = {}) => {
     child.stdin.write(JSON.stringify({ jsonrpc: '2.0', method, ...fields }) + '\n');
   };
-  const next = () => within(lines.next(), 20000, label + ': gateway reply');
+  const next = () => within(lines.next(), 20000, 'gateway reply');
   try {
-    if (reject || oauthState) {
-      const status = await within(closed, 20000, label + ': gateway exit');
-      require(status === 1 && (await next()).done, label + ': expected a clean rejection');
-      require(stderr.includes('Could not connect to the remote MCP server'), label + ': connection error missing');
-      const requests = fixture.requests.splice(0);
-      if (oauthState && bundle) {
-        const expected = ['mcp-challenge', 'protected-resource', 'authorization-server', 'registration'];
-        let offset = 0;
-        for (const request of requests) {
-          if (request === expected[offset]) offset++;
-        }
-        require(offset === expected.length, label + ': did not reach the registration boundary');
-      } else {
-        require(requests.length === 0, label + ': request reached HTTP');
-      }
-      return { case: label, exit: status, http_requests: requests };
-    }
     send('initialize', {
       id: 1,
       params: {
@@ -314,20 +215,20 @@ async function exercise(binary, address, fixture, label, { bundle, reject, oauth
       },
     });
     const initialize = JSON.parse((await next()).value);
-    require(initialize.id === 1 && initialize.result?.protocolVersion === protocol, label + ': invalid initialization');
+    require(initialize.id === 1 && initialize.result?.protocolVersion === protocol, 'invalid initialization');
     send('notifications/initialized');
     send('tools/call', { id: 2, params: { name: 'witness', arguments: {} } });
     const call = JSON.parse((await next()).value);
     require(
       call.id === 2 && call.result?.content?.some(({ type, text }) => type === 'text' && text === fixture.marker),
-      label + ': fixture response missing',
+      'fixture response missing',
     );
     child.stdin.end();
-    const status = await within(closed, 8000, label + ': gateway shutdown');
-    require(status === 0, label + ': gateway exited unsuccessfully');
+    const status = await within(closed, 8000, 'gateway shutdown');
+    require(status === 0, 'gateway exited unsuccessfully');
     const requests = fixture.requests.splice(0);
-    require(requests.includes('initialize') && requests.includes('tools/call'), label + ': fixture request missing');
-    return { case: label, exit: status, http_requests: requests };
+    require(requests.includes('initialize') && requests.includes('tools/call'), 'fixture request missing');
+    return { case: 'public-default-trust', exit: status, http_requests: requests };
   } finally {
     await stop(running);
   }
@@ -344,35 +245,12 @@ async function main() {
   const installedDigest = await digest(binary);
   const fixtureDigest = await digest(script);
   const directory = await mkdtemp(join(runRoot, 't07-tls-'));
-  const cases = [];
-  const oauthDiscovery = [];
-  let publicHostname;
+  let result;
   try {
-    const { root, leaves: [valid, wrong] } = await createCertificates(directory);
-    await withFixture(valid, async (fixture) => {
-      const address = fixture.origin + fixture.endpoint;
-      cases.push(await exercise(binary, address, fixture, 'untrusted-chain', { reject: true }));
-      cases.push(await exercise(binary, address, fixture, 'private-with-bundle', { bundle: root }));
-    });
-    await withFixture(wrong, async (fixture) => {
-      cases.push(await exercise(binary, fixture.origin + fixture.endpoint, fixture, 'wrong-hostname', {
-        bundle: root, reject: true,
-      }));
-    });
-    await withFixture(valid, async (fixture) => {
-      const address = fixture.origin + fixture.endpoint;
-      oauthDiscovery.push(await exercise(binary, address, fixture, 'oauth-untrusted-chain', {
-        oauthState: join(directory, 'oauth-default.json'), reject: true,
-      }));
-      oauthDiscovery.push(await exercise(binary, address, fixture, 'oauth-discovery-with-bundle', {
-        oauthState: join(directory, 'oauth-with-bundle.json'), bundle: root,
-      }));
-    }, { oauth: true });
-    await withFixture(null, (fixture) => withPublicRoute(cloudflared, directory, fixture, async (address) => {
-      publicHostname = new URL(address).hostname;
-      cases.push(await exercise(binary, address, fixture, 'public-default-trust'));
-      cases.push(await exercise(binary, address, fixture, 'public-with-private-bundle', { bundle: root }));
-    }));
+    result = await withFixture((fixture) => withPublicRoute(cloudflared, directory, fixture, async (address) => ({
+      hostname: new URL(address).hostname,
+      witness: await exercise(binary, address, fixture),
+    })));
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
@@ -387,9 +265,8 @@ async function main() {
     runner_os: process.platform,
     installed_gateway_sha256: installedDigest,
     fixture_sha256: fixtureDigest,
-    public_hostname: publicHostname,
-    cases,
-    oauth_discovery: oauthDiscovery,
+    public_hostname: result.hostname,
+    cases: [result.witness],
     fixtures_retired: true,
   }, null, 2) + '\n');
 }

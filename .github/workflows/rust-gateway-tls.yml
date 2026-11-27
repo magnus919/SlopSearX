@@ -59,7 +59,7 @@ jobs:
           tar -xzf cloudflared.tgz cloudflared
           codesign --verify --strict -R='identifier "cloudflared" and anchor apple generic and certificate leaf[subject.OU] = "68WVV388M8"' cloudflared
           ./cloudflared --version | tee evidence/cloudflared-version.txt
-      - name: Qualify default and additive HTTPS trust
+      - name: Qualify publicly trusted HTTPS
         shell: bash
         run: |
           set -euo pipefail
