@@ -20,6 +20,25 @@ permissions:
   contents: read
 
 jobs:
+  unix-integration:
+    name: Gateway Unix integration tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CARGO_TARGET_DIR: ${{ runner.temp }}/ssx-gateway-tests/target
+      CARGO_TERM_COLOR: always
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Confirm pinned toolchain
+        run: rustc --version --verbose
+      - name: Run multi-instance isolation regression
+        run: cargo test --locked --manifest-path crates/ssx-gateway/Cargo.toml --test unix_instances
+      - name: Retire gateway test build artifacts
+        if: always()
+        run: rm -rf -- "${RUNNER_TEMP:?}/ssx-gateway-tests"
+
   apple-silicon:
     name: Installed gateway HTTPS (Apple Silicon)
     runs-on: macos-15
