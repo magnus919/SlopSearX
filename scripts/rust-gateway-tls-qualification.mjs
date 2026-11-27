@@ -3,14 +3,14 @@ import { createHash, randomBytes } from 'node:crypto';
 import { once } from 'node:events';
 import { createServer as createHttpServer } from 'node:http';
 import { createServer as createHttpsServer } from 'node:https';
-import { mkdtemp, mkdir, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 const protocol = '2025-11-25';
 const maxRequestBytes = 16384;
-const routePattern = /https:\/\/[a-z0-9-]+\.trycloudflare\.com\b/;
+const routePattern = /\|\s*(https:\/\/[a-z0-9-]+\.trycloudflare\.com)\s*\|/;
 
 function require(condition, message) {
   if (!condition) throw new Error(message);
@@ -203,39 +203,67 @@ async function withFixture(certificate, task, { oauth = false } = {}) {
   }
 }
 
-async function withPublicRoute(cloudflared, directory, fixture, task) {
-  const home = join(directory, 'tunnel-home');
-  await mkdir(home, { mode: 0o700 });
-  const tunnel = start(cloudflared, [
-    'tunnel', '--no-autoupdate', '--protocol', 'http2', '--url', fixture.origin,
-  ], { cwd: home, env: { HOME: home, PATH: '' }, stdio: ['ignore', 'ignore', 'pipe'] });
-  let log = '';
-  tunnel.child.stderr.setEncoding('utf8');
-  tunnel.child.stderr.on('data', (chunk) => { log = (log + chunk).slice(-65536); });
-  try {
-    const deadline = Date.now() + 75000;
-    while (Date.now() < deadline) {
-      require(tunnel.child.exitCode === null, 'temporary HTTPS tunnel exited');
-      const address = log.match(routePattern)?.[0];
-      if (address) {
-        const endpoint = address + fixture.endpoint;
-        let ready = false;
-        try {
-          const reply = await fetch(endpoint + '/ready', {
-            redirect: 'error', signal: AbortSignal.timeout(3000),
-          });
-          ready = reply.ok && await reply.json() === fixture.marker;
-        } catch {
-          // Public DNS and the route can become ready after the process announces the URL.
+async function waitForPublicRoute(tunnel, fixture, log) {
+  const deadline = Date.now() + 75000;
+  let reason = 'no public hostname announced';
+  let address;
+  while (Date.now() < deadline && tunnel.child.exitCode === null && tunnel.child.signalCode === null) {
+    address ??= log().match(routePattern)?.[1];
+    if (address) {
+      const endpoint = address + fixture.endpoint;
+      try {
+        const reply = await fetch(endpoint + '/ready', {
+          redirect: 'error', signal: AbortSignal.timeout(3000),
+        });
+        if (reply.ok) {
+          if (await reply.json() === fixture.marker) return { endpoint };
+          reason = 'readiness response did not match this fixture';
+        } else {
+          reason = 'readiness returned HTTP ' + reply.status;
+          await reply.body?.cancel();
         }
-        if (ready) return await task(endpoint);
+      } catch (error) {
+        // Report error categories only. Keep URLs, fixture markers and tunnel credentials out of CI logs.
+        const code = error.cause?.code ?? error.name;
+        reason = 'readiness request failed (' + (/^[A-Za-z0-9_]+$/.test(code) ? code : 'unknown') + ')';
       }
-      await sleep(1000);
     }
-    throw new Error('temporary HTTPS route did not become ready');
-  } finally {
-    await stop(tunnel);
+    await sleep(1000);
   }
+  if (tunnel.child.exitCode !== null || tunnel.child.signalCode !== null) {
+    reason += ', connector exited (' + (tunnel.child.exitCode ?? tunnel.child.signalCode) + ')';
+  }
+  return {
+    reason,
+    announced: Boolean(address),
+    registered: log().includes('Registered tunnel connection'),
+  };
+}
+
+async function withPublicRoute(cloudflared, directory, fixture, task) {
+  // Try a new disposable route if readiness fails. Once ready, the gateway cases run exactly once.
+  for (const protocol of ['auto', 'http2']) {
+    const home = await mkdtemp(join(directory, 'tunnel-home-'));
+    const tunnel = start(cloudflared, [
+      'tunnel', '--no-autoupdate', '--protocol', protocol, '--url', fixture.origin,
+    ], { cwd: home, env: { HOME: home, PATH: '' }, stdio: ['ignore', 'pipe', 'pipe'] });
+    let log = '';
+    for (const output of [tunnel.child.stdout, tunnel.child.stderr]) {
+      output.setEncoding('utf8');
+      output.on('data', (chunk) => { log = (log + chunk).slice(-65536); });
+    }
+    try {
+      const result = await waitForPublicRoute(tunnel, fixture, () => log);
+      if (result.endpoint) return await task(result.endpoint);
+      console.error(
+        'Temporary HTTPS route (' + protocol + ') unavailable. Hostname announced: '
+        + result.announced + '. Connector registered: ' + result.registered + '. ' + result.reason,
+      );
+    } finally {
+      await stop(tunnel);
+    }
+  }
+  throw new Error('temporary HTTPS route did not become ready after two attempts');
 }
 
 async function exercise(binary, address, fixture, label, { bundle, reject, oauthState } = {}) {
