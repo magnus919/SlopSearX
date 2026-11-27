@@ -71,6 +71,23 @@ jobs:
             "$run_dir" "$run_dir/evidence/T07.json"
           test -s "$run_dir/evidence/T07.json"
           cmp "$run_dir/installed/bin/ssx-gateway" "$run_dir/evidence/ssx-gateway"
+          node - "$run_dir/evidence/T07.json" "$run_dir/installed/bin/ssx-gateway" "$run_dir/evidence/ssx-gateway" scripts/rust-gateway-tls-qualification.mjs <<'NODE'
+          const fs = require('node:fs');
+          const crypto = require('node:crypto');
+          const [evidencePath, installedPath, retainedPath, fixturePath] = process.argv.slice(2);
+          const evidence = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
+          const sha256 = (path) => crypto.createHash('sha256').update(fs.readFileSync(path)).digest('hex');
+          const fail = (message) => { throw new Error(`T07 hosted evidence ${message}`); };
+          if (evidence.revision !== process.env.GITHUB_SHA) fail('source revision mismatch');
+          if (evidence.runner_os !== 'darwin' || evidence.runner_arch !== 'arm64') fail('runner is not Apple Silicon macOS');
+          if (evidence.installed_gateway_sha256 !== sha256(installedPath)) fail('does not identify the installed gateway');
+          if (sha256(retainedPath) !== evidence.installed_gateway_sha256) fail('retained gateway artifact digest mismatch');
+          if (evidence.fixture_sha256 !== sha256(fixturePath)) fail('qualification fixture identity mismatch');
+          if (evidence.fixtures_retired !== true || evidence.cases?.length !== 1) fail('case inventory or fixture cleanup is incomplete');
+          const witness = evidence.cases[0];
+          if (witness.case !== 'public-default-trust' || witness.exit !== 0) fail('public-CA MCP session did not pass');
+          if (!witness.http_requests?.includes('initialize') || !witness.http_requests?.includes('tools/call')) fail('MCP initialize/tool call evidence is missing');
+          NODE
           test -z "$(git status --porcelain)"
       - name: Retain T07 installed-gateway evidence
         if: always()
